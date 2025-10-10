@@ -1,0 +1,7 @@
+# OS generated files
+.DS_Store
+
+# IntelliJ/Gradle files
+.idea/
+*.iml
+build/
