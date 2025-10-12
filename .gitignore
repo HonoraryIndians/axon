@@ -5,3 +5,6 @@
 .idea/
 *.iml
 build/
+
+# Secret files
+application-oauth.yml
