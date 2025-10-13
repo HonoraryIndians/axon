@@ -18,11 +18,16 @@ import java.io.IOException;
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+        log.info("--- OAuth2AuthenticationSuccessHandler.onAuthenticationSuccess() --- START");
         String accessToken = jwtTokenProvider.generateAccessToken(authentication);
         String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
+
+        log.info("Generated Access Token (first 15 chars): {}...", accessToken.substring(0, 15));
+        log.info("Generated Refresh Token (first 15 chars): {}...", refreshToken.substring(0, 15));
 
         // TODO: Refresh Token은 Redis에 저장해야 함
 
@@ -31,6 +36,16 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
 
+        clearAuthenticationAttributes(request, response);
+
+        log.info("Redirecting to target URL: {}", targetUrl);
+        log.info("--- OAuth2AuthenticationSuccessHandler.onAuthenticationSuccess() --- END");
+
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
+    }
+
+    protected void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {
+        super.clearAuthenticationAttributes(request);
+        httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
     }
 }
