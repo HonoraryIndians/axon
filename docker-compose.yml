@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: axon-mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: axon
+      MYSQL_DATABASE: axon_db # 애플리케이션에서 사용할 데이터베이스
+      MYSQL_USER: axon_user # 애플리케이션 전용 유저
+      MYSQL_PASSWORD: axon_password # 전용 유저 비밀번호
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  mysql_data:
