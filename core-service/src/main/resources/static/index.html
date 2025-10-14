@@ -1,13 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Axon Core Service</title>
+    <title>Axon Event Platform</title>
+    <style>
+        body { font-family: sans-serif; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid #ccc; }
+        nav a { margin-left: 15px; text-decoration: none; color: #007bff; }
+        main { padding: 20px; }
+        .event-list a { display: block; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
-    <h1>소셜 로그인 테스트</h1>
-    <a href="/oauth2/authorization/naver">
-        <img height="50" src="/images/naver_login_btn.png" alt="Naver Login">
-    </a>
+
+<header>
+    <h1>Axon Events</h1>
+    <nav id="nav-area">
+        <!-- 로그인 상태에 따라 동적으로 변경됩니다 -->
+    </nav>
+</header>
+
+<main>
+    <h2>진행중인 이벤트</h2>
+    <div class="event-list">
+        <a href="#" class="event-link" data-event-id="1">선착순 이벤트 1 (로그인 필요)</a>
+        <a href="#" class="event-link" data-event-id="2">선착순 이벤트 2 (로그인 필요)</a>
+    </div>
+</main>
+
+<script>
+    window.onload = function() {
+        const navArea = document.getElementById('nav-area');
+        const accessToken = localStorage.getItem('accessToken');
+
+        if (accessToken) {
+            // 로그인 상태
+            navArea.innerHTML = '<a href="#">마이페이지</a><a href="#" id="logout-button">로그아웃</a>';
+
+            document.getElementById('logout-button').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                alert('로그아웃 되었습니다.');
+                window.location.reload();
+            });
+
+        } else {
+            // 로그아웃 상태
+            navArea.innerHTML = '<a href="/oauth2/authorization/naver">네이버 로그인</a>';
+        }
+
+        document.querySelectorAll('.event-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!accessToken) {
+                    alert('로그인이 필요합니다.');
+                } else {
+                    const eventId = this.getAttribute('data-event-id');
+                    // entry.html 페이지로 이벤트 ID와 함께 이동
+                    window.location.href = `/entry.html?eventId=${eventId}`;
+                }
+            });
+        });
+    };
+</script>
+
 </body>
 </html>
