@@ -1,3 +1,5 @@
+server:
+  port: 8081
 spring:
   kafka:
     bootstrap-servers: localhost:9092
@@ -10,3 +12,5 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
+jwt:
+  secret: YOUR_VERY_SECRET_RANDOM_STRING_THAT_IS_LONG_ENOUGH_axonskusw

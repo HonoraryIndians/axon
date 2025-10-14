@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Success</title>
+</head>
+<body>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get('accessToken');
+    const refreshToken = params.get('refreshToken');
+
+    if (accessToken) {
+        console.log("Access Token found, saving to localStorage.");
+        localStorage.setItem('accessToken', accessToken);
+    }
+    if (refreshToken) {
+        // 리프레시 토큰은 보통 HttpOnly 쿠키 등으로 더 안전하게 관리하지만,
+        // 지금은 예제이므로 localStorage에 함께 저장합니다.
+        localStorage.setItem('refreshToken', refreshToken);
+    }
+
+    // 토큰 저장 후 메인 페이지로 즉시 이동
+    window.location.href = "/index.html";
+</script>
+<p>로그인 처리 중... 잠시만 기다려주세요.</p>
+</body>
+</html>
