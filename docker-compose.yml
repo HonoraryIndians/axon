@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # kafka 환경을 zookeeper가 아닌 KRaft 환경으로 구축함 (최신 환경)
   # 대량 트래픽을 위해 컨트롤러와 브로커를 각각 분리하여 실행
@@ -66,6 +64,16 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
+  redis:
+    image: redis:alpine
+    container_name: axon-redis
+    ports:
+        - "6379:6379"
+    volumes:
+        - redis_data:/data
+    restart: always
+    networks:
+      - kafka-net
 
 networks:
   kafka-net:
@@ -74,3 +82,4 @@ volumes:
   controller_data:
   broker_data:
   mysql_data:
+  redis_data:
