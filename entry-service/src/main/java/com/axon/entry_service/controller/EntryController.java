@@ -15,7 +15,7 @@ import java.time.Instant;
 @CrossOrigin(origins = "http://localhost:8080") // core-service의 frontendからのリクエストを許可
 public class EntryController {
     private final Kafka_Producer producer;
-    private final String axon_topic = "AXON-topic";
+    private final String axon_topic = "event";
 
     @PostMapping
     public ResponseEntity<Void> createEntry(@RequestBody EntryRequestDto requestDto) {

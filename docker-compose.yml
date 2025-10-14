@@ -39,7 +39,7 @@ services:
 
       # 리스너 설정 (내부/외부/컨트롤러)
       KAFKA_LISTENERS: PLAINTEXT_INTERNAL://:29092,PLAINTEXT_EXTERNAL://:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://broker_1:29092,PLAINTEXT_EXTERNAL://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://broker_1:29092,PLAINTEXT_EXTERNAL://broker_1:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
 
@@ -49,6 +49,20 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
     volumes:
       - broker_data:/var/lib/kafka/data
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka-init
+    depends_on:
+      broker:
+        condition: service_started
+    networks:
+      - kafka-net
+    volumes:
+      - ./kafka-init/create-topics.sh:/create-topics.sh
+    entrypoint: ["/bin/bash", "/create-topics.sh"]
+    restart: "no"
+
 
   mysql:
     image: mysql:8.0
@@ -67,8 +81,29 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
 
+  fluentd:
+    build:
+      context: ./fluentd
+      dockerfile: config.dockerfile
+    container_name: fluentd
+    depends_on:
+      - broker
+    ports:
+      - "24224:24224" # TCP/UDP 입력 포트
+      - "9880:9880" # HTTP 입력용 포트
+    volumes:
+      - ./fluentd/conf:/fluentd/etc  # 설정 파일
+    environment:
+      FLUENTD_CONF: fluent.conf
+    networks:
+      - kafka-net
+      - fluentd-net
+
 networks:
   kafka-net:
+    driver: bridge
+  fluentd-net:
+    driver: bridge
 
 volumes:
   controller_data:

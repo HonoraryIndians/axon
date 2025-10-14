@@ -1,6 +1,8 @@
 server:
   port: 8081
 spring:
+  profiles:
+    include: oauth
   kafka:
     bootstrap-servers: localhost:9092
     producer:

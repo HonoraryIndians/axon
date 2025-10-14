@@ -12,5 +12,4 @@ public class Kafka_ProducerDto {
     private int userId;
     private int productId;
     private Long timestamp;
-
 }

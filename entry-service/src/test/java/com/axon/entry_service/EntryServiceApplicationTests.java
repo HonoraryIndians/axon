@@ -8,6 +8,7 @@ class EntryServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
+
 	}
 
 }
