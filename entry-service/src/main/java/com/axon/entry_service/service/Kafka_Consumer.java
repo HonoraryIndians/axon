@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class Kafka_Consumer {
     @KafkaListener(
-            topics = "AXON-topic",
+            topics = "event",
             groupId = "axon-group",
             containerFactory = "kafkaListenerContainerFactory"
     )

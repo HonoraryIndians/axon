@@ -25,7 +25,7 @@ public class Security_Config {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/v1/entries").authenticated()
+                        .requestMatchers("/api/v1/entries").permitAll()   //authenticated()
                         .anyRequest().permitAll() // 다른 모든 요청은 일단 허용
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);

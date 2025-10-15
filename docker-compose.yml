@@ -19,7 +19,7 @@ services:
       - controller_data:/var/lib/kafka/data
 
   broker:
-    image: confluentinc/cp-kafka:7.6.1 
+    image: confluentinc/cp-kafka:7.6.1
     container_name: broker_1
     depends_on:
       - controller
@@ -82,13 +82,13 @@ services:
     image: redis:alpine
     container_name: axon-redis
     ports:
-      - "6379:6379"
+        - "6379:6379"
     volumes:
-      - redis_data:/data
+        - redis_data:/data
     restart: always
     networks:
       - kafka-net
-
+ÍÍÍÍ
   fluentd:
     build:
       context: ./fluentd
@@ -100,9 +100,9 @@ services:
       - "24224:24224" # TCP/UDP 입력 포트
       - "9880:9880" # HTTP 입력용 포트
     volumes:
-      - ./fluentd/conf:/fluentd/etc  # 설정 파일
+      - ./fluentd/conf:/fluentd/etc  # 설정 파일Íç
     environment:
-      FLUENTD_CONF: fluent.conf
+      햐UENTD_CONF: fluent.conf
     networks:
       - kafka-net
       - fluentd-net
