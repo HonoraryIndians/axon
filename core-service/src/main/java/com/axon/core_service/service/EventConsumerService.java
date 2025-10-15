@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class EventConsumerService {
 
     private final Map<CampaignType, CampaignStrategy> strategies;
-
+    private final String eventTopic = "event";
     // Spring이 시작될 때, CampaignStrategy 인터페이스를 구현한 모든 Bean을 찾아 리스트로 주입해줍니다.
     public EventConsumerService(List<CampaignStrategy> strategyList) {
         // 주입받은 전략 리스트를 Map 형태로 변환하여, 캠페인 타입으로 쉽게 찾을 수 있도록 합니다.
@@ -25,7 +25,7 @@ public class EventConsumerService {
                 .collect(Collectors.toUnmodifiableMap(CampaignStrategy::getType, Function.identity()));
     }
 
-    @KafkaListener(topics = "AXON-topic", groupId = "axon-group")
+    @KafkaListener(topics = eventTopic, groupId = "axon-group")
     public void consume(Kafka_ProducerDto event) {
         log.info("Consumed message: {}", event);
 
