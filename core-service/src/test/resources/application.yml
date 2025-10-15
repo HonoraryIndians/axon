@@ -1,0 +1,23 @@
+spring:
+  # 테스트 환경에서는 Redis와 Kafka가 Docker에 실행되어 있다고 가정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+    # 테스트 코드(Producer)를 위한 설정
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    # 애플리케이션(Consumer)을 위한 설정
+    consumer:
+      group-id: axon-test-group # 테스트용 그룹 ID는 실제와 분리하는 것이 좋음
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+      auto-offset-reset: earliest # 테스트 실행 시 이전에 놓친 메시지도 읽어오도록 설정
+
+jwt:
+  secret: 'this-is-a-test-secret-key-for-unit-tests-only-1234567890'
