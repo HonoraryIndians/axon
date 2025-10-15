@@ -1,40 +1,41 @@
 package com.axon.core_service.service;
 
+import com.axon.core_service.domain.CampaignType;
 import com.axon.core_service.domain.dto.Kafka_ProducerDto;
-import lombok.RequiredArgsConstructor;
+import com.axon.core_service.service.strategy.CampaignStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-@Service
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Slf4j
-@RequiredArgsConstructor
+@Service
 public class EventConsumerService {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final Map<CampaignType, CampaignStrategy> strategies;
 
-    @KafkaListener(topics="event", groupId = "event-consuming-group")
-    public void consume(Kafka_ProducerDto data) {
-        log.info("Received data: {}", data);
+    // Spring이 시작될 때, CampaignStrategy 인터페이스를 구현한 모든 Bean을 찾아 리스트로 주입해줍니다.
+    public EventConsumerService(List<CampaignStrategy> strategyList) {
+        // 주입받은 전략 리스트를 Map 형태로 변환하여, 캠페인 타입으로 쉽게 찾을 수 있도록 합니다.
+        this.strategies = strategyList.stream()
+                .collect(Collectors.toUnmodifiableMap(CampaignStrategy::getType, Function.identity()));
+    }
 
-        String eventKey=  "event" + data.getEventId();
-        Long addResult = redisTemplate.opsForSet().add(eventKey, String.valueOf(data.getUserId())); //redis set에 userId추가.
-        //결과가 1이면 최초응모, 0이면 중복 응모
-        if (addResult != null && addResult == 1) {
-            Long currentEntries=  redisTemplate.opsForSet().size(eventKey);
-            int limit = 100; // TODO: 추후 이벤트별로 limit 설정 가능하도록 변경
+    @KafkaListener(topics = "AXON-topic", groupId = "axon-group")
+    public void consume(Kafka_ProducerDto event) {
+        log.info("Consumed message: {}", event);
 
-            if (currentEntries != null && currentEntries <= limit) {
-                //선착순 성공
-                log.info("선착순 성공, User Id: {}, Event ID: {}, 현재 인원: {}/{}", data.getUserId(), eventKey, currentEntries, limit);
-            }else {
-                //선착순 마감
-                log.info("선착순 마감, User Id: {}, Event ID: {}", data.getUserId(), eventKey);
-            }
-        }else {
-            //중복 응모
-            log.info("중복 응모, User Id: {}, Event ID: {}", data.getUserId(), eventKey);
+        CampaignType type = event.getCampaignType();
+        CampaignStrategy strategy = strategies.get(type);
+
+        if (strategy != null) {
+            strategy.process(event);
+        } else {
+            log.warn("지원하지 않는 캠페인 타입입니다: {}", type);
         }
     }
 }
