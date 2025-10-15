@@ -48,6 +48,69 @@ services:
     volumes:
       - broker_data:/var/lib/kafka/data
 
+  # kafka 환경을 zookeeper가 아닌 KRaft 환경으로 구축함 (최신 환경)
+  # 대량 트래픽을 위해 컨트롤러와 브로커를 각각 분리하여 실행
+  controller:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka-controller
+    networks:
+      - kafka-net
+    environment:
+      KAFKA_PROCESS_ROLES: 'controller'
+      KAFKA_NODE_ID: 1
+      KAFKA_CLUSTER_ID: 'O69UWjQJRFCIpj8R7rV50A'
+      CLUSTER_ID: 'O69UWjQJRFCIpj8R7rV50A'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@controller:9093'
+      KAFKA_LISTENERS: 'CONTROLLER://:9093'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+    volumes:
+      - controller_data:/var/lib/kafka/data
+
+  broker:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: broker_1
+    depends_on:
+      - controller
+    networks:
+      - kafka-net
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_NODE_ID: 2
+      CLUSTER_ID: 'O69UWjQJRFCIpj8R7rV50A'
+      KAFKA_CLUSTER_ID: 'O69UWjQJRFCIpj8R7rV50A'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@controller:9093'
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      # 리스너 설정 (내부/외부/컨트롤러)
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://:29092,PLAINTEXT_EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://broker_1:29092,PLAINTEXT_EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+
+      # 싱글 노드 필수 옵션
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
+    volumes:
+      - broker_data:/var/lib/kafka/data
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka-init
+    depends_on:
+      broker:
+        condition: service_started
+    networks:
+      - kafka-net
+    volumes:
+      - ./kafka-init/create-topics.sh:/create-topics.sh
+    entrypoint: ["/bin/bash", "/create-topics.sh"]
+    restart: "no"
+
+
   mysql:
     image: mysql:8.0
     container_name: axon-mysql
@@ -77,6 +140,30 @@ services:
 
 networks:
   kafka-net:
+
+  fluentd:
+    build:
+      context: ./fluentd
+      dockerfile: config.dockerfile
+    container_name: fluentd
+    depends_on:
+      - broker
+    ports:
+      - "24224:24224" # TCP/UDP 입력 포트
+      - "9880:9880" # HTTP 입력용 포트
+    volumes:
+      - ./fluentd/conf:/fluentd/etc  # 설정 파일
+    environment:
+      FLUENTD_CONF: fluent.conf
+    networks:
+      - kafka-net
+      - fluentd-net
+
+networks:
+  kafka-net:
+    driver: bridge
+  fluentd-net:
+    driver: bridge
 
 volumes:
   controller_data:
