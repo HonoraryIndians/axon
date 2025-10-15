@@ -26,6 +26,7 @@ public class Kafka_Config {
         data.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker_port);
         data.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         data.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+
         return new DefaultKafkaProducerFactory<>(data);
     }
 
