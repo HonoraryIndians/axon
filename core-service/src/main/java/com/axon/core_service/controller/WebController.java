@@ -19,4 +19,11 @@ public class WebController {
         log.info("Serving login-success.html");
         return "login-success.html";
     }
+
+
+    @GetMapping("/entry")
+    public String entry() {
+        log.info("Serving entry.html");
+        return "entry.html";
+    }
 }
