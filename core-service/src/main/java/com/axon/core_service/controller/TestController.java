@@ -2,6 +2,7 @@ package com.axon.core_service.controller;
 
 import com.axon.core_service.config.auth.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +19,7 @@ import java.util.Collections;
 @RestController
 @RequestMapping("/test")
 @RequiredArgsConstructor
+@Slf4j
 public class TestController {
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -29,6 +31,7 @@ public class TestController {
      */
     @GetMapping("/auth/token")
     public ResponseEntity<String> getTestToken(@RequestParam int userId) {
+        log.info("Generating test token for userId: {}", userId);
         // 1. 가짜 인증 정보 생성
         String userRole = "ROLE_USER"; // 기본 권한
         Authentication authentication = new UsernamePasswordAuthenticationToken(
