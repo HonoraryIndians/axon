@@ -82,14 +82,14 @@ services:
     image: redis:alpine
     container_name: axon-redis
     ports:
-        - "6379:6379"
+      - "6379:6379"
     volumes:
-        - redis_data:/data
+      - redis_data:/data
     restart: always
     networks:
       - kafka-net
+
   fluentd:
-    platform: linux/arm64
     build:
       context: ./fluentd
       dockerfile: config.dockerfile
@@ -100,7 +100,7 @@ services:
       - "24224:24224" # TCP/UDP 입력 포트
       - "9880:9880" # HTTP 입력용 포트
     volumes:
-      - ./fluentd/conf:/fluentd/etc  # 설정 파일Íç
+      - ./fluentd/conf:/fluentd/etc  # 설정 파일
     environment:
       FLUENTD_CONF: fluent.conf
     networks:
