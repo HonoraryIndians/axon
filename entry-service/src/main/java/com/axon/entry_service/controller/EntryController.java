@@ -1,10 +1,10 @@
 package com.axon.entry_service.controller;
 
-import com.axon.entry_service.Enum.CampaignType;
 import com.axon.entry_service.dto.EntryRequestDto;
-import com.axon.entry_service.dto.Kafka_ProducerDto;
 import com.axon.entry_service.service.Kafka_Producer;
+import com.axon.messaging.dto.Kafka_ProducerDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +14,10 @@ import java.time.Instant;
 @RequestMapping("/api/v1/entries")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:8080") // core-service의 frontendからのリクエストを許可
+@Slf4j
 public class EntryController {
     private final Kafka_Producer producer;
-    private final String axon_topic = "event";
+    private final String axonTopic = "AXON-topic";
 
     @PostMapping
     public ResponseEntity<Void> createEntry(@RequestBody EntryRequestDto requestDto) {
@@ -26,15 +27,15 @@ public class EntryController {
         long timestamp = Instant.now().toEpochMilli();
 
         Kafka_ProducerDto eventDto = new Kafka_ProducerDto(
-                CampaignType.FIRST_COME_FIRST_SERVE,
+                requestDto.getCampaignType(),
                 requestDto.getEventId(),
                 userId,
                 requestDto.getProductId(),
                 timestamp
         );
 
-        producer.KafkasendMessage(axon_topic, eventDto);
-
+        producer.KafkasendMessage(axonTopic, eventDto);
+        log.info("Produced event: {}", eventDto);
         return ResponseEntity.accepted().build();
     }
 }

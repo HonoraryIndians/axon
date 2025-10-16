@@ -1,7 +1,7 @@
 package com.axon.core_service.service;
 
-import com.axon.core_service.domain.CampaignType;
-import com.axon.core_service.domain.dto.Kafka_ProducerDto;
+import com.axon.messaging.CampaignType;
+import com.axon.messaging.dto.Kafka_ProducerDto;
 import com.axon.core_service.service.strategy.CampaignStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,8 +16,10 @@ import java.util.stream.Collectors;
 @Service
 public class EventConsumerService {
 
+    private static final String AXON_TOPIC = "AXON-topic";
+
     private final Map<CampaignType, CampaignStrategy> strategies;
-    private final String eventTopic = "event";
+
     // Spring이 시작될 때, CampaignStrategy 인터페이스를 구현한 모든 Bean을 찾아 리스트로 주입해줍니다.
     public EventConsumerService(List<CampaignStrategy> strategyList) {
         // 주입받은 전략 리스트를 Map 형태로 변환하여, 캠페인 타입으로 쉽게 찾을 수 있도록 합니다.
@@ -25,11 +27,15 @@ public class EventConsumerService {
                 .collect(Collectors.toUnmodifiableMap(CampaignStrategy::getType, Function.identity()));
     }
 
-    @KafkaListener(topics = eventTopic, groupId = "axon-group")
+    @KafkaListener(topics = AXON_TOPIC, groupId = "axon-group")
     public void consume(Kafka_ProducerDto event) {
         log.info("Consumed message: {}", event);
 
         CampaignType type = event.getCampaignType();
+        if (type == null) {
+            log.warn("캠페인 타입이 비어 있습니다. 기본값 FIRST_COME_FIRST_SERVE로 처리합니다. eventId={}", event.getEventId());
+            type = CampaignType.FIRST_COME_FIRST_SERVE;
+        }
         CampaignStrategy strategy = strategies.get(type);
 
         if (strategy != null) {

@@ -1,6 +1,6 @@
 package com.axon.entry_service.service;
 
-import com.axon.entry_service.dto.Kafka_ProducerDto;
+import com.axon.messaging.dto.Kafka_ProducerDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -8,8 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class Kafka_Producer {
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-
+    private final KafkaTemplate<String, Kafka_ProducerDto> kafkaTemplate;
 
     public void KafkasendMessage(String topic, Kafka_ProducerDto msg){
         kafkaTemplate.send(topic, msg);

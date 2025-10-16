@@ -1,4 +1,4 @@
-package com.axon.entry_service.Enum;
+package com.axon.messaging;
 
 public enum CampaignType {
     FIRST_COME_FIRST_SERVE,

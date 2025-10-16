@@ -1,5 +1,6 @@
 package com.axon.entry_service.config;
 
+import com.axon.messaging.dto.Kafka_ProducerDto;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -21,7 +22,7 @@ public class Kafka_Config {
 
     private final String broker_port ="localhost:9092";
     @Bean
-    public ProducerFactory<String, Object> producerFactory() {
+    public ProducerFactory<String, Kafka_ProducerDto> producerFactory() {
         Map<String, Object> data = new HashMap<>();
         data.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker_port);
         data.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -31,13 +32,13 @@ public class Kafka_Config {
     }
 
     @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate() {
+    public KafkaTemplate<String, Kafka_ProducerDto> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
-    public ConsumerFactory<String, Object> consumerFactory() {
-        JsonDeserializer<Object> deserializer = new JsonDeserializer<>();
+    public ConsumerFactory<String, Kafka_ProducerDto> consumerFactory() {
+        JsonDeserializer<Kafka_ProducerDto> deserializer = new JsonDeserializer<>(Kafka_ProducerDto.class);
         deserializer.addTrustedPackages("*");
 
         Map<String, Object> config = new HashMap<>();
@@ -50,8 +51,8 @@ public class Kafka_Config {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, Kafka_ProducerDto> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, Kafka_ProducerDto> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }

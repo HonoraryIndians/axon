@@ -1,11 +1,11 @@
 package com.axon.entry_service.dto;
 
-import com.axon.entry_service.Enum.CampaignType;
+import com.axon.messaging.CampaignType;
 import lombok.Data;
 
 @Data
 public class EntryRequestDto {
-    CampaignType campaignType;
+    private CampaignType campaignType;
     private int eventId;
     private int productId;
 }
