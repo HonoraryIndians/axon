@@ -1,5 +1,6 @@
 package com.axon.core_service.config.auth;
 
+import com.axon.core_service.util.CookieUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,13 +30,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         log.info("Generated Access Token (first 15 chars): {}...", accessToken.substring(0, 15));
         log.info("Generated Refresh Token (first 15 chars): {}...", refreshToken.substring(0, 15));
 
+        // 1. Access Token을 쿠키에 저장
+        int cookieMaxAge = 30 * 60;
+        CookieUtils.addCookie(response, JwtAuthenticationFilter.ACCESS_TOKEN_COOKIE_NAME, accessToken, cookieMaxAge);
+
+        String targetUrl = "/index";
         // TODO: Refresh Token은 Redis에 저장해야 함
-
-        String targetUrl = UriComponentsBuilder.fromUriString("/login-success")
-                .queryParam("accessToken", accessToken)
-                .queryParam("refreshToken", refreshToken)
-                .build().toUriString();
-
         clearAuthenticationAttributes(request, response);
 
         log.info("Redirecting to target URL: {}", targetUrl);

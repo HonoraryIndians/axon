@@ -1,5 +1,6 @@
 package com.axon.entry_service.controller;
 
+import com.axon.entry_service.Enum.CampaignType;
 import com.axon.entry_service.dto.EntryRequestDto;
 import com.axon.entry_service.dto.Kafka_ProducerDto;
 import com.axon.entry_service.service.Kafka_Producer;
@@ -25,6 +26,7 @@ public class EntryController {
         long timestamp = Instant.now().toEpochMilli();
 
         Kafka_ProducerDto eventDto = new Kafka_ProducerDto(
+                CampaignType.FIRST_COME_FIRST_SERVE,
                 requestDto.getEventId(),
                 userId,
                 requestDto.getProductId(),
