@@ -43,7 +43,10 @@ public class SecurityConfig {
                                 antMatcher("/api/**")
                         )
                 )
-                .logout(logout -> logout.logoutSuccessUrl("/"))
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                        .deleteCookies(JwtAuthenticationFilter.ACCESS_TOKEN_COOKIE_NAME))
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
