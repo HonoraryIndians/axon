@@ -28,25 +28,16 @@
     </div>
 </main>
 
+<script src="/js/common.js"></script>
 <script>
-    function getCookie(name) {
-        let match = document.cookie.match(new RegExp(
-            "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-        ));
-        return match ? decodeURIComponent(match[1]) : undefined;
-    }
-
-    function deleteAccessTokenCookie() {
-        document.cookie = 'accessToken=; Max-Age=-99999999; path=/;';
-    }
-
     window.onload = function() {
         const navArea = document.getElementById('nav-area');
-        const accessToken = getCookie('accessToken');
+        const accessToken = common.getCookie('accessToken');
 
         if (accessToken) {
             // 로그인 상태
             navArea.innerHTML = '<a href="#">마이페이지</a><a href="/logout" id="logout-button">로그아웃</a>';
+            //To-Do: 로그아웃 이후 재로그인 화면으로 넘어가게 하기
         } else {
             // 로그아웃 상태
             navArea.innerHTML = '<a href="/oauth2/authorization/naver">네이버 로그인</a>';

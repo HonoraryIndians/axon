@@ -14,10 +14,11 @@ public class WebController {
         return "index.html";
     }
 
-    @GetMapping("/login-success")
+    @GetMapping("/")
     public String loginSuccess() {
         log.info("Serving login-success.html");
         return "login-success.html";
+        //TO-DO: 로그아웃 이후 임시 대피처 재정의 필요
     }
 
 
