@@ -1,2 +1,1 @@
 rootProject.name = 'core-service'
-includeBuild('../common-messaging')

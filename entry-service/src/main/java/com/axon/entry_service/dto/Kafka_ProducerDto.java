@@ -1,17 +1,18 @@
-package com.axon.messaging.dto;
+package com.axon.entry_service.dto;
 
-import com.axon.messaging.CampaignType;
+import com.axon.entry_service.Enum.CampaignType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class Kafka_ProducerDto {
-    private CampaignType campaignType;
+    CampaignType campaignType;
     private int eventId;
     private int userId;
     private int productId;
     private Long timestamp;
+
 }

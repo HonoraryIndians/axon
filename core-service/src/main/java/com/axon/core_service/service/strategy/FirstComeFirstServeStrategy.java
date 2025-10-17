@@ -1,7 +1,7 @@
 package com.axon.core_service.service.strategy;
 
-import com.axon.messaging.CampaignType;
-import com.axon.messaging.dto.Kafka_ProducerDto;
+import com.axon.core_service.domain.CampaignType;
+import com.axon.core_service.domain.dto.Kafka_ProducerDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.axon.core_service.domain.Event;

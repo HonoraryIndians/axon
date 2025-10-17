@@ -3,7 +3,6 @@
 
 # IntelliJ/Gradle files
 .idea/
-.gradle/
 *.iml
 build/
 
