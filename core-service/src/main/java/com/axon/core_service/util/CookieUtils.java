@@ -24,15 +24,13 @@ public class CookieUtils {
         return Optional.empty();
     }
 
-    //httponly false 함수
-    public static void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean httpOnly) {
+    public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
         Cookie cookie = new Cookie(name, value);
         cookie.setPath("/");
-        cookie.setHttpOnly(httpOnly);
+        cookie.setHttpOnly(true);
         cookie.setMaxAge(maxAge);
         response.addCookie(cookie);
     }
-
 
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
         Cookie[] cookies = request.getCookies();
