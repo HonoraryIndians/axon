@@ -18,6 +18,15 @@ public class Security_Config {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    /**
+     * Configure the application's HTTP security and build a SecurityFilterChain.
+     *
+     * Disables HTTP Basic auth and CSRF, sets session management to STATELESS,
+     * permits requests to "/api/v1/entries" (and currently allows all other requests),
+     * and registers a JwtAuthenticationFilter before the UsernamePasswordAuthenticationFilter.
+     *
+     * @return the configured SecurityFilterChain
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

@@ -18,13 +18,27 @@ public class EventConsumerService {
 
     private final Map<CampaignType, CampaignStrategy> strategies;
     private final String eventTopic = "event";
-    // Spring이 시작될 때, CampaignStrategy 인터페이스를 구현한 모든 Bean을 찾아 리스트로 주입해줍니다.
+    /**
+     * Create an EventConsumerService by indexing provided CampaignStrategy implementations by their CampaignType.
+     *
+     * Constructs an unmodifiable map that maps each strategy's CampaignType to its CampaignStrategy instance
+     * for efficient lookup when dispatching events.
+     *
+     * @param strategyList list of CampaignStrategy implementations injected by Spring
+     */
     public EventConsumerService(List<CampaignStrategy> strategyList) {
         // 주입받은 전략 리스트를 Map 형태로 변환하여, 캠페인 타입으로 쉽게 찾을 수 있도록 합니다.
         this.strategies = strategyList.stream()
                 .collect(Collectors.toUnmodifiableMap(CampaignStrategy::getType, Function.identity()));
     }
 
+    /**
+     * Dispatches a consumed Kafka event to the matching CampaignStrategy based on its CampaignType.
+     *
+     * If a strategy for the event's campaign type exists, its {@code process} method is invoked; otherwise a warning is logged.
+     *
+     * @param event the consumed Kafka event containing the campaign type and associated payload
+     */
     @KafkaListener(topics = eventTopic, groupId = "axon-group")
     public void consume(KafkaProducerDto event) {
         log.info("Consumed message: {}", event);

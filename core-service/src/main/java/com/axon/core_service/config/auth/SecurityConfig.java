@@ -25,6 +25,18 @@ public class SecurityConfig {
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
+    /**
+     * Configures the application's HTTP security and returns the resulting security filter chain.
+     *
+     * <p>The configuration disables HTTP Basic and CSRF, enforces stateless sessions, and disables frame
+     * options. It permits access to public assets and specific endpoints (including "/test/**"), requires
+     * the `USER` role for "/api/v1/**", and requires authentication for all other requests. For routes
+     * under "/api/**" unauthenticated requests receive HTTP 401. Logout redirects to "/", OAuth2 login
+     * uses the custom user service and success handler, and a JWT authentication filter is added before
+     * the username/password authentication filter.</p>
+     *
+     * @return the configured SecurityFilterChain enforcing the described security rules
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

@@ -30,6 +30,12 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
                 });
     }
 
+    /**
+     * Persists the OAuth2AuthorizationRequest and optional post-login redirect URI into HTTP-only cookies,
+     * or deletes those cookies when the provided authorizationRequest is null.
+     *
+     * @param authorizationRequest the authorization request to store; if null the related cookies are removed
+     */
     @Override
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
         if (authorizationRequest == null) {

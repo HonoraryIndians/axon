@@ -20,6 +20,16 @@ public class EntryController {
     private final Kafka_Producer producer;
     private final String axon_topic = "event";
 
+    /**
+     * Accepts an entry request, constructs a Kafka event payload, and publishes it to the configured topic.
+     *
+     * The constructed event includes a campaign type, the request's event and product IDs, a hard-coded
+     * userId (placeholder), and the current timestamp in milliseconds. The method responds with HTTP 202
+     * Accepted and no response body after dispatching the message.
+     *
+     * @param requestDto the incoming entry request containing eventId and productId
+     * @return a ResponseEntity with HTTP 202 Accepted and no body
+     */
     @PostMapping
     public ResponseEntity<Void> createEntry(@RequestBody EntryRequestDto requestDto) {
         log.info("요청 확인 {}", requestDto);

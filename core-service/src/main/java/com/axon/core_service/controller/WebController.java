@@ -8,12 +8,22 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class WebController {
 
+    /**
+     * Serves the application's index HTML view.
+     *
+     * @return the view name "index.html" to render the index page
+     */
     @GetMapping("/index")
     public String index() {
         log.info("Serving index.html");
         return "index.html";
     }
 
+    /**
+     * Handles GET requests to the application root and resolves the "login-success.html" view.
+     *
+     * @return the view name "login-success.html"
+     */
     @GetMapping("/")
     public String loginSuccess() {
         log.info("Serving login-success.html");
@@ -22,6 +32,11 @@ public class WebController {
     }
 
 
+    /**
+     * Serves the entry page.
+     *
+     * @return the view name "entry.html"
+     */
     @GetMapping("/entry")
     public String entry() {
         log.info("Serving entry.html");

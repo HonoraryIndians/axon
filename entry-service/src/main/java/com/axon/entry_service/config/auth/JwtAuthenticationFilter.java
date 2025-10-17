@@ -21,6 +21,15 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    /**
+     * Processes an incoming servlet request by extracting a Bearer JWT from the Authorization header,
+     * validating it, and, if valid, setting the corresponding Authentication into the SecurityContext.
+     * Continues the filter chain regardless of token presence or validity.
+     *
+     * @param request  the incoming servlet request
+     * @param response the servlet response
+     * @param chain    the filter chain to continue processing the request
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -38,6 +47,12 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         chain.doFilter(request, response);
     }
 
+    /**
+     * Extracts the JWT from the request's Authorization header when it uses the Bearer scheme.
+     *
+     * @param request the HTTP request containing the Authorization header
+     * @return the token string without the "Bearer " prefix, or {@code null} if the header is missing or not Bearer-prefixed
+     */
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {

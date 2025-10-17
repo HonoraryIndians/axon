@@ -21,6 +21,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final JwtTokenProvider jwtTokenProvider;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
+    /**
+     * Handles a successful OAuth2 authentication by generating JWT access and refresh tokens, storing the access token in a cookie (30-minute max age), clearing temporary authentication attributes and cookies, and redirecting the user to /index.
+     *
+     * @throws IOException if an I/O error occurs while performing the redirect
+     * @throws ServletException if a servlet error occurs while handling the authentication success
+     */
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         log.info("--- OAuth2AuthenticationSuccessHandler.onAuthenticationSuccess() --- START");

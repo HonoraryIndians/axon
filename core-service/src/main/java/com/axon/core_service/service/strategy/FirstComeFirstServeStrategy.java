@@ -15,7 +15,16 @@ import org.springframework.stereotype.Component;
 public class FirstComeFirstServeStrategy implements CampaignStrategy {
 
     private final RedisTemplate<String, String> redisTemplate;
-    private final EventRepository eventRepository; // EventRepository 주입
+    private final EventRepository eventRepository; /**
+     * Attempts to register the user from the provided event DTO for the event's first-come-first-serve campaign.
+     *
+     * If the user is newly recorded and the total registered users is less than or equal to the event's limit, the registration is treated as successful.
+     * If the total exceeds the event's limit after registration, the registration is treated as closed.
+     * If the user was already recorded, the request is treated as a duplicate.
+     *
+     * @param eventDto contains the target event ID and the user ID to register
+     * @throws IllegalArgumentException if no event exists with the ID from {@code eventDto}
+     */
 
     @Override
     public void process(KafkaProducerDto eventDto) {
@@ -46,6 +55,11 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
         }
     }
 
+    /**
+     * Identifies the campaign strategy type implemented by this class.
+     *
+     * @return the CampaignType FIRST_COME_FIRST_SERVE
+     */
     @Override
     public CampaignType getType() {
         return CampaignType.FIRST_COME_FIRST_SERVE;
