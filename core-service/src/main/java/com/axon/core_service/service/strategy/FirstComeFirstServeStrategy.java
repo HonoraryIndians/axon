@@ -1,7 +1,7 @@
 package com.axon.core_service.service.strategy;
 
-import com.axon.core_service.domain.CampaignType;
-import com.axon.core_service.domain.dto.Kafka_ProducerDto;
+import com.axon.messaging.CampaignType;
+import com.axon.messaging.dto.KafkaProducerDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.axon.core_service.domain.Event;
@@ -18,7 +18,7 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
     private final EventRepository eventRepository; // EventRepository 주입
 
     @Override
-    public void process(Kafka_ProducerDto eventDto) {
+    public void process(KafkaProducerDto eventDto) {
         // DB에서 이벤트 정보 조회
         Event event = eventRepository.findById(eventDto.getEventId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이벤트입니다. ID: " + eventDto.getEventId()));

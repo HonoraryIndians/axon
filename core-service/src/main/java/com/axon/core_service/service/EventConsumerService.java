@@ -1,7 +1,7 @@
 package com.axon.core_service.service;
 
-import com.axon.core_service.domain.CampaignType;
-import com.axon.core_service.domain.dto.Kafka_ProducerDto;
+import com.axon.messaging.CampaignType;
+import com.axon.messaging.dto.KafkaProducerDto;
 import com.axon.core_service.service.strategy.CampaignStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -26,7 +26,7 @@ public class EventConsumerService {
     }
 
     @KafkaListener(topics = eventTopic, groupId = "axon-group")
-    public void consume(Kafka_ProducerDto event) {
+    public void consume(KafkaProducerDto event) {
         log.info("Consumed message: {}", event);
 
         CampaignType type = event.getCampaignType();
