@@ -5,11 +5,13 @@ import com.axon.entry_service.dto.EntryRequestDto;
 import com.axon.entry_service.dto.Kafka_ProducerDto;
 import com.axon.entry_service.service.Kafka_Producer;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/entries")
 @RequiredArgsConstructor
@@ -20,6 +22,7 @@ public class EntryController {
 
     @PostMapping
     public ResponseEntity<Void> createEntry(@RequestBody EntryRequestDto requestDto) {
+        log.info("요청 확인 {}", requestDto);
         // TODO: 추후 Spring Security를 통해 JWT 토큰에서 실제 userId를 추출해야 함
         int userId = 1; // 임시로 하드코딩
 

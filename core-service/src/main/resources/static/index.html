@@ -28,23 +28,16 @@
     </div>
 </main>
 
+<script src="/js/common.js"></script>
 <script>
     window.onload = function() {
         const navArea = document.getElementById('nav-area');
-        const accessToken = localStorage.getItem('accessToken');
+        const accessToken = common.getCookie('accessToken');
 
         if (accessToken) {
             // 로그인 상태
-            navArea.innerHTML = '<a href="#">마이페이지</a><a href="#" id="logout-button">로그아웃</a>';
-
-            document.getElementById('logout-button').addEventListener('click', function(e) {
-                e.preventDefault();
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                alert('로그아웃 되었습니다.');
-                window.location.reload();
-            });
-
+            navArea.innerHTML = '<a href="#">마이페이지</a><a href="/logout" id="logout-button">로그아웃</a>';
+            //To-Do: 로그아웃 이후 재로그인 화면으로 넘어가게 하기
         } else {
             // 로그아웃 상태
             navArea.innerHTML = '<a href="/oauth2/authorization/naver">네이버 로그인</a>';
@@ -58,7 +51,7 @@
                 } else {
                     const eventId = this.getAttribute('data-event-id');
                     // entry.html 페이지로 이벤트 ID와 함께 이동
-                    window.location.href = `/entry.html?eventId=${eventId}`;
+                    window.location.href = `/entry?eventId=${eventId}`;
                 }
             });
         });

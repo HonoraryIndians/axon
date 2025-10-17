@@ -16,6 +16,7 @@
 <button id="entryButton">응모하기</button>
 <div id="result"></div>
 
+<script src="/js/common.js"></script>
 <script>
     const params = new URLSearchParams(window.location.search);
     const eventId = params.get('eventId');
@@ -35,7 +36,7 @@
         const resultDiv = document.getElementById('result');
         resultDiv.innerText = '응모 요청 중...';
 
-        const accessToken = localStorage.getItem('accessToken');
+        const accessToken = common.getCookie('accessToken');
 
         if (!accessToken) {
             resultDiv.innerText = '오류: 로그인 정보가 없습니다.';
