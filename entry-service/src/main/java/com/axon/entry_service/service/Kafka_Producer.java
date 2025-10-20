@@ -7,7 +7,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class Kafka_Producer {
+public class
+Kafka_Producer {
     private final KafkaTemplate<String, Kafka_ProducerDto> kafkaTemplate;
 
     public void KafkasendMessage(String topic, Kafka_ProducerDto msg){
