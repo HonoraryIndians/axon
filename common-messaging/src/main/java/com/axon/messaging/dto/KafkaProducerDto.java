@@ -6,9 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class Kafka_ProducerDto {
+@AllArgsConstructor
+public class KafkaProducerDto {
     private CampaignType campaignType;
     private int eventId;
     private int userId;

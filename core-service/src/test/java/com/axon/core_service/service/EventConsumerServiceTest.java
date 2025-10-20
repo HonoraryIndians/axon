@@ -1,9 +1,9 @@
 package com.axon.core_service.service;
 
 import com.axon.messaging.CampaignType;
+import com.axon.messaging.dto.KafkaProducerDto;
 import com.axon.core_service.domain.Event;
 import com.axon.core_service.domain.EventRepository;
-import com.axon.messaging.dto.Kafka_ProducerDto;
 import com.axon.core_service.service.strategy.FirstComeFirstServeStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,7 +46,7 @@ class EventConsumerServiceTest {
     void consume_FirstComeFirstServe_FirstEntrySuccess() {
         int eventId = 1;
         Event event = new Event(eventId, "테스트 이벤트", 100);
-        Kafka_ProducerDto message = new Kafka_ProducerDto(
+        KafkaProducerDto message = new KafkaProducerDto(
                 CampaignType.FIRST_COME_FIRST_SERVE,
                 eventId,
                 123,
@@ -73,7 +73,7 @@ class EventConsumerServiceTest {
     void consume_FirstComeFirstServe_DuplicateEntryIgnored() {
         int eventId = 2;
         Event event = new Event(eventId, "테스트 이벤트", 50);
-        Kafka_ProducerDto message = new Kafka_ProducerDto(
+        KafkaProducerDto message = new KafkaProducerDto(
                 CampaignType.FIRST_COME_FIRST_SERVE,
                 eventId,
                 123,
