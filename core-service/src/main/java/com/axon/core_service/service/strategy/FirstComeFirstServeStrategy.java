@@ -5,7 +5,7 @@ import com.axon.messaging.dto.Kafka_ProducerDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.axon.core_service.domain.Event;
-import com.axon.core_service.domain.EventRepository;
+import com.axon.core_service.repository.EventRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +26,7 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
         // 해당 이벤트의 제한 인원을 동적으로 가져옴
         int limit = event.getLimitCount();
 
-        String eventKey = "event:" + eventDto.getEventId();
+        String eventKey = "event:" + String.valueOf(eventDto.getEventId());
         String userIdStr = String.valueOf(eventDto.getUserId());
 
         Long addResult = redisTemplate.opsForSet().add(eventKey, userIdStr);

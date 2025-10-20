@@ -23,12 +23,13 @@ public class EntryController {
     public ResponseEntity<Void> createEntry(@RequestBody EntryRequestDto requestDto) {
         // TODO: 추후 Spring Security를 통해 JWT 토큰에서 실제 userId를 추출해야 함
         int userId = 1; // 임시로 하드코딩
+        //core-service에서 controller만들어서?
 
         long timestamp = Instant.now().toEpochMilli();
 
         Kafka_ProducerDto eventDto = new Kafka_ProducerDto(
                 requestDto.getCampaignType(),
-                requestDto.getEventId(),
+                (long) requestDto.getEventId(),
                 userId,
                 requestDto.getProductId(),
                 timestamp

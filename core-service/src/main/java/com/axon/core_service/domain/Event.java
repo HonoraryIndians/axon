@@ -1,5 +1,6 @@
 package com.axon.core_service.domain;
 
+import com.axon.core_service.domain.campaign.Campaign;
 import com.axon.core_service.domain.campaign.CampaignStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -16,13 +17,15 @@ public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campaign_id", nullable = false)
+    private Campaign campaign;
 
-    private int campaignId; // 캠페인 아이디
-    private String eventName; // 이벤트 이름
+    private String name; // 이벤트 이름
 
-    private int limitCount; // 선착순 제한 인원
+    private Integer limitCount; // 선착순 제한 인원
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Kafka_ProducerDto {
     private CampaignType campaignType;
-    private int eventId;
+    private Long eventId;
     private int userId;
     private int productId;
     private Long timestamp;
