@@ -1,6 +1,6 @@
 package com.axon.core_service.service;
 
-import com.axon.messaging.CampaignType;
+import com.axon.messaging.EventType;
 import com.axon.messaging.dto.KafkaProducerDto;
 import com.axon.core_service.domain.event.Event;
 import com.axon.core_service.repository.EventRepository;
@@ -49,7 +49,7 @@ class EventConsumerServiceTest {
         Event event = Mockito.mock(Event.class);
         when(event.getLimitCount()).thenReturn(100);
         KafkaProducerDto message = new KafkaProducerDto(
-                CampaignType.FIRST_COME_FIRST_SERVE,
+                EventType.FIRST_COME_FIRST_SERVE,
                 eventId,
                 123,
                 999,
@@ -77,7 +77,7 @@ class EventConsumerServiceTest {
         Event event = Mockito.mock(Event.class);
         when(event.getLimitCount()).thenReturn(50);
         KafkaProducerDto message = new KafkaProducerDto(
-                CampaignType.FIRST_COME_FIRST_SERVE,
+                EventType.FIRST_COME_FIRST_SERVE,
                 eventId,
                 123,
                 888,

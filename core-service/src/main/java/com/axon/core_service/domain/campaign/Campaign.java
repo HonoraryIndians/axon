@@ -2,7 +2,7 @@ package com.axon.core_service.domain.campaign;
 
 import com.axon.core_service.domain.event.Event;
 import com.axon.core_service.domain.common.BaseTimeEntity;
-import com.axon.messaging.CampaignType;
+import com.axon.messaging.EventType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,7 +36,7 @@ public class Campaign extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private CampaignType type;
+    private EventType type;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
@@ -56,7 +56,7 @@ public class Campaign extends BaseTimeEntity {
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<Event> events = new ArrayList<>();
 
-    public Campaign(String name, CampaignType type) {
+    public Campaign(String name, EventType type) {
         this.name = name;
         this.type = type;
     }

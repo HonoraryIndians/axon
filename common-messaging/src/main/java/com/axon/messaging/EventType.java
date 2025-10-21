@@ -1,6 +1,6 @@
 package com.axon.messaging;
 
-public enum CampaignType {
+public enum EventType {
     FIRST_COME_FIRST_SERVE,
     COUPON,
     GIVEAWAY

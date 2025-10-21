@@ -1,6 +1,6 @@
 package com.axon.core_service.service;
 
-import com.axon.messaging.CampaignType;
+import com.axon.messaging.EventType;
 import com.axon.messaging.dto.KafkaProducerDto;
 import com.axon.core_service.service.strategy.CampaignStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 public class EventConsumerService {
 
-    private final Map<CampaignType, CampaignStrategy> strategies;
+    private final Map<EventType, CampaignStrategy> strategies;
     private final String eventTopic = "event";
     // Spring이 시작될 때, CampaignStrategy 인터페이스를 구현한 모든 Bean을 찾아 리스트로 주입해줍니다.
     public EventConsumerService(List<CampaignStrategy> strategyList) {
@@ -29,7 +29,7 @@ public class EventConsumerService {
     public void consume(KafkaProducerDto event) {
         log.info("Consumed message: {}", event);
 
-        CampaignType type = event.getCampaignType();
+        EventType type = event.getCampaignType();
         CampaignStrategy strategy = strategies.get(type);
 
         if (strategy != null) {

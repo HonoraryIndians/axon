@@ -1,7 +1,7 @@
 package com.axon.core_service.domain.dto.campaign;
 
 import com.axon.core_service.domain.campaign.CampaignStatus;
-import com.axon.messaging.CampaignType;
+import com.axon.messaging.EventType;
 import jakarta.validation.constraints.Future;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +21,7 @@ public class CampaignRequest {
     private String name;
 
     @NotNull
-    private CampaignType type;
+    private EventType type;
 
     private Long targetSegmentId;
 

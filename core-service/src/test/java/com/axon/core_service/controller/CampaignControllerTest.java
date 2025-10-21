@@ -5,7 +5,7 @@ import com.axon.core_service.domain.dto.campaign.CampaignRequest;
 
 import com.axon.core_service.domain.dto.campaign.CampaignResponse;
 import com.axon.core_service.service.CampaignService;
-import com.axon.messaging.CampaignType;
+import com.axon.messaging.EventType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -40,7 +40,7 @@ class CampaignControllerTest {
     void createCampaign_returnsCreatedCampaign() throws Exception {
         CampaignRequest request = CampaignRequest.builder()
                 .name("Black Friday")
-                .type(CampaignType.FIRST_COME_FIRST_SERVE)
+                .type(EventType.FIRST_COME_FIRST_SERVE)
                 .targetSegmentId(42L)
                 .rewardType("COUPON")
                 .rewardPayload("{\"amount\":1000}")
@@ -52,7 +52,7 @@ class CampaignControllerTest {
         CampaignResponse response = CampaignResponse.builder()
                 .id(1L)
                 .name("Black Friday")
-                .type(CampaignType.FIRST_COME_FIRST_SERVE)
+                .type(EventType.FIRST_COME_FIRST_SERVE)
                 .targetSegmentId(42L)
                 .rewardType("COUPON")
                 .rewardPayload("{\"amount\":1000}")
@@ -77,7 +77,7 @@ class CampaignControllerTest {
         CampaignResponse response = CampaignResponse.builder()
                 .id(1L)
                 .name("Black Friday")
-                .type(CampaignType.FIRST_COME_FIRST_SERVE)
+                .type(EventType.FIRST_COME_FIRST_SERVE)
                 .targetSegmentId(42L)
                 .rewardType("COUPON")
                 .rewardPayload("{\"amount\":1000}")

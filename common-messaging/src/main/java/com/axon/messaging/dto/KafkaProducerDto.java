@@ -1,6 +1,6 @@
 package com.axon.messaging.dto;
 
-import com.axon.messaging.CampaignType;
+import com.axon.messaging.EventType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KafkaProducerDto {
-    private CampaignType campaignType;
+    private EventType campaignType;
     private Long eventId;
     private Long userId;
     private Long productId;

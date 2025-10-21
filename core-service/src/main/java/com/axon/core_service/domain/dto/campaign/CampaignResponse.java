@@ -2,7 +2,7 @@ package com.axon.core_service.domain.dto.campaign;
 
 import com.axon.core_service.domain.campaign.Campaign;
 import com.axon.core_service.domain.campaign.CampaignStatus;
-import com.axon.messaging.CampaignType;
+import com.axon.messaging.EventType;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class CampaignResponse {
     private final Long id;
     private final String name;
-    private final CampaignType type;
+    private final EventType type;
     private final Long targetSegmentId;
     private final String rewardType;
     private final String rewardPayload;

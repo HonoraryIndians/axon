@@ -4,7 +4,7 @@ import com.axon.core_service.domain.event.Event;
 import com.axon.core_service.domain.evententry.EventEntryStatus;
 import com.axon.core_service.repository.EventRepository;
 import com.axon.core_service.service.EventEntryService;
-import com.axon.messaging.CampaignType;
+import com.axon.messaging.EventType;
 import com.axon.messaging.dto.KafkaProducerDto;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +55,7 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
     }
 
     @Override
-    public CampaignType getType() {
-        return CampaignType.FIRST_COME_FIRST_SERVE;
+    public EventType getType() {
+        return EventType.FIRST_COME_FIRST_SERVE;
     }
 }
