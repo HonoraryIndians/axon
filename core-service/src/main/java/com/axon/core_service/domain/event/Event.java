@@ -1,4 +1,4 @@
-package com.axon.core_service.domain;
+package com.axon.core_service.domain.event;
 
 import com.axon.core_service.domain.campaign.Campaign;
 import com.axon.core_service.domain.campaign.CampaignStatus;

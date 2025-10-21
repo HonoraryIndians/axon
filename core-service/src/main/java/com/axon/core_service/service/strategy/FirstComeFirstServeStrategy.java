@@ -4,8 +4,8 @@ import com.axon.messaging.CampaignType;
 import com.axon.messaging.dto.KafkaProducerDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.axon.core_service.domain.Event;
-import com.axon.core_service.domain.EventRepository;
+import com.axon.core_service.domain.event.Event;
+import com.axon.core_service.repository.EventRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
