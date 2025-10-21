@@ -34,6 +34,7 @@ public class EventEntryService {
                        (long) dto.getUserId(),
                        dto.getProductId(),
                        requestedAt
+
                ));
 
        entry.updateProduct(dto.getProductId());
