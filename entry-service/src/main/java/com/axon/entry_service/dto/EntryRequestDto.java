@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 public class EntryRequestDto {
     private CampaignType campaignType;
-    private int eventId;
-    private int productId;
+    private Long eventId;
+    private Long productId;
 }

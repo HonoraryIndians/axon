@@ -78,7 +78,7 @@ public class CampaignService {
     }
 
     // 이벤트의 기본 설정(이름·한도)을 갱신하고 상태 전환을 검증한다.
-    public EventResponse updateEvent(Integer eventId, EventRequest request) {
+    public EventResponse updateEvent(Long eventId, EventRequest request) {
         Event event = findEvent(eventId);
         event.updateInfo(request.getName(), request.getLimitCount());
         validateStatusTransition(event.getCampaignStatus(), request.getStatus());
@@ -87,7 +87,7 @@ public class CampaignService {
     }
 
     // 이벤트의 상태만 변경한다.
-    public EventResponse changeEventStatus(Integer eventId, CampaignStatus status) {
+    public EventResponse changeEventStatus(Long eventId, CampaignStatus status) {
         Event event = findEvent(eventId);
         validateStatusTransition(event.getCampaignStatus(), status);
         event.changeStatus(status);
@@ -102,7 +102,7 @@ public class CampaignService {
     }
 
     // 이벤트를 삭제한다.
-    public void deleteEvent(Integer eventId) {
+    public void deleteEvent(Long eventId) {
         eventRepository.deleteById(eventId);
     }
 
@@ -121,7 +121,7 @@ public class CampaignService {
     }
 
     // 이벤트 존재 여부를 확인하고 엔티티를 반환한다.
-    private Event findEvent(Integer id) {
+    private Event findEvent(Long id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("event not found: " + id));
     }

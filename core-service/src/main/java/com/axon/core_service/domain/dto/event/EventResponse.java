@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class EventResponse {
-    private final Integer id;
+    private final Long id;
     private final Long campaignId;
     private final String name;
     private final Integer limitCount;

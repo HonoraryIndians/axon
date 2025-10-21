@@ -82,7 +82,7 @@ public class CampaignController {
     // 이벤트의 기본 정보를 수정한다.
     @PutMapping("/events/{eventId}")
     public ResponseEntity<EventResponse> updateEvent(
-            @PathVariable Integer eventId,
+            @PathVariable Long eventId,
             @RequestBody @Valid EventRequest request
     ) {
         return ResponseEntity.ok(campaignService.updateEvent(eventId, request));
@@ -91,7 +91,7 @@ public class CampaignController {
     // 이벤트 상태만 변경한다.
     @PatchMapping("/events/{eventId}/status")
     public ResponseEntity<EventResponse> changeEventStatus(
-            @PathVariable Integer eventId,
+            @PathVariable Long eventId,
             @RequestParam CampaignStatus status
     ) {
         return ResponseEntity.ok(campaignService.changeEventStatus(eventId, status));
@@ -99,7 +99,7 @@ public class CampaignController {
 
     // 이벤트를 삭제한다.
     @DeleteMapping("/events/{eventId}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Integer eventId) {
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
         campaignService.deleteEvent(eventId);
         return ResponseEntity.noContent().build();
     }

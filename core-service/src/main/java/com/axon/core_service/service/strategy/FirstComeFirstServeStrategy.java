@@ -1,11 +1,14 @@
 package com.axon.core_service.service.strategy;
 
+import com.axon.core_service.domain.event.Event;
+import com.axon.core_service.domain.evententry.EventEntryStatus;
+import com.axon.core_service.repository.EventRepository;
+import com.axon.core_service.service.EventEntryService;
 import com.axon.messaging.CampaignType;
 import com.axon.messaging.dto.KafkaProducerDto;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.axon.core_service.domain.event.Event;
-import com.axon.core_service.repository.EventRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,34 +18,35 @@ import org.springframework.stereotype.Component;
 public class FirstComeFirstServeStrategy implements CampaignStrategy {
 
     private final RedisTemplate<String, String> redisTemplate;
-    private final EventRepository eventRepository; // EventRepository 주입
+    private final EventRepository eventRepository;
+    private final EventEntryService eventEntryService;
 
     @Override
     public void process(KafkaProducerDto eventDto) {
-        // DB에서 이벤트 정보 조회
         Event event = eventRepository.findById(eventDto.getEventId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이벤트입니다. ID: " + eventDto.getEventId()));
 
-        // 해당 이벤트의 제한 인원을 동적으로 가져옴
-        int limit = event.getLimitCount();
-
+        int limit = Optional.ofNullable(event.getLimitCount()).orElse(Integer.MAX_VALUE);
         String eventKey = "event:" + eventDto.getEventId();
-        String userIdStr = String.valueOf(eventDto.getUserId());
+        String userKey = String.valueOf(eventDto.getUserId());
 
-        Long addResult = redisTemplate.opsForSet().add(eventKey, userIdStr);
+        boolean firstHit = Boolean.TRUE.equals(redisTemplate.opsForSet().add(eventKey, userKey));
 
-        if (addResult != null && addResult == 1) {
-            Long currentEntries = redisTemplate.opsForSet().size(eventKey);
-
-            if (currentEntries != null && currentEntries <= limit) {
-                log.info("선착순 성공! Event: {}, User: {}, 현재 인원: {}/{}", eventDto.getEventId(), eventDto.getUserId(), currentEntries, limit);
-                // TODO: DB 재고 감소 등 실제 비즈니스 로직 처리
-            } else {
-                log.info("선착순 마감. Event: {}, User: {}", eventDto.getEventId(), eventDto.getUserId());
-                // TODO: 사용자에게 마감 알림을 보내는 로직 (선택 사항)
-            }
-        } else {
+        if (!firstHit) {
             log.info("중복 응모입니다. Event: {}, User: {}", eventDto.getEventId(), eventDto.getUserId());
+            eventEntryService.upsertEntry(event, eventDto, EventEntryStatus.DUPLICATED, true);
+            return;
+        }
+
+        Long currentEntries = redisTemplate.opsForSet().size(eventKey);
+        boolean withinLimit = currentEntries != null && currentEntries <= limit;
+
+        if (withinLimit) {
+            log.info("선착순 성공! Event: {}, User: {}, 현재 인원: {}/{}", eventDto.getEventId(), eventDto.getUserId(), currentEntries, limit);
+            eventEntryService.upsertEntry(event, eventDto, EventEntryStatus.APPROVED, true);
+        } else {
+            log.info("선착순 마감. Event: {}, User: {}", eventDto.getEventId(), eventDto.getUserId());
+            eventEntryService.upsertEntry(event, eventDto, EventEntryStatus.REJECTED, true);
         }
     }
 
