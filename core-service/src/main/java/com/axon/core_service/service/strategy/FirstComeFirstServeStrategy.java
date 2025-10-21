@@ -30,10 +30,12 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
         String eventKey = "event:" + eventDto.getEventId();
         String userKey = String.valueOf(eventDto.getUserId());
 
-        boolean firstHit = Boolean.TRUE.equals(redisTemplate.opsForSet().add(eventKey, userKey));
+        Long addResult = redisTemplate.opsForSet().add(eventKey, userKey);
+        boolean firstHit =  addResult != null && addResult == 1L;
 
         if (!firstHit) {
             log.info("중복 응모입니다. Event: {}, User: {}", eventDto.getEventId(), eventDto.getUserId());
+            log.info("DB 상태를 DUPLICATED로 변경합니다.");
             eventEntryService.upsertEntry(event, eventDto, EventEntryStatus.DUPLICATED, true);
             return;
         }
@@ -43,9 +45,11 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
 
         if (withinLimit) {
             log.info("선착순 성공! Event: {}, User: {}, 현재 인원: {}/{}", eventDto.getEventId(), eventDto.getUserId(), currentEntries, limit);
+            log.info("DB 상태를 APPROVED로 변경합니다.");
             eventEntryService.upsertEntry(event, eventDto, EventEntryStatus.APPROVED, true);
         } else {
             log.info("선착순 마감. Event: {}, User: {}", eventDto.getEventId(), eventDto.getUserId());
+            log.info("DB 상태를 REJECTED로 변경합니다.");
             eventEntryService.upsertEntry(event, eventDto, EventEntryStatus.REJECTED, true);
         }
     }
