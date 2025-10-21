@@ -16,15 +16,20 @@ public class WebController {
 
     @GetMapping("/")
     public String loginSuccess() {
-        log.info("Serving login-success.html");
-        return "login-success.html";
+        log.info("Serving welcomepage.html");
+        return "welcomepage.html";
         //TO-DO: 로그아웃 이후 임시 대피처 재정의 필요
     }
-
 
     @GetMapping("/entry")
     public String entry() {
         log.info("Serving entry.html");
         return "entry.html";
+    }
+
+    @GetMapping("/admin")
+    public String admin() {
+        log.info("Serving admin.html");
+        return "admin.html";
     }
 }
