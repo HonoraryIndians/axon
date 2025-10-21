@@ -32,7 +32,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         // 1. Access Token을 쿠키에 저장
         int cookieMaxAge = 30 * 60;
-        CookieUtils.addCookie(response, JwtAuthenticationFilter.ACCESS_TOKEN_COOKIE_NAME, accessToken, cookieMaxAge);
+        CookieUtils.addCookie(response, JwtAuthenticationFilter.ACCESS_TOKEN_COOKIE_NAME, accessToken, cookieMaxAge, false);
 
         String targetUrl = "/index";
         // TODO: Refresh Token은 Redis에 저장해야 함

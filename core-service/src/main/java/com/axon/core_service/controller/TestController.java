@@ -37,6 +37,7 @@ public class TestController {
                 Collections.singletonList(new SimpleGrantedAuthority(userRole))
         );
 
+        // 2. JwtTokenProvider를 사용하여 토큰 생성\
         String accessToken = jwtTokenProvider.generateAccessToken(authentication);
         // 3. 생성된 토큰을 응답 body에 담아 반환
         return ResponseEntity.ok(accessToken);
