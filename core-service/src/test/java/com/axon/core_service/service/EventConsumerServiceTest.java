@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
@@ -45,7 +46,8 @@ class EventConsumerServiceTest {
     @DisplayName("Kafka 메시지로 선착순 캠페인이 들어오면 최초 응모 사용자는 성공 처리된다")
     void consume_FirstComeFirstServe_FirstEntrySuccess() {
         int eventId = 1;
-        Event event = new Event(eventId, "테스트 이벤트", 100);
+        Event event = Mockito.mock(Event.class);
+        when(event.getLimitCount()).thenReturn(100);
         KafkaProducerDto message = new KafkaProducerDto(
                 CampaignType.FIRST_COME_FIRST_SERVE,
                 eventId,
@@ -72,7 +74,8 @@ class EventConsumerServiceTest {
     @DisplayName("Kafka 메시지로 선착순 캠페인이 들어오더라도 중복 응모자는 무시된다")
     void consume_FirstComeFirstServe_DuplicateEntryIgnored() {
         int eventId = 2;
-        Event event = new Event(eventId, "테스트 이벤트", 50);
+        Event event = Mockito.mock(Event.class);
+        when(event.getLimitCount()).thenReturn(50);
         KafkaProducerDto message = new KafkaProducerDto(
                 CampaignType.FIRST_COME_FIRST_SERVE,
                 eventId,

@@ -13,6 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -61,6 +62,8 @@ public class Campaign extends BaseTimeEntity {
         this.type = type;
     }
 
+
+
     public void updateSchedule(LocalDateTime startAt, LocalDateTime endAt) {
         this.startAt = startAt;
         this.endAt = endAt;
@@ -73,5 +76,10 @@ public class Campaign extends BaseTimeEntity {
     public void updateReward(String rewardType, String rewardPayload) {
         this.rewardType = rewardType;
         this.rewardPayload = rewardPayload;
+    }
+
+    public void updateBasicInfo(String name, Long targetSegmentId) {
+        this.name = name;
+        this.targetSegmentId = targetSegmentId;
     }
 }
