@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Axon 관리자 - 캠페인 관리</title>
+
+    <!-- Tailwind & Font Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/admin_board.css" />
+</head>
+<body class="bg-white text-neutral-900">
+
+<!-- Header -->
+<header class="header">
+    <div class="header-inner">
+        <div class="header-left">
+            <div class="logo">Axon</div>
+            <nav class="nav">
+                <span class="nav-item">대시보드</span>
+                <span class="nav-item active">캠페인</span>
+            </nav>
+        </div>
+
+        <div class="header-right">
+            <a href="/admin_create_event" class="btn-primary">
+                <i class="fa-solid fa-plus mr-2"></i> 새 캠페인 만들기
+            </a>
+            <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=123" alt="Profile" class="avatar">
+        </div>
+    </div>
+</header>
+
+<!-- Filter Bar -->
+<section class="filter-bar">
+    <div class="filter-inner">
+        <div class="search-box">
+            <i class="fa-solid fa-search search-icon"></i>
+            <input type="text" placeholder="캠페인 이름으로 검색" class="search-input">
+        </div>
+
+        <select class="filter-select">
+            <option>전체 상태</option>
+            <option>진행중</option>
+            <option>일시중지</option>
+            <option>종료</option>
+            <option>예약</option>
+        </select>
+
+        <select class="filter-select">
+            <option>전체 유형</option>
+            <option>선착순</option>
+            <option>조건부</option>
+            <option>응모/추첨</option>
+        </select>
+
+        <div class="date-range">
+            <input type="date" class="filter-select">
+            <span>~</span>
+            <input type="date" class="filter-select">
+        </div>
+
+        <button class="btn-primary">적용</button>
+    </div>
+</section>
+
+<!-- Main Table -->
+<main class="main">
+    <div class="table-header">
+        <span class="text-sm text-neutral-600">총 47개 캠페인</span>
+        <div class="text-sm text-neutral-600">
+            페이지당
+            <select class="page-select">
+                <option>10</option>
+                <option>30</option>
+                <option>50</option>
+            </select>
+            개씩 보기
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="campaign-table">
+            <thead>
+            <tr>
+                <th><input type="checkbox" class="check"></th>
+                <th>캠페인 이름</th>
+                <th>상태</th>
+                <th>유형</th>
+                <th>기간</th>
+                <th>진행률/성과</th>
+                <th>생성일</th>
+                <th>액션</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><input type="checkbox" class="check"></td>
+                <td><span class="link">신규 가입자 환영 이벤트</span></td>
+                <td><span class="badge"><span class="dot"></span> 진행중</span></td>
+                <td>선착순</td>
+                <td>2025-10-16 ~ 2025-11-15</td>
+                <td>
+                    <div class="progress">
+                        <div class="bar" style="width:78%"></div>
+                    </div>
+                    <span class="progress-text">78/100</span>
+                </td>
+                <td>2025-10-01</td>
+                <td><button class="action"><i class="fa-solid fa-ellipsis-vertical"></i></button></td>
+            </tr>
+
+            <tr>
+                <td><input type="checkbox" class="check"></td>
+                <td><span class="link">할로윈 특별 프로모션</span></td>
+                <td><span class="badge"><span class="dot"></span> 종료</span></td>
+                <td>조건부</td>
+                <td>2025-10-25 ~ 2025-10-31</td>
+                <td><span class="metric">전환 수: 245</span><div class="sub">전환율: 15.2%</div></td>
+                <td>2025-10-20</td>
+                <td><button class="action"><i class="fa-solid fa-ellipsis-vertical"></i></button></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+        <div>1-10 of 47 results</div>
+        <div class="pages">
+            <button disabled><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="current">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+            <button>5</button>
+            <button><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+</main>
+</body>
+</html>

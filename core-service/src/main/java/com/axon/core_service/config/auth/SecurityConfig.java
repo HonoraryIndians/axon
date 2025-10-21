@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/h2-console/**", "/favicon.ico", "/login-success", "/login-success.html", "/test/**").permitAll()
                         .requestMatchers("/api/v1/**").hasRole(Role.USER.name())
-                        .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
+                        //.requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions

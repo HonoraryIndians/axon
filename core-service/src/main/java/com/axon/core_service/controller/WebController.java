@@ -32,4 +32,16 @@ public class WebController {
         log.info("Serving admin.html");
         return "admin.html";
     }
+
+    @GetMapping("/admin_board")
+    public String admin_board() {
+        log.info("Serving admin_board.html");
+        return "admin_board.html";
+    }
+
+    @GetMapping("/admin_create_event")
+    public String admin_create_event() {
+        log.info("Serving admin_create_event.html");
+        return "admin_create_event.html";
+    }
 }
