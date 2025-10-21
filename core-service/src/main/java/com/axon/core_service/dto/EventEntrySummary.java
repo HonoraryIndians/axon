@@ -26,7 +26,7 @@ public class EventEntrySummary {
                 .status(entry.getStatus())
                 .requestedAt(entry.getRequestedAt())
                 .processedAt(entry.getProcessedAt())
-                .info(entry.getAdditionalData()) // 예시: additionalData를 info로 매핑
+                .info(entry.getInfo()) // 예시: additionalData를 info로 매핑
                 .build();
     }
 }

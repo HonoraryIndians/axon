@@ -28,14 +28,13 @@ public class EventEntryService {
                .map(Instant::ofEpochMilli)
                .orElseGet(Instant::now);
 
-       EventEntry entry = Optional.ofNullable(
-               eventEntryRepository.findByEvent_IdAndUserId(event.getId(), dto.getUserId())
-       ).orElseGet(() -> EventEntry.create(
-               event,
-               dto.getUserId(),
-               dto.getProductId(),
-               requestedAt
-       ));
+       EventEntry entry = eventEntryRepository.findByEvent_IdAndUserId(event.getId(), (long) dto.getUserId())
+               .orElseGet(() -> EventEntry.create(
+                       event,
+                       (long) dto.getUserId(),
+                       dto.getProductId(),
+                       requestedAt
+               ));
 
        entry.updateProduct(dto.getProductId());
        entry.updateStatus(nextStatus);
