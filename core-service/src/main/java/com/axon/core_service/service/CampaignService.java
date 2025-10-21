@@ -1,10 +1,10 @@
 package com.axon.core_service.service;
 
 
-import com.axon.core_service.domain.Event;
-import com.axon.core_service.domain.EventRepository;
+import com.axon.core_service.domain.event.Event;
+import com.axon.core_service.repository.EventRepository;
 import com.axon.core_service.domain.campaign.Campaign;
-import com.axon.core_service.domain.campaign.CampaignRepository;
+import com.axon.core_service.repository.CampaignRepository;
 import com.axon.core_service.domain.campaign.CampaignStatus;
 import com.axon.core_service.domain.dto.campaign.CampaignRequest;
 import com.axon.core_service.domain.dto.campaign.CampaignResponse;

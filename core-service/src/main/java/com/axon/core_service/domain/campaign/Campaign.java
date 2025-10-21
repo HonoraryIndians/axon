@@ -1,6 +1,6 @@
 package com.axon.core_service.domain.campaign;
 
-import com.axon.core_service.domain.Event;
+import com.axon.core_service.domain.event.Event;
 import com.axon.core_service.domain.common.BaseTimeEntity;
 import com.axon.messaging.CampaignType;
 import jakarta.persistence.CascadeType;
@@ -13,7 +13,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

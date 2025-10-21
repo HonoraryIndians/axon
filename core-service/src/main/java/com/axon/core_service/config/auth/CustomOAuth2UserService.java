@@ -2,7 +2,7 @@ package com.axon.core_service.config.auth;
 
 import com.axon.core_service.config.auth.dto.OAuthAttributes;
 import com.axon.core_service.domain.user.User;
-import com.axon.core_service.domain.user.UserRepository;
+import com.axon.core_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

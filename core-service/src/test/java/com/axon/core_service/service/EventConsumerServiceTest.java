@@ -2,8 +2,8 @@ package com.axon.core_service.service;
 
 import com.axon.messaging.CampaignType;
 import com.axon.messaging.dto.KafkaProducerDto;
-import com.axon.core_service.domain.Event;
-import com.axon.core_service.domain.EventRepository;
+import com.axon.core_service.domain.event.Event;
+import com.axon.core_service.repository.EventRepository;
 import com.axon.core_service.service.strategy.FirstComeFirstServeStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
