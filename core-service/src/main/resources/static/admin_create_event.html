@@ -50,7 +50,7 @@
                 <div class="space-y-6">
                     <div>
                         <label class="form-label">이벤트 이름 *</label>
-                        <label for="eventName"></label><input id="eventName" type="text" class="form-input" placeholder="캠페인명을 입력하세요">
+                        <label for="eventName"></label><input id="eventName" type="text" class="form-input" placeholder="이벤트명을 입력하세요">
                     </div>
                     <div>
                         <label class="form-label">이벤트 설명</label>
@@ -58,39 +58,24 @@
                             <textarea class="form-textarea" placeholder="캠페인 목적 및 요약을 입력하세요"></textarea>
                         </label>
                     </div>
-                    <div>
-                        <label class="form-label">캠페인 유형 *</label>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div class="campaign-type">
-                                <i class="fa-solid fa-clock type-icon"></i>
-                                <div>선착순</div>
-                                <div class="type-desc">먼저 참여한 순서대로</div>
-                            </div>
-                            <div class="campaign-type">
-                                <i class="fa-solid fa-check-circle type-icon"></i>
-                                <div>조건부</div>
-                                <div class="type-desc">특정 조건 달성 시</div>
-                            </div>
-                            <div class="campaign-type">
-                                <i class="fa-solid fa-gift type-icon"></i>
-                                <div>응모/추첨</div>
-                                <div class="type-desc">추첨을 통한 당첨</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="form-label">대표 이미지</label>
-                        <div class="upload-box">
-                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-neutral-400 mb-2"></i>
-                            <div class="text-neutral-600">이미지를 드래그하거나 클릭하여 업로드</div>
-                            <div class="text-sm text-neutral-500 mt-1">JPG, PNG 파일만 지원</div>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="form-label">태그</label>
-                        <label>
-                            <input type="text" class="form-input" placeholder="#이벤트 #할인 형태로 입력">
-                        </label>
+
+                    <input type="hidden" id="campaignTypeInput" name="campaignType" />
+                    <div id="campaignTypeGroup" class="grid grid-cols-3 gap-4">
+                        <button type="button" class="campaign-type selectable" data-type=1>
+                            <i class="fa-solid fa-clock type-icon"></i>
+                            <div>선착순</div>
+                            <div class="type-desc">먼저 참여한 순서대로</div>
+                        </button>
+                        <button type="button" class="campaign-type selectable" data-type=2>
+                            <i class="fa-solid fa-check-circle type-icon"></i>
+                            <div>조건부</div>
+                            <div class="type-desc">특정 조건 달성 시</div>
+                        </button>
+                        <button type="button" class="campaign-type selectable" data-type=3>
+                            <i class="fa-solid fa-gift type-icon"></i>
+                            <div>응모/추첨</div>
+                            <div class="type-desc">추첨을 통한 당첨</div>
+                        </button>
                     </div>
                 </div>
             </section>
@@ -213,6 +198,7 @@
             </section>
         </div>
     </div>
+<script src="/js/common.js"></script>
 <script src="/js/admin_create_event.js"></script>
 </main>
 </body>
