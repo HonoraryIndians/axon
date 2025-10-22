@@ -1,6 +1,6 @@
 package com.axon.core_service.config.auth;
 
-import com.axon.core_service.util.CookieUtils;
+import com.axon.util.CookieUtils;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

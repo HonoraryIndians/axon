@@ -7,6 +7,8 @@ import com.axon.messaging.dto.KafkaProducerDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -21,10 +23,11 @@ public class EntryController {
     private final String axon_topic = "event";
 
     @PostMapping
-    public ResponseEntity<Void> createEntry(@RequestBody EntryRequestDto requestDto) {
+    public ResponseEntity<Void> createEntry(@RequestBody EntryRequestDto requestDto,
+                                            @AuthenticationPrincipal UserDetails userDetails) {
         log.info("요청 확인 {}", requestDto);
         // TODO: 추후 Spring Security를 통해 JWT 토큰에서 실제 userId를 추출해야 함
-        Long userId = Long.valueOf(1); // 임시로 하드코딩
+        long userId = Long.parseLong(userDetails.getUsername());
 
         long timestamp = Instant.now().toEpochMilli();
 

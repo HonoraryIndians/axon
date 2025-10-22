@@ -1,7 +1,8 @@
 package com.axon.core_service.config.auth;
 
-import com.axon.core_service.util.CookieUtils;
+import com.axon.util.CookieUtils;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.Optional;
+
+import com.axon.core_service.domain.user.CustomOAuth2User;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
+// ... (imports)
 
 @Slf4j
 @Component
@@ -23,25 +30,44 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        log.info("--- OAuth2AuthenticationSuccessHandler.onAuthenticationSuccess() --- START");
-        String accessToken = jwtTokenProvider.generateAccessToken(authentication);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
+        String targetUrl = determineTargetUrl(request, response, authentication);
 
-        log.info("Generated Access Token (first 15 chars): {}...", accessToken.substring(0, 15));
-        log.info("Generated Refresh Token (first 15 chars): {}...", refreshToken.substring(0, 15));
+        if (response.isCommitted()) {
+            logger.debug("Response has already been committed. Unable to redirect to " + targetUrl);
+            return;
+        }
 
-        // 1. Access Token을 쿠키에 저장
-        int cookieMaxAge = 30 * 60;
-        CookieUtils.addCookie(response, JwtAuthenticationFilter.ACCESS_TOKEN_COOKIE_NAME, accessToken, cookieMaxAge, false);
-
-        String targetUrl = "/index";
-        // TODO: Refresh Token은 Redis에 저장해야 함
         clearAuthenticationAttributes(request, response);
-
-        log.info("Redirecting to target URL: {}", targetUrl);
-        log.info("--- OAuth2AuthenticationSuccessHandler.onAuthenticationSuccess() --- END");
-
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
+    }
+
+    protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+        Optional<String> redirectUri = CookieUtils.getCookie(request, HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME)
+                .map(Cookie::getValue);
+
+        String targetUrl = redirectUri.orElse(getDefaultTargetUrl());
+
+        // 내부 DB의 userId를 사용하도록 수정
+        CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
+        Long userId = oauthUser.getUserId();
+
+        // 새로운 Authentication 객체 생성
+        Authentication newAuth = new UsernamePasswordAuthenticationToken(String.valueOf(userId), null, oauthUser.getAuthorities());
+
+        String accessToken = jwtTokenProvider.generateAccessToken(newAuth);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(newAuth);
+        int accessTokenMaxAge = 30 * 60;     // 30분
+        int refreshTokenMaxAge = 7 * 24 * 60 * 60; // 7일
+
+        CookieUtils.addCookie(response, "accessToken", accessToken, accessTokenMaxAge, false);
+        //CookieUtils.addCookie(response, "refreshToken", refreshToken, refreshTokenMaxAge, true);
+        log.info("Generated Access Token (first 15 chars): {}", accessToken.substring(0, 15));
+        log.info("Generated Refresh Token (first 15 chars): {}", refreshToken.substring(0, 15));
+
+        return UriComponentsBuilder.fromUriString(targetUrl)
+                .queryParam("accessToken", accessToken)
+                .queryParam("refreshToken", refreshToken)
+                .build().toUriString();
     }
 
     protected void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {
