@@ -1,4 +1,4 @@
-package com.axon.core_service.dto;
+package com.axon.core_service.domain.dto.evententry;
 
 import com.axon.core_service.domain.evententry.EventEntry;
 import com.axon.core_service.domain.evententry.EventEntryStatus;
