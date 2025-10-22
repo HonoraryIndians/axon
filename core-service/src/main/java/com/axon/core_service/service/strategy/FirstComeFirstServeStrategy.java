@@ -30,7 +30,7 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
         String eventKey = "event:" + eventDto.getEventId();
         String userKey = String.valueOf(eventDto.getUserId());
 
-        Long addResult = redisTemplate.opsForSet().add(eventKey, userKey);
+        Long addResult = redisTemplate.opsForSet().add(eventKey, userKey); //중복이면 0, 신규면 1
         boolean firstHit =  addResult != null && addResult == 1L;
 
         if (!firstHit) {
