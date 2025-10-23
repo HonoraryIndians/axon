@@ -1,7 +1,9 @@
 package com.axon.core_service.domain.event;
 
 import com.axon.core_service.domain.campaign.Campaign;
-import com.axon.core_service.domain.campaign.CampaignStatus;
+import com.axon.core_service.domain.dto.event.EventStatus;
+import com.axon.core_service.domain.common.BaseTimeEntity;
+import com.axon.messaging.EventType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,13 +17,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "events")
-public class Event {
-
+public class Event extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,14 +41,27 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
-    private CampaignStatus campaignStatus;
+    private EventStatus eventStatus;
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date", nullable = false)
+    private LocalDateTime endDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name= "eventType", nullable = false)
+    private EventType eventType;
 
     @Builder
-    public Event(Campaign campaign, String eventName, Integer limitCount, CampaignStatus campaignStatus) {
+    public Event(Campaign campaign, String eventName, Integer limitCount, EventStatus eventStatus, LocalDateTime startDate, LocalDateTime endDate, EventType eventType) {
         this.campaign = campaign;
         this.eventName = eventName;
         this.limitCount = limitCount;
-        this.campaignStatus = campaignStatus;
+        this.eventStatus = eventStatus;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.eventType = eventType;
     }
 
     public Long getCampaignId() {
@@ -57,8 +73,8 @@ public class Event {
         this.limitCount = limitCount;
     }
 
-    public void changeStatus(CampaignStatus status) {
-        this.campaignStatus = status;
+    public void changeStatus(EventStatus status) {
+        this.eventStatus = status;
     }
 
     void assignCampaign(Campaign campaign) {

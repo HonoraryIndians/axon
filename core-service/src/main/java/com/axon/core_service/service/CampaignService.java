@@ -5,7 +5,7 @@ import com.axon.core_service.domain.event.Event;
 import com.axon.core_service.repository.EventRepository;
 import com.axon.core_service.domain.campaign.Campaign;
 import com.axon.core_service.repository.CampaignRepository;
-import com.axon.core_service.domain.campaign.CampaignStatus;
+import com.axon.core_service.domain.dto.event.EventStatus;
 import com.axon.core_service.domain.dto.campaign.CampaignRequest;
 import com.axon.core_service.domain.dto.campaign.CampaignResponse;
 import com.axon.core_service.domain.dto.event.EventRequest;
@@ -25,7 +25,7 @@ public class CampaignService {
 
     // 새 캠페인을 생성하면서 한도·일정·보상 정책을 함께 세팅한다.
     public CampaignResponse createCampaign(CampaignRequest request) {
-        Campaign campaign = new Campaign(request.getName(), request.getType());
+        Campaign campaign = new Campaign(request.getName());
         applyCampaignPolicies(campaign, request);
         return CampaignResponse.from(campaignRepository.save(campaign));
     }
@@ -34,18 +34,9 @@ public class CampaignService {
     public CampaignResponse updateCampaign(Long id, CampaignRequest request) {
         Campaign campaign = findCampaign(id);
         applyCampaignPolicies(campaign, request);
-        validateStatusTransition(campaign.getStatus(), request.getStatus());
-        campaign.changeStatus(request.getStatus());
         return CampaignResponse.from(campaign);
     }
 
-    // 상태 변경만 필요한 경우 호출해 유효한 전환인지 확인한다.
-    public CampaignResponse changeStatus(Long id, CampaignStatus status) {
-        Campaign campaign = findCampaign(id);
-        validateStatusTransition(campaign.getStatus(), status);
-        campaign.changeStatus(status);
-        return CampaignResponse.from(campaign);
-    }
 
     // 모든 캠페인을 한 번에 조회한다.
     public List<CampaignResponse> getCampaigns() {
@@ -71,7 +62,10 @@ public class CampaignService {
                 .campaign(campaign)
                 .eventName(request.getName())
                 .limitCount(request.getLimitCount())
-                .campaignStatus(request.getStatus())
+                .eventStatus(request.getStatus())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .eventType(request.getEventType())
                 .build();
         Event saved = eventRepository.save(event);
         return EventResponse.from(saved);
@@ -81,15 +75,15 @@ public class CampaignService {
     public EventResponse updateEvent(Long eventId, EventRequest request) {
         Event event = findEvent(eventId);
         event.updateInfo(request.getName(), request.getLimitCount());
-        validateStatusTransition(event.getCampaignStatus(), request.getStatus());
+        validateStatusTransition(event.getEventStatus(), request.getStatus());
         event.changeStatus(request.getStatus());
         return EventResponse.from(event);
     }
 
     // 이벤트의 상태만 변경한다.
-    public EventResponse changeEventStatus(Long eventId, CampaignStatus status) {
+    public EventResponse changeEventStatus(Long eventId, EventStatus status) {
         Event event = findEvent(eventId);
-        validateStatusTransition(event.getCampaignStatus(), status);
+        validateStatusTransition(event.getEventStatus(), status);
         event.changeStatus(status);
         return EventResponse.from(event);
     }
@@ -106,12 +100,23 @@ public class CampaignService {
         eventRepository.deleteById(eventId);
     }
 
+    // 모든 이벤트를 한 번에 조회한다.
+    public List<EventResponse> getAllEvents() {
+        return eventRepository.findAll().stream()
+                .map(EventResponse::from)
+                .toList();
+    }
+
+    // 전체 이벤트의 개수를 조회한다.
+    public long getTotalEventCount() {
+        return eventRepository.count();
+    }
+
     // 캠페인의 핵심 정책(기본 정보·일정·보상)을 일괄 적용한다.
     private void applyCampaignPolicies(Campaign campaign, CampaignRequest request) {
         campaign.updateBasicInfo(request.getName(), request.getTargetSegmentId());
         campaign.updateSchedule(request.getStartAt(), request.getEndAt());
         campaign.updateReward(request.getRewardType(), request.getRewardPayload());
-        campaign.changeStatus(request.getStatus());
     }
 
     // 존재하는 캠페인인지 확인하고 엔티티를 반환한다.
@@ -127,11 +132,11 @@ public class CampaignService {
     }
 
     // 허용된 상태 전환 흐름(DRAFT→ACTIVE→PAUSED/ENDED 등)인지 검증한다.
-    private void validateStatusTransition(CampaignStatus current, CampaignStatus next) {
+    private void validateStatusTransition(EventStatus current, EventStatus next) {
         if(current == next) return;
-        if (current == CampaignStatus.DRAFT && next == CampaignStatus.ACTIVE) return;
-        if (current == CampaignStatus.ACTIVE && (next == CampaignStatus.PAUSED || next == CampaignStatus.ENDED)) return;
-        if (current == CampaignStatus.PAUSED && next == CampaignStatus.ACTIVE) return;
+        if (current == EventStatus.DRAFT && next == EventStatus.ACTIVE) return;
+        if (current == EventStatus.ACTIVE && (next == EventStatus.PAUSED || next == EventStatus.ENDED)) return;
+        if (current == EventStatus.PAUSED && next == EventStatus.ACTIVE) return;
         throw new IllegalStateException("invalid status transition: " + current + " -> " + next);
     }
 }

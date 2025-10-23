@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>새 캠페인 만들기</title>
+    <title>새 이벤트 만들기</title>
 
     <!-- Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,14 +22,11 @@
             <a href="/admin_board"
                     class="flex items-center space-x-2 text-neutral-600 hover:text-neutral-800">
                 <i class="fa-solid fa-arrow-left"></i>
-                <span>캠페인 목록</span>
+                <span>이벤트 목록</span>
             </a>
         </div>
-        <h1 class="text-xl text-neutral-900">새 캠페인 만들기</h1>
+        <h1 class="text-xl text-neutral-900">새 이벤트 만들기</h1>
         <div class="flex items-center space-x-3">
-            <button class="px-4 py-2 border border-neutral-300 rounded-lg text-neutral-700 hover:bg-neutral-50">
-                임시 저장
-            </button>
             <button id="submit" class="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800">
                 등록 완료
             </button>
@@ -46,7 +43,7 @@
 
             <!-- 기본 정보 -->
             <section class="section-card">
-                <h2 class="section-title">캠페인 기본 정보</h2>
+                <h2 class="section-title">이벤트 기본 정보</h2>
                 <div class="space-y-6">
                     <div>
                         <label class="form-label">이벤트 이름 *</label>
@@ -55,23 +52,31 @@
                     <div>
                         <label class="form-label">이벤트 설명</label>
                         <label>
-                            <textarea class="form-textarea" placeholder="캠페인 목적 및 요약을 입력하세요"></textarea>
+                            <textarea class="form-textarea" placeholder="이벤트 목적 및 요약을 입력하세요"></textarea>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="form-label">캠페인 유형 *</label>
+                        <label>
+                            <select id="campaignId" class="form-input">
+                                <option id="cam_default" value="">캠페인을 선택하세요</option>
+                            </select>
                         </label>
                     </div>
 
-                    <input type="hidden" id="campaignTypeInput" name="campaignType" />
+                    <input type="hidden" id="eventTypeInput" name="campaignType" />
                     <div id="campaignTypeGroup" class="grid grid-cols-3 gap-4">
-                        <button type="button" class="campaign-type selectable" data-type=1>
+                        <button type="button" class="campaign-type selectable" data-type=FIRST_COME_FIRST_SERVE>
                             <i class="fa-solid fa-clock type-icon"></i>
                             <div>선착순</div>
                             <div class="type-desc">먼저 참여한 순서대로</div>
                         </button>
-                        <button type="button" class="campaign-type selectable" data-type=2>
+                        <button type="button" class="campaign-type selectable" data-type=COUPON>
                             <i class="fa-solid fa-check-circle type-icon"></i>
                             <div>조건부</div>
                             <div class="type-desc">특정 조건 달성 시</div>
                         </button>
-                        <button type="button" class="campaign-type selectable" data-type=3>
+                        <button type="button" class="campaign-type selectable" data-type=GIVEAWAY>
                             <i class="fa-solid fa-gift type-icon"></i>
                             <div>응모/추첨</div>
                             <div class="type-desc">추첨을 통한 당첨</div>
@@ -82,7 +87,7 @@
 
             <!-- 조건 -->
             <section class="section-card">
-                <h2 class="section-title">캠페인 조건 설정</h2>
+                <h2 class="section-title">이벤트 조건 설정</h2>
                 <div class="space-y-6">
                     <div>
                         <label class="form-label">참여 인원 수</label>
@@ -91,17 +96,16 @@
                     <div>
                         <label class="form-label">참여 제한 옵션</label>
                         <div class="space-y-3">
-                            <label class="flex items-center"><input type="checkbox" class="form-checkbox"><span class="ml-2">1인 1회 참여 제한</span></label>
-                            <label class="flex items-center"><input type="checkbox" class="form-checkbox"><span class="ml-2">회원만 참여 가능</span></label>
-                            <label class="flex items-center"><input type="checkbox" class="form-checkbox"><span class="ml-2">비로그인 참여 허용</span></label>
+                            <label class="flex items-center"><input type="checkbox" class="form-checkbox"><span class="ml-2">미구현 섹터</span></label>
                         </div>
                     </div>
                 </div>
             </section>
 
             <!-- 보상 -->
+            <!--
             <section class="section-card">
-                <h2 class="section-title">보상 설정</h2>
+                <h2 class="section-title">보상 설정 (구현예정)</h2>
                 <div class="space-y-6">
                     <div>
                         <label class="form-label">보상 유형 *</label>
@@ -146,6 +150,7 @@
                     </div>
                 </div>
             </section>
+            -->
 
             <!-- 일정 -->
             <section class="section-card">
@@ -155,13 +160,13 @@
                         <div>
                             <label class="form-label">시작일 *</label>
                             <label>
-                                <input type="datetime-local" class="form-input">
+                                <input type="datetime-local" id="startDate" class="form-input">
                             </label>
                         </div>
                         <div>
                             <label class="form-label">종료일 *</label>
                             <label>
-                                <input type="datetime-local" class="form-input">
+                                <input type="datetime-local" id="endDate" class="form-input">
                             </label>
                         </div>
                     </div>

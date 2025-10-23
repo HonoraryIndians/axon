@@ -1,7 +1,6 @@
 package com.axon.core_service.domain.dto.campaign;
 
-import com.axon.core_service.domain.campaign.CampaignStatus;
-import com.axon.messaging.EventType;
+import com.axon.core_service.domain.dto.event.EventStatus;
 import jakarta.validation.constraints.Future;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,9 +19,6 @@ public class CampaignRequest {
     @NotBlank
     private String name;
 
-    @NotNull
-    private EventType type;
-
     private Long targetSegmentId;
 
     private String rewardType;
@@ -36,5 +32,5 @@ public class CampaignRequest {
     private LocalDateTime endAt;
 
     @NotNull
-    private CampaignStatus status;
+    private EventStatus status;
 }
