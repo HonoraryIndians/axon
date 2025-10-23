@@ -1,6 +1,6 @@
 package com.axon.core_service.controller;
 
-import com.axon.core_service.domain.campaign.CampaignStatus;
+import com.axon.core_service.domain.dto.event.EventStatus;
 import com.axon.core_service.domain.dto.campaign.CampaignRequest;
 import com.axon.core_service.domain.dto.campaign.CampaignResponse;
 import com.axon.core_service.domain.dto.event.EventRequest;
@@ -48,15 +48,6 @@ public class CampaignController {
         return ResponseEntity.ok(campaignService.updateCampaign(id, request));
     }
 
-    // 캠페인 상태만 별도로 전환한다.
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<CampaignResponse> changeCampaignStatus(
-            @PathVariable Long id,
-            @RequestParam CampaignStatus status
-    ) {
-        return ResponseEntity.ok(campaignService.changeStatus(id, status));
-    }
-
     // 캠페인을 삭제한다.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCampaign(@PathVariable Long id) {
@@ -72,6 +63,7 @@ public class CampaignController {
     ) {
         return ResponseEntity.ok(campaignService.createEvent(campaignId, request));
     }
+
 
     // 특정 캠페인에 속한 이벤트 목록을 조회한다.
     @GetMapping("/{campaignId}/events")
@@ -92,7 +84,7 @@ public class CampaignController {
     @PatchMapping("/events/{eventId}/status")
     public ResponseEntity<EventResponse> changeEventStatus(
             @PathVariable Long eventId,
-            @RequestParam CampaignStatus status
+            @RequestParam EventStatus status
     ) {
         return ResponseEntity.ok(campaignService.changeEventStatus(eventId, status));
     }
@@ -102,5 +94,17 @@ public class CampaignController {
     public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
         campaignService.deleteEvent(eventId);
         return ResponseEntity.noContent().build();
+    }
+
+    // 전체 이벤트를 조회한다.
+    @GetMapping("/events")
+    public ResponseEntity<List<EventResponse>> getEvents() {
+        return ResponseEntity.ok(campaignService.getAllEvents());
+    }
+
+    // 전체 이벤트의 개수를 조회한다.
+    @GetMapping("/events/count")
+    public ResponseEntity<Long> getTotalEventCount() {
+        return ResponseEntity.ok(campaignService.getTotalEventCount());
     }
 }

@@ -1,13 +1,11 @@
 package com.axon.core_service.domain.campaign;
 
+import com.axon.core_service.domain.dto.event.EventStatus;
 import com.axon.core_service.domain.event.Event;
 import com.axon.core_service.domain.common.BaseTimeEntity;
-import com.axon.messaging.EventType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,14 +32,6 @@ public class Campaign extends BaseTimeEntity {
     @Column(nullable = false)
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private EventType type;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private CampaignStatus status = CampaignStatus.DRAFT;
-
     private LocalDateTime startAt;
 
     private LocalDateTime endAt;
@@ -56,20 +46,13 @@ public class Campaign extends BaseTimeEntity {
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<Event> events = new ArrayList<>();
 
-    public Campaign(String name, EventType type) {
+    public Campaign(String name) {
         this.name = name;
-        this.type = type;
     }
-
-
 
     public void updateSchedule(LocalDateTime startAt, LocalDateTime endAt) {
         this.startAt = startAt;
         this.endAt = endAt;
-    }
-
-    public void changeStatus(CampaignStatus status) {
-        this.status = status;
     }
 
     public void updateReward(String rewardType, String rewardPayload) {
