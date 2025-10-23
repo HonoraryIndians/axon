@@ -1,6 +1,6 @@
 package com.axon.core_service.controller;
 
-import com.axon.core_service.domain.campaign.CampaignStatus;
+import com.axon.core_service.domain.dto.event.EventStatus;
 import com.axon.core_service.domain.dto.campaign.CampaignRequest;
 
 import com.axon.core_service.domain.dto.campaign.CampaignResponse;
@@ -46,7 +46,7 @@ class CampaignControllerTest {
                 .rewardPayload("{\"amount\":1000}")
                 .startAt(LocalDateTime.now().plusDays(1))
                 .endAt(LocalDateTime.now().plusDays(7))
-                .status(CampaignStatus.DRAFT)
+                .status(EventStatus.DRAFT)
                 .build();
 
         CampaignResponse response = CampaignResponse.builder()
@@ -58,7 +58,7 @@ class CampaignControllerTest {
                 .rewardPayload("{\"amount\":1000}")
                 .startAt(request.getStartAt())
                 .endAt(request.getEndAt())
-                .status(CampaignStatus.DRAFT)
+                .status(EventStatus.DRAFT)
                 .build();
 
         Mockito.when(campaignService.createCampaign(any()))
@@ -81,7 +81,7 @@ class CampaignControllerTest {
                 .targetSegmentId(42L)
                 .rewardType("COUPON")
                 .rewardPayload("{\"amount\":1000}")
-                .status(CampaignStatus.DRAFT)
+                .status(EventStatus.DRAFT)
                 .build();
 
         Mockito.when(campaignService.getCampaigns())

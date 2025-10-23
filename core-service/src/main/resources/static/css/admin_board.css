@@ -133,6 +133,7 @@ body {
 .campaign-table td {
     padding: 12px 16px;
     text-align: left;
+    position: relative; /* Added for dropdown positioning */
 }
 .campaign-table tr:hover {
     background: #f9fafb;
@@ -183,12 +184,51 @@ body {
     text-decoration: underline;
 }
 
-/* Action */
-.action {
-    color: #9ca3af;
+/* Action Menu */
+.action-menu-container {
+    position: relative;
+    display: inline-block;
 }
-.action:hover {
+
+.action-menu-trigger {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+}
+
+.action-menu-trigger:hover {
     color: #4b5563;
+}
+
+.action-menu-dropdown {
+    position: absolute;
+    right: 0;
+    background-color: #fff;
+    min-width: 120px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 10; /* Increased z-index */
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 8px; /* Space between trigger and dropdown */
+}
+
+.action-menu-dropdown.hidden {
+    display: none;
+}
+
+.action-menu-item {
+    color: #111827;
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 14px;
+}
+
+.action-menu-item:hover {
+    background-color: #f3f4f6;
 }
 
 /* Pagination */

@@ -9,33 +9,58 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "/";
         return;
     }
+    const campaignSelect = document.getElementById('campaignId');
+    function loadCampaign() {
+        fetch("/api/v1/campaign")
+            .then(res => res.json())
+            .then(campaigns => {
+                campaigns.forEach(campaign => {
+                    const opt = document.createElement('option');
+                    opt.value=campaign.id;
+                    opt.textContent = campaign.name;
+                    campaignSelect.appendChild(opt);
+                });
+            })
+            .catch(error => {
+                const def = document.getElementById("cam_default");
+                def.textContent = "캠페인을 선택하지 못합니다.";
+                console.log(error);
+            })
+    }
+    loadCampaign();
 
     const selectableTypes = document.querySelectorAll(".campaign-type.selectable");
-    const campaignTypeInput = document.getElementById("campaignTypeInput");
+    const eventTypeInput = document.getElementById("eventTypeInput");
 
     selectableTypes.forEach((btn) => {
         btn.addEventListener("click", () => {
             selectableTypes.forEach((b) => b.classList.remove("selected"));
             btn.classList.add("selected");
-            campaignTypeInput.value = btn.dataset.type;
+            eventTypeInput.value = btn.dataset.type;
         });
     });
 
     submit.addEventListener("click", async () => {
-        const campaignId = campaignTypeInput.value;
+        const campaignId = document.getElementById("campaignId").value;
+        const eventType = eventTypeInput.value;
         const eventName = document.getElementById("eventName").value.trim();
         const limitCount = document.getElementById("limitCountInput").value;
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
         const status = "DRAFT"
 
-        if (!campaignId || !eventName || !status) {
-            alert("캠페인 ID, 이벤트 이름, 상태는 필수입니다.");
+        if (!campaignId || !eventName || !status || !startDate || !endDate || !eventType) {
+            alert("필수 항목을 반드시 선택하세요");
             return;
         }
 
         const payload = {
             name: eventName,
             limitCount: limitCount ? Number(limitCount) : 0,
-            status
+            status,
+            startDate,
+            endDate,
+            eventType
         };
 
         try {
