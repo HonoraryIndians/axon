@@ -77,6 +77,11 @@ public class Event extends BaseTimeEntity {
         this.eventStatus = status;
     }
 
+    public void changeDates(LocalDateTime startDate, LocalDateTime endDate) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
     void assignCampaign(Campaign campaign) {
         this.campaign = campaign;
     }

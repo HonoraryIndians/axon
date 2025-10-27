@@ -2,6 +2,7 @@ package com.axon.core_service.service;
 
 
 import com.axon.core_service.domain.event.Event;
+import com.axon.core_service.repository.EventEntryRepository;
 import com.axon.core_service.repository.EventRepository;
 import com.axon.core_service.domain.campaign.Campaign;
 import com.axon.core_service.repository.CampaignRepository;
@@ -22,6 +23,7 @@ import java.util.List;
 public class CampaignService {
     private final CampaignRepository campaignRepository;
     private final EventRepository eventRepository;
+    private final EventEntryRepository eventEntryRepository;
 
     // 새 캠페인을 생성하면서 한도·일정·보상 정책을 함께 세팅한다.
     public CampaignResponse createCampaign(CampaignRequest request) {
@@ -77,6 +79,7 @@ public class CampaignService {
         event.updateInfo(request.getName(), request.getLimitCount());
         validateStatusTransition(event.getEventStatus(), request.getStatus());
         event.changeStatus(request.getStatus());
+        event.changeDates(request.getStartDate(), request.getEndDate());
         return EventResponse.from(event);
     }
 
@@ -103,7 +106,21 @@ public class CampaignService {
     // 모든 이벤트를 한 번에 조회한다.
     public List<EventResponse> getAllEvents() {
         return eventRepository.findAll().stream()
-                .map(EventResponse::from)
+                .map(event -> {
+                    long participantCount = eventEntryRepository.countByEvent_Id(event.getId());
+                    return EventResponse.builder()
+                            .id(event.getId())
+                            .campaignId(event.getCampaignId())
+                            .name(event.getEventName())
+                            .limitCount(event.getLimitCount())
+                            .status(event.getEventStatus())
+                            .start_date(event.getStartDate())
+                            .end_date(event.getEndDate())
+                            .eventType(event.getEventType())
+                            .created_at(event.getCreatedAt())
+                            .participantCount(participantCount)
+                            .build();
+                })
                 .toList();
     }
 
@@ -112,7 +129,30 @@ public class CampaignService {
         return eventRepository.count();
     }
 
-    // 캠페인의 핵심 정책(기본 정보·일정·보상)을 일괄 적용한다.
+    // 단일 이벤트를 조회한다.
+    public EventResponse getEvent(Long eventId) {
+        Event event = findEvent(eventId);
+        long participantCount = eventEntryRepository.countByEvent_Id(eventId);
+        return EventResponse.builder()
+                .id(event.getId())
+                .campaignId(event.getCampaignId())
+                .name(event.getEventName())
+                .limitCount(event.getLimitCount())
+                .status(event.getEventStatus())
+                .start_date(event.getStartDate())
+                .end_date(event.getEndDate())
+                .eventType(event.getEventType())
+                .created_at(event.getCreatedAt())
+                .participantCount(participantCount)
+                .build();
+    }
+
+    // 캠페인 이름이 이미 사용 중인지 확인한다.
+    public boolean isCampaignNameTaken(String name) {
+        return campaignRepository.findByName(name).isPresent();
+    }
+
+    // 캠페인의 핵심 정책(기본 정보·일정·보상)을 일괄 적용한다。
     private void applyCampaignPolicies(Campaign campaign, CampaignRequest request) {
         campaign.updateBasicInfo(request.getName(), request.getTargetSegmentId());
         campaign.updateSchedule(request.getStartAt(), request.getEndAt());

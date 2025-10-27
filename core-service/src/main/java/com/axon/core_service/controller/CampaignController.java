@@ -107,4 +107,16 @@ public class CampaignController {
     public ResponseEntity<Long> getTotalEventCount() {
         return ResponseEntity.ok(campaignService.getTotalEventCount());
     }
+
+    // 단일 이벤트의 상세 정보를 조회한다.
+    @GetMapping("/events/{eventId}")
+    public ResponseEntity<EventResponse> getEvent(@PathVariable Long eventId) {
+        return ResponseEntity.ok(campaignService.getEvent(eventId));
+    }
+
+    // 캠페인 이름 중복을 확인한다.
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> checkCampaignName(@RequestParam String name) {
+        return ResponseEntity.ok(campaignService.isCampaignNameTaken(name));
+    }
 }

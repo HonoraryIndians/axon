@@ -53,6 +53,26 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("필수 항목을 반드시 선택하세요");
             return;
         }
+        if(limitCount <=0) {alert("최소 참여 인원은 1명입니다."); return;}
+
+        const now = new Date();
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (start <= now) {
+            alert("시작 시간은 현재 시간보다 미래여야 합니다.");
+            return;
+        }
+
+        if (end <= now) {
+            alert("종료 시간은 현재 시간보다 미래여야 합니다.");
+            return;
+        }
+
+        if (end <= start) {
+            alert("종료 시간은 시작 시간보다 미래여야 합니다.");
+            return;
+        }
 
         const payload = {
             name: eventName,

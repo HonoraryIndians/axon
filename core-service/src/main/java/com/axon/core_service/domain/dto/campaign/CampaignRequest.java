@@ -1,12 +1,10 @@
 package com.axon.core_service.domain.dto.campaign;
 
-import com.axon.core_service.domain.dto.event.EventStatus;
 import jakarta.validation.constraints.Future;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDateTime;
@@ -31,6 +29,4 @@ public class CampaignRequest {
     @Future
     private LocalDateTime endAt;
 
-    @NotNull
-    private EventStatus status;
 }

@@ -16,4 +16,6 @@ public interface EventEntryRepository extends JpaRepository<EventEntry, Long> {
     Page<EventEntry> findByEvent_Id(Long eventId, Pageable pageable);
 
     Page<EventEntry> findByEvent_IdAndStatus(Long eventId, EventEntryStatus status, Pageable pageable);
+
+    long countByEvent_Id(Long eventId);
 }

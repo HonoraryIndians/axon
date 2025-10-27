@@ -19,6 +19,7 @@ public class EventResponse {
     private final LocalDateTime end_date;
     private final EventType eventType;
     private final LocalDateTime created_at;
+    private final Long participantCount;
 
     public static EventResponse from(Event event) {
         return EventResponse.builder()
