@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     'COUPON': '쿠폰',
                     'GIVEAWAY': '경품'
                 };
+
                 const eventTypeText = eventTypeMap[event.eventType];
                 row.innerHTML = `
                     <td><label><input type="checkbox" class="check"></label></td>
