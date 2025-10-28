@@ -1,5 +1,6 @@
 package com.axon.core_service.domain.dto.event;
 
+import com.axon.core_service.domain.dto.filter.FilterDetail;
 import com.axon.messaging.EventType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Getter
@@ -34,4 +36,6 @@ public class EventRequest {
 
     @NotNull
     private EventType eventType;
+
+    private List<FilterDetail> filters;
 }

@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const token = common.getCookie("accessToken");
 
     // 총 이벤트 개수를 가져와 표시
-    fetch('/api/v1/campaign/events/count')
+    fetch('/api/v1/event/count')
         .then(response => response.json())
         .then(count => {
             totalEventsSpan.textContent = `총 ${count}개 이벤트`;
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     // 이벤트 목록을 가져와 테이블에 채우기
-    fetch('/api/v1/campaign/events')
+    fetch('/api/v1/event/events')
         .then(response => response.json())
         .then(data => {
             eventTableBody.innerHTML = ''; // 기존 테이블 내용 지우기
