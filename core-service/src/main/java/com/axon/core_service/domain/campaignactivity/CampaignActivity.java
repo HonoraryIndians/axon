@@ -3,8 +3,11 @@ package com.axon.core_service.domain.campaignactivity;
 import com.axon.core_service.domain.campaign.Campaign;
 import com.axon.core_service.domain.common.BaseTimeEntity;
 import com.axon.core_service.domain.dto.campaignactivity.CampaignActivityStatus;
+import com.axon.core_service.domain.dto.campaignactivity.filter.FilterDetail;
+import com.axon.core_service.domain.dto.campaignactivity.filter.converter.FilterDetailConverter;
 import com.axon.messaging.CampaignActivityType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,6 +19,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -55,6 +59,10 @@ public class CampaignActivity extends BaseTimeEntity {
     @Column(name = "activity_type", nullable = false)
     private CampaignActivityType activityType;
 
+    @Convert(converter = FilterDetailConverter.class)
+    @Column(name = "filters", columnDefinition = "JSON")
+    private List<FilterDetail> filters;
+
     @Builder
     public CampaignActivity(Campaign campaign,
                             String name,
@@ -62,7 +70,8 @@ public class CampaignActivity extends BaseTimeEntity {
                             CampaignActivityStatus status,
                             LocalDateTime startDate,
                             LocalDateTime endDate,
-                            CampaignActivityType activityType) {
+                            CampaignActivityType activityType,
+                            List<FilterDetail> filters) {
         this.campaign = campaign;
         this.name = name;
         this.limitCount = limitCount;
@@ -70,6 +79,7 @@ public class CampaignActivity extends BaseTimeEntity {
         this.startDate = startDate;
         this.endDate = endDate;
         this.activityType = activityType;
+        this.filters = filters;
     }
 
     public Long getCampaignId() {
@@ -88,6 +98,10 @@ public class CampaignActivity extends BaseTimeEntity {
     public void changeDates(LocalDateTime startDate, LocalDateTime endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
+    }
+
+    public void setFilters(List<FilterDetail> filters) {
+        this.filters = filters;
     }
 
     void assignCampaign(Campaign campaign) {

@@ -32,6 +32,7 @@ public class CampaignActivityService {
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .activityType(request.getActivityType())
+                .filters(request.getFilters())
                 .build();
         CampaignActivity saved = campaignActivityRepository.save(campaignActivity);
         return CampaignActivityResponse.from(saved);
@@ -43,6 +44,9 @@ public class CampaignActivityService {
         validateStatusTransition(campaignActivity.getStatus(), request.getStatus());
         campaignActivity.changeStatus(request.getStatus());
         campaignActivity.changeDates(request.getStartDate(), request.getEndDate());
+        if (request.getFilters() != null) {
+            campaignActivity.setFilters(request.getFilters());
+        }
         return CampaignActivityResponse.from(campaignActivity);
     }
 

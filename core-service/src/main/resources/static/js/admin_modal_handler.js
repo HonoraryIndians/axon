@@ -190,7 +190,8 @@ const modalHandler = {
                 status: activityDetails.status,
                 startDate: document.getElementById('editStartDate').value + ':00',
                 endDate: document.getElementById('editEndDate').value + ':00',
-                activityType: document.getElementById('editCampaignActivityTypeInput').value
+                activityType: document.getElementById('editCampaignActivityTypeInput').value,
+                filters: activityDetails.filters ?? []
             };
 
             const token = common.getCookie("accessToken");
@@ -379,6 +380,7 @@ const modalHandler = {
                 console.error('캠페인 생성 오류:', error);
                 alert('캠페인 생성 중 오류가 발생했습니다: ' + error.message);
             }
+
         });
     }
 };

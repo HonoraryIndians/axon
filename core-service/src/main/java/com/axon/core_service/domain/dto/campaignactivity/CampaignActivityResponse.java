@@ -1,8 +1,10 @@
 package com.axon.core_service.domain.dto.campaignactivity;
 
 import com.axon.core_service.domain.campaignactivity.CampaignActivity;
+import com.axon.core_service.domain.dto.campaignactivity.filter.FilterDetail;
 import com.axon.messaging.CampaignActivityType;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -20,6 +22,7 @@ public class CampaignActivityResponse {
     private final CampaignActivityType activityType;
     private final LocalDateTime createdAt;
     private final Long participantCount;
+    private final List<FilterDetail> filters;
 
     public static CampaignActivityResponse from(CampaignActivity campaignActivity) {
         return from(campaignActivity, null);
@@ -37,6 +40,7 @@ public class CampaignActivityResponse {
                 .activityType(campaignActivity.getActivityType())
                 .createdAt(campaignActivity.getCreatedAt())
                 .participantCount(participantCount)
+                .filters(campaignActivity.getFilters())
                 .build();
     }
 }

@@ -73,6 +73,7 @@ class CampaignActivityConsumerServiceTest {
                 .startDate(LocalDateTime.now())
                 .endDate(LocalDateTime.now().plusDays(1))
                 .activityType(CampaignActivityType.FIRST_COME_FIRST_SERVE)
+                .filters(null)
                 .build();
         CampaignActivity saved = campaignActivityRepository.save(activity);
         this.campaignActivityId = saved.getId();

@@ -39,9 +39,9 @@ public class WebController {
         return "admin_board.html";
     }
 
-    @GetMapping("/admin_create_event")
+    @GetMapping("/admin_create_campaignActivitys")
     public String admin_create_event() {
-        log.info("Serving admin_create_event.html");
-        return "admin_create_event.html";
+        log.info("Serving admin_create_campaignActivitys.html");
+        return "admin_create_campaignActivitys.html";
     }
 }
