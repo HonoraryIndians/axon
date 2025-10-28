@@ -3,21 +3,14 @@ package com.axon.core_service.domain.event;
 import com.axon.core_service.domain.campaign.Campaign;
 import com.axon.core_service.domain.dto.event.EventStatus;
 import com.axon.core_service.domain.common.BaseTimeEntity;
+import com.axon.core_service.domain.dto.filter.FilterDetail;
+import com.axon.core_service.domain.dto.filter.converter.FilterDetailConverter;
 import com.axon.messaging.EventType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -49,12 +42,17 @@ public class Event extends BaseTimeEntity {
     @Column(name = "end_date", nullable = false)
     private LocalDateTime endDate;
 
+
     @Enumerated(EnumType.STRING)
-    @Column(name= "eventType", nullable = false)
+    @Column(name= "event_type", nullable = false)
     private EventType eventType;
 
+    @Convert(converter = FilterDetailConverter.class)
+    @Column(name = "filters", columnDefinition = "JSON")
+    private List<FilterDetail> filters;
+
     @Builder
-    public Event(Campaign campaign, String eventName, Integer limitCount, EventStatus eventStatus, LocalDateTime startDate, LocalDateTime endDate, EventType eventType) {
+    public Event(Campaign campaign, String eventName, Integer limitCount, EventStatus eventStatus, LocalDateTime startDate, LocalDateTime endDate, EventType eventType, List<FilterDetail> filters) {
         this.campaign = campaign;
         this.eventName = eventName;
         this.limitCount = limitCount;
@@ -62,6 +60,7 @@ public class Event extends BaseTimeEntity {
         this.startDate = startDate;
         this.endDate = endDate;
         this.eventType = eventType;
+        this.filters = filters;
     }
 
     public Long getCampaignId() {
@@ -86,3 +85,5 @@ public class Event extends BaseTimeEntity {
         this.campaign = campaign;
     }
 }
+
+

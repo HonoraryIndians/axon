@@ -38,7 +38,7 @@ const modalHandler = {
         confirmDeleteBtn.addEventListener('click', async () => {
             const token = common.getCookie("accessToken");
             try {
-                const res = await fetch(`/api/v1/campaign/events/${eventId}`, {
+                const res = await fetch(`/api/v1/event/${eventId}`, {
                     method: 'DELETE',
                     headers: { "Authorization": `Bearer ${token}` },
                 });
@@ -63,7 +63,7 @@ const modalHandler = {
         if (existingModal) existingModal.remove();
 
         const [eventDetails, campaigns] = await Promise.all([
-            fetch(`/api/v1/campaign/events/${eventId}`).then(res => res.ok ? res.json() : Promise.reject('이벤트 정보를 불러오는데 실패했습니다.')),
+            fetch(`/api/v1/event/${eventId}`).then(res => res.ok ? res.json() : Promise.reject('이벤트 정보를 불러오는데 실패했습니다.')),
             fetch('/api/v1/campaign').then(res => res.ok ? res.json() : Promise.reject('캠페인 목록을 불러오는데 실패했습니다.'))
         ]).catch(error => {
             console.error('Error fetching data for edit modal:', error);
@@ -195,7 +195,7 @@ const modalHandler = {
 
             const token = common.getCookie("accessToken");
             try {
-                const res = await fetch(`/api/v1/campaign/events/${eventId}`, {
+                const res = await fetch(`/api/v1/event/${eventId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify(payload)
@@ -257,7 +257,7 @@ const modalHandler = {
         confirmBtn.addEventListener('click', async () => {
             const token = common.getCookie("accessToken");
             try {
-                const res = await fetch(`/api/v1/campaign/events/${eventId}/status?status=${newStatus}`, {
+                const res = await fetch(`/api/v1/event/${eventId}/status?status=${newStatus}`, {
                     method: 'PATCH',
                     headers: { 'Authorization': `Bearer ${token}` },
                 });
