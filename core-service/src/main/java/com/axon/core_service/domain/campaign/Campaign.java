@@ -1,9 +1,7 @@
 package com.axon.core_service.domain.campaign;
 
-import com.axon.core_service.domain.dto.event.EventStatus;
-import com.axon.core_service.domain.event.Event;
+import com.axon.core_service.domain.campaignactivity.CampaignActivity;
 import com.axon.core_service.domain.common.BaseTimeEntity;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,14 +10,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -46,14 +43,19 @@ public class Campaign extends BaseTimeEntity {
     private String rewardPayload;
 
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<Event> events = new ArrayList<>();
+    private final List<CampaignActivity> campaignActivities = new ArrayList<>();
 
     public Campaign(String name) {
         this.name = name;
     }
 
     @Builder
-    public Campaign(String name, LocalDateTime startAt, LocalDateTime endAt, Long targetSegmentId, String rewardType, String rewardPayload) {
+    public Campaign(String name,
+                    LocalDateTime startAt,
+                    LocalDateTime endAt,
+                    Long targetSegmentId,
+                    String rewardType,
+                    String rewardPayload) {
         this.name = name;
         this.startAt = startAt;
         this.endAt = endAt;
@@ -61,7 +63,6 @@ public class Campaign extends BaseTimeEntity {
         this.rewardType = rewardType;
         this.rewardPayload = rewardPayload;
     }
-
 
     public void updateSchedule(LocalDateTime startAt, LocalDateTime endAt) {
         this.startAt = startAt;

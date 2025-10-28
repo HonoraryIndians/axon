@@ -1,8 +1,6 @@
 package com.axon.core_service.domain.dto.campaign;
 
 import com.axon.core_service.domain.campaign.Campaign;
-import com.axon.core_service.domain.dto.event.EventStatus;
-import com.axon.messaging.EventType;
 import lombok.Builder;
 import lombok.Getter;
 

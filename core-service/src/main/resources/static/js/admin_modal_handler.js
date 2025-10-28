@@ -1,5 +1,5 @@
 const modalHandler = {
-    showDeleteModal: function(eventId, eventName) {
+    showDeleteModal: function(campaignActivityId, campaignActivityName) {
         const existingModal = document.getElementById('delete-modal-backdrop');
         if (existingModal) existingModal.remove();
 
@@ -7,11 +7,11 @@ const modalHandler = {
             <div id="delete-modal-backdrop" class="modal-backdrop">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3 class="modal-title">이벤트 삭제</h3>
+                        <h3 class="modal-title">캠페인 활동 삭제</h3>
                         <button class="modal-close-button">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p><strong>'${eventName}'</strong> 이벤트를 정말로 삭제하시겠습니까?</p>
+                        <p><strong>'${campaignActivityName}'</strong> 캠페인 활동을 정말로 삭제하시겠습니까?</p>
                         <p>이 작업은 되돌릴 수 없습니다.</p>
                     </div>
                     <div class="modal-footer">
@@ -38,32 +38,32 @@ const modalHandler = {
         confirmDeleteBtn.addEventListener('click', async () => {
             const token = common.getCookie("accessToken");
             try {
-                const res = await fetch(`/api/v1/campaign/events/${eventId}`, {
+                const res = await fetch(`/api/v1/campaign/activities/${campaignActivityId}`, {
                     method: 'DELETE',
                     headers: { "Authorization": `Bearer ${token}` },
                 });
                 if (!res.ok) {
                     const errorText = await res.text();
-                    let errorMessage = '이벤트 삭제에 실패했습니다.';
+                    let errorMessage = '캠페인 활동 삭제에 실패했습니다.';
                     try { errorMessage = JSON.parse(errorText).message || errorMessage; } catch (e) { errorMessage = errorText || errorMessage; }
                     throw new Error(errorMessage);
                 }
-                alert('이벤트가 성공적으로 삭제되었습니다!');
+                alert('캠페인 활동이 성공적으로 삭제되었습니다!');
                 closeModal();
                 location.reload();
             } catch (error) {
-                console.error('이벤트 삭제 오류:', error);
-                alert('이벤트 삭제 중 오류가 발생했습니다: ' + error.message);
+                console.error('캠페인 활동 삭제 오류:', error);
+                alert('캠페인 활동 삭제 중 오류가 발생했습니다: ' + error.message);
             }
         });
     },
 
-    showEditModal: async function(eventId, eventName) {
+    showEditModal: async function(campaignActivityId, campaignActivityName) {
         const existingModal = document.getElementById('edit-modal-backdrop');
         if (existingModal) existingModal.remove();
 
-        const [eventDetails, campaigns] = await Promise.all([
-            fetch(`/api/v1/campaign/events/${eventId}`).then(res => res.ok ? res.json() : Promise.reject('이벤트 정보를 불러오는데 실패했습니다.')),
+        const [activityDetails, campaigns] = await Promise.all([
+            fetch(`/api/v1/campaign/activities/${campaignActivityId}`).then(res => res.ok ? res.json() : Promise.reject('캠페인 활동 정보를 불러오는데 실패했습니다.')),
             fetch('/api/v1/campaign').then(res => res.ok ? res.json() : Promise.reject('캠페인 목록을 불러오는데 실패했습니다.'))
         ]).catch(error => {
             console.error('Error fetching data for edit modal:', error);
@@ -71,62 +71,62 @@ const modalHandler = {
             return [null, null];
         });
 
-        if (!eventDetails || !campaigns) return;
+        if (!activityDetails || !campaigns) return;
 
         const modalHtml = `
             <div id="edit-modal-backdrop" class="modal-backdrop">
                 <div class="modal-content large-modal">
                     <div class="modal-header">
-                        <h3 class="modal-title">이벤트 수정 (<b>${eventName}</b>)</h3>
+                        <h3 class="modal-title">캠페인 활동 수정 (<b>${campaignActivityName}</b>)</h3>
                         <button class="modal-close-button">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <form id="edit-event-form" class="space-y-6">
+                        <form id="edit-activity-form" class="space-y-6">
                             <section class="section-card">
-                                <h2 style="font-size: larger" class="section-title">이벤트 기본 정보</h2><br>
+                                <h2 style="font-size: larger" class="section-title">캠페인 활동 기본 정보</h2><br>
                                 <div class="space-y-6">
                                     <div>
-                                        <label class="form-label">이벤트 이름 *</label>
-                                        <input id="editEventName" type="text" class="form-input" placeholder="이벤트명을 입력하세요" value="${eventDetails.name}" required>
+                                        <label class="form-label">캠페인 활동 이름 *</label>
+                                        <input id="editActivityName" type="text" class="form-input" placeholder="캠페인 활동명을 입력하세요" value="${activityDetails.name}" required>
                                     </div>
                                     <div>
                                         <label class="form-label">캠페인 선택 *</label>
                                         <select id="editCampaignSelect" class="form-input" required>
                                             <option value="">캠페인을 선택하세요</option>
-                                            ${campaigns.map(campaign => `<option value="${campaign.id}" ${campaign.id === eventDetails.campaignId ? 'selected' : ''}>${campaign.name}</option>`).join('')}
+                                            ${campaigns.map(campaign => `<option value="${campaign.id}" ${campaign.id === activityDetails.campaignId ? 'selected' : ''}>${campaign.name}</option>`).join('')}
                                         </select>
                                     </div>
                                     <br>
                                     <div>
-                                        <label class="form-label">이벤트 유형 *</label>
-                                        <div id="editEventTypeGroup" class="grid grid-cols-3 gap-4">
-                                            <button type="button" class="campaign-type selectable ${eventDetails.eventType === 'FIRST_COME_FIRST_SERVE' ? 'selected' : ''}" data-type="FIRST_COME_FIRST_SERVE">
+                                        <label class="form-label">캠페인 활동 유형 *</label>
+                                        <div id="editCampaignActivityTypeGroup" class="grid grid-cols-3 gap-4">
+                                            <button type="button" class="campaign-type selectable ${activityDetails.activityType === 'FIRST_COME_FIRST_SERVE' ? 'selected' : ''}" data-type="FIRST_COME_FIRST_SERVE">
                                                 <i class="fa-solid fa-clock type-icon"></i>
                                                 <div>선착순</div>
                                                 <div class="type-desc">먼저 참여한 순서대로</div>
                                             </button>
-                                            <button type="button" class="campaign-type selectable ${eventDetails.eventType === 'COUPON' ? 'selected' : ''}" data-type="COUPON">
+                                            <button type="button" class="campaign-type selectable ${activityDetails.activityType === 'COUPON' ? 'selected' : ''}" data-type="COUPON">
                                                 <i class="fa-solid fa-check-circle type-icon"></i>
                                                 <div>조건부</div>
                                                 <div class="type-desc">특정 조건 달성 시</div>
                                             </button>
-                                            <button type="button" class="campaign-type selectable ${eventDetails.eventType === 'GIVEAWAY' ? 'selected' : ''}" data-type="GIVEAWAY">
+                                            <button type="button" class="campaign-type selectable ${activityDetails.activityType === 'GIVEAWAY' ? 'selected' : ''}" data-type="GIVEAWAY">
                                                 <i class="fa-solid fa-gift type-icon"></i>
                                                 <div>응모/추첨</div>
                                                 <div class="type-desc">추첨을 통한 당첨</div>
                                             </button>
                                         </div>
-                                        <input type="hidden" id="editEventTypeInput" value="${eventDetails.eventType}" required>
+                                        <input type="hidden" id="editCampaignActivityTypeInput" value="${activityDetails.activityType}" required>
                                     </div>
                                 </div>
                             </section>
                             <br>
                             <section class="section-card">
-                                <h2 style="font-size: larger" class="section-title">이벤트 조건 설정</h2>
+                                <h2 style="font-size: larger" class="section-title">캠페인 활동 조건 설정</h2>
                                 <div class="space-y-6">
                                     <div>
                                         <label class="form-label">참여 인원 수</label>
-                                        <input id="editLimitCountInput" type="number" class="form-input" placeholder="최대 참여 인원을 입력하세요" value="${eventDetails.limitCount || ''}">
+                                        <input id="editLimitCountInput" type="number" class="form-input" placeholder="최대 참여 인원을 입력하세요" value="${activityDetails.limitCount || ''}">
                                     </div>
                                 </div>
                             </section>
@@ -136,11 +136,11 @@ const modalHandler = {
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label class="form-label">시작일 *</label>
-                                            <input id="editStartDate" type="datetime-local" class="form-input" value="${eventDetails.start_date ? eventDetails.start_date.substring(0, 16) : ''}" required>
+                                            <input id="editStartDate" type="datetime-local" class="form-input" value="${activityDetails.startDate ? activityDetails.startDate.substring(0, 16) : ''}" required>
                                         </div>
                                         <div>
                                             <label class="form-label">종료일 *</label>
-                                            <input id="editEndDate" type="datetime-local" class="form-input" value="${eventDetails.end_date ? eventDetails.end_date.substring(0, 16) : ''}" required>
+                                            <input id="editEndDate" type="datetime-local" class="form-input" value="${activityDetails.endDate ? activityDetails.endDate.substring(0, 16) : ''}" required>
                                         </div>
                                     </div>
                                 </div>
@@ -162,16 +162,16 @@ const modalHandler = {
         modalBackdrop.querySelector('.modal-close-button').addEventListener('click', closeModal);
         document.getElementById('cancel-edit-btn').addEventListener('click', closeModal);
 
-        document.getElementById('editEventTypeGroup').querySelectorAll('.selectable').forEach(button => {
+        document.getElementById('editCampaignActivityTypeGroup').querySelectorAll('.selectable').forEach(button => {
             button.addEventListener('click', () => {
-                document.getElementById('editEventTypeGroup').querySelectorAll('.selectable').forEach(btn => btn.classList.remove('selected'));
+                document.getElementById('editCampaignActivityTypeGroup').querySelectorAll('.selectable').forEach(btn => btn.classList.remove('selected'));
                 button.classList.add('selected');
-                document.getElementById('editEventTypeInput').value = button.dataset.type;
+                document.getElementById('editCampaignActivityTypeInput').value = button.dataset.type;
             });
         });
 
         document.getElementById('save-edit-btn').addEventListener('click', async () => {
-            const form = document.getElementById('edit-event-form');
+            const form = document.getElementById('edit-activity-form');
             const limitcount = document.getElementById("editLimitCountInput").value;
             if (!form.checkValidity()) { form.reportValidity(); return; }
             if(!limitcount || limitcount <= 0) {alert("최소 참가 인원은 1명입니다."); return;}
@@ -185,36 +185,36 @@ const modalHandler = {
             if (end <= start) { alert("종료 시간은 시작 시간보다 미래여야 합니다."); return; }
 
             const payload = {
-                name: document.getElementById('editEventName').value,
+                name: document.getElementById('editActivityName').value,
                 limitCount: parseInt(document.getElementById('editLimitCountInput').value) || 0,
-                status: eventDetails.status,
+                status: activityDetails.status,
                 startDate: document.getElementById('editStartDate').value + ':00',
                 endDate: document.getElementById('editEndDate').value + ':00',
-                eventType: document.getElementById('editEventTypeInput').value
+                activityType: document.getElementById('editCampaignActivityTypeInput').value
             };
 
             const token = common.getCookie("accessToken");
             try {
-                const res = await fetch(`/api/v1/campaign/events/${eventId}`, {
+                const res = await fetch(`/api/v1/campaign/activities/${campaignActivityId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify(payload)
                 });
                 if (!res.ok) {
-                    const errorData = await res.json().catch(() => ({ message: '이벤트 수정에 실패했습니다.' }));
+                    const errorData = await res.json().catch(() => ({ message: '캠페인 활동 수정에 실패했습니다.' }));
                     throw new Error(errorData.message);
                 }
-                alert('이벤트가 성공적으로 수정되었습니다!');
+                alert('캠페인 활동이 성공적으로 수정되었습니다!');
                 closeModal();
                 location.reload();
             } catch (error) {
-                console.error('이벤트 수정 오류:', error);
-                alert('이벤트 수정 중 오류가 발생했습니다: ' + error.message);
+                console.error('캠페인 활동 수정 오류:', error);
+                alert('캠페인 활동 수정 중 오류가 발생했습니다: ' + error.message);
             }
         });
     },
 
-    showStatusModal: function(eventId, eventName, currentStatus, newStatus) {
+    showStatusModal: function(campaignActivityId, campaignActivityName, currentStatus, newStatus) {
         const existingModal = document.getElementById('status-modal-backdrop');
         if (existingModal) existingModal.remove();
 
@@ -222,11 +222,11 @@ const modalHandler = {
             <div id="status-modal-backdrop" class="modal-backdrop">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3 class="modal-title">이벤트 상태 변경 확인</h3>
+                        <h3 class="modal-title">캠페인 활동 상태 변경 확인</h3>
                         <button class="modal-close-button">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p><strong>'${eventName}'</strong> 이벤트의 상태를</p>
+                        <p><strong>'${campaignActivityName}'</strong> 캠페인 활동의 상태를</p>
                         <p><strong>${currentStatus}</strong> 에서 <strong style="color: tomato">${newStatus}</strong> (으)로 변경하시겠습니까?</p>
                         <br>
                         <div id="ENDED-message"></div>
@@ -240,7 +240,7 @@ const modalHandler = {
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         if(currentStatus === "ACTIVE" && newStatus === "ENDED") {
-            document.getElementById("ENDED-message").innerHTML = "<strong style='color: tomato'>ENDED</strong>상태로 변경시 이벤트가 종료되며,<br> 더이상 상태변경이 불가능해집니다.";
+            document.getElementById("ENDED-message").innerHTML = "<strong style='color: tomato'>ENDED</strong>상태로 변경시 캠페인 활동이 종료되며,<br> 더이상 상태변경이 불가능해집니다.";
         }
 
         const modalBackdrop = document.getElementById('status-modal-backdrop');
@@ -257,7 +257,7 @@ const modalHandler = {
         confirmBtn.addEventListener('click', async () => {
             const token = common.getCookie("accessToken");
             try {
-                const res = await fetch(`/api/v1/campaign/events/${eventId}/status?status=${newStatus}`, {
+                const res = await fetch(`/api/v1/campaign/activities/${campaignActivityId}/status?status=${newStatus}`, {
                     method: 'PATCH',
                     headers: { 'Authorization': `Bearer ${token}` },
                 });
@@ -265,12 +265,12 @@ const modalHandler = {
                     const errorData = await res.json().catch(() => ({ message: '상태 변경에 실패했습니다.' }));
                     throw new Error(errorData.message);
                 }
-                alert(`이벤트 상태가 ${newStatus}(으)로 성공적으로 변경되었습니다!`);
+                alert(`캠페인 활동 상태가 ${newStatus}(으)로 성공적으로 변경되었습니다!`);
                 closeModal();
                 location.reload();
             } catch (error) {
-                console.error('이벤트 상태 변경 오류:', error);
-                alert('이벤트 상태 변경 중 오류가 발생했습니다: ' + error.message);
+                console.error('캠페인 활동 상태 변경 오류:', error);
+                alert('캠페인 활동 상태 변경 중 오류가 발생했습니다: ' + error.message);
             }
         });
     },

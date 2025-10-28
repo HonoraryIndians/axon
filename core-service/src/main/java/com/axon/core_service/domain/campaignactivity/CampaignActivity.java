@@ -1,9 +1,9 @@
-package com.axon.core_service.domain.event;
+package com.axon.core_service.domain.campaignactivity;
 
 import com.axon.core_service.domain.campaign.Campaign;
-import com.axon.core_service.domain.dto.event.EventStatus;
 import com.axon.core_service.domain.common.BaseTimeEntity;
-import com.axon.messaging.EventType;
+import com.axon.core_service.domain.dto.campaignactivity.CampaignActivityStatus;
+import com.axon.messaging.CampaignActivityType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,16 +15,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.*;
-
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "events")
-public class Event extends BaseTimeEntity {
+@Table(name = "campaign_activities")
+public class CampaignActivity extends BaseTimeEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,15 +35,15 @@ public class Event extends BaseTimeEntity {
     @JoinColumn(name = "campaign_id")
     private Campaign campaign;
 
-    @Column(name = "event_name", nullable = false)
-    private String eventName;
+    @Column(name = "name", nullable = false)
+    private String name;
 
     @Column(name = "limit_count")
     private Integer limitCount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
-    private EventStatus eventStatus;
+    private CampaignActivityStatus status;
 
     @Column(name = "start_date", nullable = false)
     private LocalDateTime startDate;
@@ -50,31 +52,37 @@ public class Event extends BaseTimeEntity {
     private LocalDateTime endDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name= "eventType", nullable = false)
-    private EventType eventType;
+    @Column(name = "activity_type", nullable = false)
+    private CampaignActivityType activityType;
 
     @Builder
-    public Event(Campaign campaign, String eventName, Integer limitCount, EventStatus eventStatus, LocalDateTime startDate, LocalDateTime endDate, EventType eventType) {
+    public CampaignActivity(Campaign campaign,
+                            String name,
+                            Integer limitCount,
+                            CampaignActivityStatus status,
+                            LocalDateTime startDate,
+                            LocalDateTime endDate,
+                            CampaignActivityType activityType) {
         this.campaign = campaign;
-        this.eventName = eventName;
+        this.name = name;
         this.limitCount = limitCount;
-        this.eventStatus = eventStatus;
+        this.status = status;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.eventType = eventType;
+        this.activityType = activityType;
     }
 
     public Long getCampaignId() {
         return campaign != null ? campaign.getId() : null;
     }
 
-    public void updateInfo(String eventName, Integer limitCount) {
-        this.eventName = eventName;
+    public void updateInfo(String name, Integer limitCount) {
+        this.name = name;
         this.limitCount = limitCount;
     }
 
-    public void changeStatus(EventStatus status) {
-        this.eventStatus = status;
+    public void changeStatus(CampaignActivityStatus nextStatus) {
+        this.status = nextStatus;
     }
 
     public void changeDates(LocalDateTime startDate, LocalDateTime endDate) {

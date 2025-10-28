@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>새 이벤트 만들기</title>
+    <title>새 캠페인 활동 만들기</title>
 
     <!-- Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,10 +22,10 @@
             <a href="/admin_board"
                     class="flex items-center space-x-2 text-neutral-600 hover:text-neutral-800">
                 <i class="fa-solid fa-arrow-left"></i>
-                <span>이벤트 목록</span>
+                <span>캠페인 활동 목록</span>
             </a>
         </div>
-        <h1 class="text-xl text-neutral-900">새 이벤트 만들기</h1>
+        <h1 class="text-xl text-neutral-900">새 캠페인 활동 만들기</h1>
         <div class="flex items-center space-x-3">
             <button id="submit" class="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800">
                 등록 완료
@@ -43,16 +43,16 @@
 
             <!-- 기본 정보 -->
             <section class="section-card">
-                <h2 class="section-title">이벤트 기본 정보</h2>
+                <h2 class="section-title">캠페인 활동 기본 정보</h2>
                 <div class="space-y-6">
                     <div>
-                        <label class="form-label">이벤트 이름 *</label>
-                        <label for="eventName"></label><input id="eventName" type="text" class="form-input" placeholder="이벤트명을 입력하세요">
+                        <label class="form-label">캠페인 활동 이름 *</label>
+                        <label for="activityName"></label><input id="activityName" type="text" class="form-input" placeholder="캠페인 활동명을 입력하세요">
                     </div>
                     <div>
-                        <label class="form-label">이벤트 설명</label>
+                        <label class="form-label">캠페인 활동 설명</label>
                         <label>
-                            <textarea class="form-textarea" placeholder="이벤트 목적 및 요약을 입력하세요"></textarea>
+                            <textarea class="form-textarea" placeholder="캠페인 활동 목적 및 요약을 입력하세요"></textarea>
                         </label>
                     </div>
                     <div>
@@ -64,8 +64,8 @@
                         </label>
                     </div>
 
-                    <input type="hidden" id="eventTypeInput" name="campaignType" />
-                    <div id="campaignTypeGroup" class="grid grid-cols-3 gap-4">
+                    <input type="hidden" id="activityTypeInput" name="campaignType" />
+                    <div id="campaignActivityTypeGroup" class="grid grid-cols-3 gap-4">
                         <button type="button" class="campaign-type selectable" data-type=FIRST_COME_FIRST_SERVE>
                             <i class="fa-solid fa-clock type-icon"></i>
                             <div>선착순</div>
@@ -87,7 +87,7 @@
 
             <!-- 조건 -->
             <section class="section-card">
-                <h2 class="section-title">이벤트 조건 설정</h2>
+                <h2 class="section-title">캠페인 활동 조건 설정</h2>
                 <div class="space-y-6">
                     <div>
                         <label class="form-label">참여 인원 수</label>

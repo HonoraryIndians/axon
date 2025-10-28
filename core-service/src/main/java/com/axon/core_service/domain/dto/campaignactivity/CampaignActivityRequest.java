@@ -1,22 +1,21 @@
-package com.axon.core_service.domain.dto.event;
+package com.axon.core_service.domain.dto.campaignactivity;
 
-import com.axon.messaging.EventType;
+import com.axon.messaging.CampaignActivityType;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
-
-import java.time.LocalDateTime;
-
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EventRequest {
+public class CampaignActivityRequest {
+
     @NotBlank
     private String name;
 
@@ -24,7 +23,7 @@ public class EventRequest {
     private Integer limitCount;
 
     @NotNull
-    private EventStatus status;
+    private CampaignActivityStatus status;
 
     @NotNull
     private LocalDateTime startDate;
@@ -33,5 +32,5 @@ public class EventRequest {
     private LocalDateTime endDate;
 
     @NotNull
-    private EventType eventType;
+    private CampaignActivityType activityType;
 }

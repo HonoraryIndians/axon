@@ -1,7 +1,7 @@
-package com.axon.core_service.domain.evententry;
+package com.axon.core_service.domain.campaignactivityentry;
 
+import com.axon.core_service.domain.campaignactivity.CampaignActivity;
 import com.axon.core_service.domain.common.BaseTimeEntity;
-import com.axon.core_service.domain.event.Event;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,24 +20,24 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "event_entries")
+@Table(name = "campaign_activity_entries")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EventEntry extends BaseTimeEntity {
+public class CampaignActivityEntry extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "event_id")
-    private Event event;
+    @JoinColumn(name = "campaign_activity_id")
+    private CampaignActivity campaignActivity;
 
     @Column(name = "product_id")
     private Long productId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private EventEntryStatus status;
+    private CampaignActivityEntryStatus status;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -51,25 +51,25 @@ public class EventEntry extends BaseTimeEntity {
     @Column(name = "additional_data")
     private String info;
 
-    private EventEntry(Event event,
-                       Long userId,
-                       Long productId,
-                       Instant requestedAt) {
-        this.event = event;
+    private CampaignActivityEntry(CampaignActivity campaignActivity,
+                                  Long userId,
+                                  Long productId,
+                                  Instant requestedAt) {
+        this.campaignActivity = campaignActivity;
         this.userId = userId;
         this.productId = productId;
         this.requestedAt = requestedAt;
-        this.status = EventEntryStatus.PENDING;
+        this.status = CampaignActivityEntryStatus.PENDING;
     }
 
-    public static EventEntry create(Event event,
-                                    Long userId,
-                                    Long productId,
-                                    Instant requestedAt) {
-        return new EventEntry(event, userId, productId, requestedAt);
+    public static CampaignActivityEntry create(CampaignActivity campaignActivity,
+                                               Long userId,
+                                               Long productId,
+                                               Instant requestedAt) {
+        return new CampaignActivityEntry(campaignActivity, userId, productId, requestedAt);
     }
 
-    public void updateStatus(EventEntryStatus status) {
+    public void updateStatus(CampaignActivityEntryStatus status) {
         this.status = status;
     }
 

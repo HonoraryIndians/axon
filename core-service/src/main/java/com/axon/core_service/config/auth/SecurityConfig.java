@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/h2-console/**", "/favicon.ico", "/login-success", "/login-success.html", "/test/**").permitAll()
-                        .requestMatchers("/api/v1/**").hasRole(Role.USER.name())
+                        .requestMatchers("/api/v1/**").permitAll()
                         //.requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated()
                 )

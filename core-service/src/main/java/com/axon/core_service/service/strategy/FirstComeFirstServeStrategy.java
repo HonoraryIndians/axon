@@ -1,10 +1,10 @@
 package com.axon.core_service.service.strategy;
 
-import com.axon.core_service.domain.event.Event;
-import com.axon.core_service.domain.evententry.EventEntryStatus;
-import com.axon.core_service.repository.EventRepository;
-import com.axon.core_service.service.EventEntryService;
-import com.axon.messaging.EventType;
+import com.axon.core_service.domain.campaignactivity.CampaignActivity;
+import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntryStatus;
+import com.axon.core_service.repository.CampaignActivityRepository;
+import com.axon.core_service.service.CampaignActivityEntryService;
+import com.axon.messaging.CampaignActivityType;
 import com.axon.messaging.dto.KafkaProducerDto;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -18,25 +18,24 @@ import org.springframework.stereotype.Component;
 public class FirstComeFirstServeStrategy implements CampaignStrategy {
 
     private final RedisTemplate<String, String> redisTemplate;
-    private final EventRepository eventRepository;
-    private final EventEntryService eventEntryService;
+    private final CampaignActivityRepository campaignActivityRepository;
+    private final CampaignActivityEntryService campaignActivityEntryService;
 
     @Override
     public void process(KafkaProducerDto eventDto) {
-        Event event = eventRepository.findById(eventDto.getEventId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이벤트입니다. ID: " + eventDto.getEventId()));
+        CampaignActivity campaignActivity = campaignActivityRepository.findById(eventDto.getCampaignActivityId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 캠페인 활동입니다. ID: " + eventDto.getCampaignActivityId()));
 
-        int limit = Optional.ofNullable(event.getLimitCount()).orElse(Integer.MAX_VALUE);
-        String eventKey = "event:" + eventDto.getEventId();
+        int limit = Optional.ofNullable(campaignActivity.getLimitCount()).orElse(Integer.MAX_VALUE);
+        String eventKey = "campaign-activity:" + eventDto.getCampaignActivityId();
         String userKey = String.valueOf(eventDto.getUserId());
 
-        Long addResult = redisTemplate.opsForSet().add(eventKey, userKey); //중복이면 0, 신규면 1
-        boolean firstHit =  addResult != null && addResult == 1L;
+        Long addResult = redisTemplate.opsForSet().add(eventKey, userKey);
+        boolean firstHit = addResult != null && addResult == 1L;
 
         if (!firstHit) {
-            log.info("중복 응모입니다. Event: {}, User: {}", eventDto.getEventId(), eventDto.getUserId());
-            log.info("DB 상태를 DUPLICATED로 변경합니다.");
-            eventEntryService.upsertEntry(event, eventDto, EventEntryStatus.DUPLICATED, true);
+            log.info("중복 응모입니다. CampaignActivity: {}, User: {}", eventDto.getCampaignActivityId(), eventDto.getUserId());
+            campaignActivityEntryService.upsertEntry(campaignActivity, eventDto, CampaignActivityEntryStatus.DUPLICATED, true);
             return;
         }
 
@@ -44,18 +43,16 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
         boolean withinLimit = currentEntries != null && currentEntries <= limit;
 
         if (withinLimit) {
-            log.info("선착순 성공! Event: {}, User: {}, 현재 인원: {}/{}", eventDto.getEventId(), eventDto.getUserId(), currentEntries, limit);
-            log.info("DB 상태를 APPROVED로 변경합니다.");
-            eventEntryService.upsertEntry(event, eventDto, EventEntryStatus.APPROVED, true);
+            log.info("선착순 성공! CampaignActivity: {}, User: {}, 현재 인원: {}/{}", eventDto.getCampaignActivityId(), eventDto.getUserId(), currentEntries, limit);
+            campaignActivityEntryService.upsertEntry(campaignActivity, eventDto, CampaignActivityEntryStatus.APPROVED, true);
         } else {
-            log.info("선착순 마감. Event: {}, User: {}", eventDto.getEventId(), eventDto.getUserId());
-            log.info("DB 상태를 REJECTED로 변경합니다.");
-            eventEntryService.upsertEntry(event, eventDto, EventEntryStatus.REJECTED, true);
+            log.info("선착순 마감. CampaignActivity: {}, User: {}", eventDto.getCampaignActivityId(), eventDto.getUserId());
+            campaignActivityEntryService.upsertEntry(campaignActivity, eventDto, CampaignActivityEntryStatus.REJECTED, true);
         }
     }
 
     @Override
-    public EventType getType() {
-        return EventType.FIRST_COME_FIRST_SERVE;
+    public CampaignActivityType getType() {
+        return CampaignActivityType.FIRST_COME_FIRST_SERVE;
     }
 }

@@ -1,32 +1,32 @@
-package com.axon.core_service.domain.dto.evententry;
+package com.axon.core_service.domain.dto.campaignactivityentry;
 
-import com.axon.core_service.domain.evententry.EventEntry;
-import com.axon.core_service.domain.evententry.EventEntryStatus;
+import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntry;
+import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntryStatus;
+import java.time.Instant;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.Instant;
-
 @Getter
 @Builder
-public class EventEntrySummary {
+public class CampaignActivityEntrySummary {
+
     private final Long entryId;
     private final Long userId;
     private final Long productId;
-    private final EventEntryStatus status;
+    private final CampaignActivityEntryStatus status;
     private final Instant requestedAt;
     private final Instant processedAt;
     private final String info;
 
-    public static EventEntrySummary from(EventEntry entry) {
-        return EventEntrySummary.builder()
+    public static CampaignActivityEntrySummary from(CampaignActivityEntry entry) {
+        return CampaignActivityEntrySummary.builder()
                 .entryId(entry.getId())
                 .userId(entry.getUserId())
                 .productId(entry.getProductId())
                 .status(entry.getStatus())
                 .requestedAt(entry.getRequestedAt())
                 .processedAt(entry.getProcessedAt())
-                .info(entry.getInfo()) // 예시: additionalData를 info로 매핑
+                .info(entry.getInfo())
                 .build();
     }
 }

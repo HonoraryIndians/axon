@@ -2,7 +2,7 @@ package com.axon.entry_service.controller;
 
 import com.axon.entry_service.dto.EntryRequestDto;
 import com.axon.entry_service.service.Kafka_Producer;
-import com.axon.messaging.EventType;
+import com.axon.messaging.CampaignActivityType;
 import com.axon.messaging.dto.KafkaProducerDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +30,13 @@ public class EntryController {
 
         long timestamp = Instant.now().toEpochMilli();
 
+        CampaignActivityType type = requestDto.getCampaignActivityType() != null
+                ? requestDto.getCampaignActivityType()
+                : CampaignActivityType.FIRST_COME_FIRST_SERVE;
+
         KafkaProducerDto eventDto = new KafkaProducerDto(
-                EventType.FIRST_COME_FIRST_SERVE,
-                requestDto.getEventId(),
+                type,
+                requestDto.getCampaignActivityId(),
                 userId,
                 requestDto.getProductId(),
                 timestamp

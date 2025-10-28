@@ -12,5 +12,5 @@ public class ApiErrorResponse {
 
     private final String error;
     private final String message;
-    private final Long eventId;
+    private final Long campaignActivityId;
 }

@@ -19,12 +19,12 @@
 <script src="/js/common.js"></script>
 <script>
     const params = new URLSearchParams(window.location.search);
-    const eventId = params.get('eventId');
+    const campaignActivityId = params.get('campaignActivityId');
 
     // 페이지 로드 시 이벤트 정보 표시
     document.addEventListener('DOMContentLoaded', function() {
-        if (eventId) {
-            document.getElementById('event-title').innerText = `선착순 이벤트 #${eventId}`;
+        if (campaignActivityId) {
+            document.getElementById('event-title').innerText = `선착순 캠페인 활동 #${campaignActivityId}`;
         } else {
             document.getElementById('event-title').innerText = '잘못된 이벤트입니다.';
             document.getElementById('entryButton').disabled = true;
@@ -45,8 +45,8 @@
 
         // API 요청에 필요한 데이터
         const eventData = {
-            eventId: parseInt(eventId),
-            productId: 100 + parseInt(eventId) // 예시: productId는 eventId 기반으로 임의 생성
+            campaignActivityId: parseInt(campaignActivityId),
+            productId: 100 + parseInt(campaignActivityId) // 예시: productId는 ID 기반으로 임의 생성
         };
 
         // 로컬 개발 환경에서는 entry-service가 8081 포트에서 실행된다고 가정

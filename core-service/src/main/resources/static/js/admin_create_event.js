@@ -30,26 +30,26 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCampaign();
 
     const selectableTypes = document.querySelectorAll(".campaign-type.selectable");
-    const eventTypeInput = document.getElementById("eventTypeInput");
+    const activityTypeInput = document.getElementById("activityTypeInput");
 
     selectableTypes.forEach((btn) => {
         btn.addEventListener("click", () => {
             selectableTypes.forEach((b) => b.classList.remove("selected"));
             btn.classList.add("selected");
-            eventTypeInput.value = btn.dataset.type;
+            activityTypeInput.value = btn.dataset.type;
         });
     });
 
     submit.addEventListener("click", async () => {
         const campaignId = document.getElementById("campaignId").value;
-        const eventType = eventTypeInput.value;
-        const eventName = document.getElementById("eventName").value.trim();
+        const activityType = activityTypeInput.value;
+        const activityName = document.getElementById("activityName").value.trim();
         const limitCount = document.getElementById("limitCountInput").value;
         const startDate = document.getElementById("startDate").value;
         const endDate = document.getElementById("endDate").value;
         const status = "DRAFT"
 
-        if (!campaignId || !eventName || !status || !startDate || !endDate || !eventType) {
+        if (!campaignId || !activityName || !status || !startDate || !endDate || !activityType) {
             alert("필수 항목을 반드시 선택하세요");
             return;
         }
@@ -75,16 +75,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const payload = {
-            name: eventName,
+            name: activityName,
             limitCount: limitCount ? Number(limitCount) : 0,
             status,
             startDate,
             endDate,
-            eventType
+            activityType
         };
 
         try {
-            const res = await fetch(`/api/v1/campaign/${campaignId}/events`, {
+            const res = await fetch(`/api/v1/campaign/${campaignId}/activities`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -95,10 +95,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if(!res.ok) {
                 alert("생성에 실패하였습니다.");
                 const error = await res.json();
-                throw new Error(error.message || "이벤트 생성 실패");
+                throw new Error(error.message || "캠페인 활동 생성 실패");
             }
             const data = await res.json();
-            alert(data.name + " 이벤트가 생성되었습니다.");
+            alert(data.name + " 캠페인 활동이 생성되었습니다.");
             window.location.href="../admin_board.html"
         } catch (err) {
             alert("알 수 없는 오류가 발생했습니다. 나중에 다시 시도해주세요.");

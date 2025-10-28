@@ -2,13 +2,13 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Axon Event Platform</title>
+    <title>Axon Campaign Activity Platform</title>
     <style>
         body { font-family: sans-serif; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid #ccc; }
         nav a { margin-left: 15px; text-decoration: none; color: #007bff; }
         main { padding: 20px; }
-        .event-list a { display: block; margin-bottom: 10px; }
+    .campaign-activity-list a { display: block; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -22,9 +22,9 @@
 
 <main>
     <h2>진행중인 이벤트</h2>
-    <div class="event-list">
-        <a href="#" class="event-link" data-event-id="1">선착순 이벤트 1 (로그인 필요)</a>
-        <a href="#" class="event-link" data-event-id="2">선착순 이벤트 2 (로그인 필요)</a>
+    <div class="campaign-activity-list">
+        <a href="#" class="campaign-activity-link" data-activity-id="1">선착순 캠페인 활동 1 (로그인 필요)</a>
+        <a href="#" class="campaign-activity-link" data-activity-id="2">선착순 캠페인 활동 2 (로그인 필요)</a>
     </div>
 </main>
 
@@ -43,15 +43,14 @@
             navArea.innerHTML = '<a href="/oauth2/authorization/naver">네이버 로그인</a>';
         }
 
-        document.querySelectorAll('.event-link').forEach(link => {
+        document.querySelectorAll('.campaign-activity-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 if (!accessToken) {
                     alert('로그인이 필요합니다.');
                 } else {
-                    const eventId = this.getAttribute('data-event-id');
-                    // entry.html 페이지로 이벤트 ID와 함께 이동
-                    window.location.href = `/entry?eventId=${eventId}`;
+                    const campaignActivityId = this.getAttribute('data-activity-id');
+                    window.location.href = `/entry?campaignActivityId=${campaignActivityId}`;
                 }
             });
         });

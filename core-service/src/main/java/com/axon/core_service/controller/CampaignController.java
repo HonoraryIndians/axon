@@ -1,120 +1,106 @@
 package com.axon.core_service.controller;
 
-import com.axon.core_service.domain.dto.event.EventStatus;
 import com.axon.core_service.domain.dto.campaign.CampaignRequest;
 import com.axon.core_service.domain.dto.campaign.CampaignResponse;
-import com.axon.core_service.domain.dto.event.EventRequest;
-import com.axon.core_service.domain.dto.event.EventResponse;
+import com.axon.core_service.domain.dto.campaignactivity.CampaignActivityRequest;
+import com.axon.core_service.domain.dto.campaignactivity.CampaignActivityResponse;
+import com.axon.core_service.domain.dto.campaignactivity.CampaignActivityStatus;
 import com.axon.core_service.service.CampaignService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/campaign")
 @RequiredArgsConstructor
 public class CampaignController {
+
     private final CampaignService campaignService;
 
-    // JSON형식의 요청을 받으면 아래 함수를 통해 값을 dto로 변환하여 처리합니다.
-
-    // 새 캠페인을 등록하며 한도·일정·보상 정책을 전달한다.
     @PostMapping
     public ResponseEntity<CampaignResponse> createCampaign(@RequestBody @Valid CampaignRequest request) {
         return ResponseEntity.ok(campaignService.createCampaign(request));
     }
 
-    // 전체 캠페인을 조회한다.
     @GetMapping
     public ResponseEntity<List<CampaignResponse>> getCampaigns() {
-
         return ResponseEntity.ok(campaignService.getCampaigns());
     }
 
-    // 단일 캠페인의 상세 정보를 확인한다.
     @GetMapping("/{id}")
     public ResponseEntity<CampaignResponse> getCampaign(@PathVariable Long id) {
         return ResponseEntity.ok(campaignService.getCampaign(id));
     }
 
-    // 캠페인의 기본 정보·정책을 수정한다.
     @PutMapping("/{id}")
-    public ResponseEntity<CampaignResponse> updateCampaign(@PathVariable Long id, @RequestBody @Valid CampaignRequest request) {
+    public ResponseEntity<CampaignResponse> updateCampaign(@PathVariable Long id,
+                                                           @RequestBody @Valid CampaignRequest request) {
         return ResponseEntity.ok(campaignService.updateCampaign(id, request));
     }
 
-    // 캠페인을 삭제한다.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCampaign(@PathVariable Long id) {
         campaignService.deleteCampaign(id);
         return ResponseEntity.noContent().build();
     }
 
-    // 캠페인 하위 이벤트를 등록하고 한도·상태를 설정한다.
-    @PostMapping("/{campaignId}/events")
-    public ResponseEntity<EventResponse> createEvent(
-            @PathVariable Long campaignId,
-            @RequestBody @Valid EventRequest request
-    ) {
-        return ResponseEntity.ok(campaignService.createEvent(campaignId, request));
+    @PostMapping("/{campaignId}/activities")
+    public ResponseEntity<CampaignActivityResponse> createCampaignActivity(@PathVariable Long campaignId,
+                                                                           @RequestBody @Valid CampaignActivityRequest request) {
+        return ResponseEntity.ok(campaignService.createCampaignActivity(campaignId, request));
     }
 
-
-    // 특정 캠페인에 속한 이벤트 목록을 조회한다.
-    @GetMapping("/{campaignId}/events")
-    public ResponseEntity<List<EventResponse>> getEvents(@PathVariable Long campaignId) {
-        return ResponseEntity.ok(campaignService.getEvents(campaignId));
+    @GetMapping("/{campaignId}/activities")
+    public ResponseEntity<List<CampaignActivityResponse>> getCampaignActivities(@PathVariable Long campaignId) {
+        return ResponseEntity.ok(campaignService.getCampaignActivities(campaignId));
     }
 
-    // 이벤트의 기본 정보를 수정한다.
-    @PutMapping("/events/{eventId}")
-    public ResponseEntity<EventResponse> updateEvent(
-            @PathVariable Long eventId,
-            @RequestBody @Valid EventRequest request
-    ) {
-        return ResponseEntity.ok(campaignService.updateEvent(eventId, request));
+    @PutMapping("/activities/{campaignActivityId}")
+    public ResponseEntity<CampaignActivityResponse> updateCampaignActivity(@PathVariable Long campaignActivityId,
+                                                                           @RequestBody @Valid CampaignActivityRequest request) {
+        return ResponseEntity.ok(campaignService.updateCampaignActivity(campaignActivityId, request));
     }
 
-    // 이벤트 상태만 변경한다.
-    @PatchMapping("/events/{eventId}/status")
-    public ResponseEntity<EventResponse> changeEventStatus(
-            @PathVariable Long eventId,
-            @RequestParam EventStatus status
-    ) {
-        return ResponseEntity.ok(campaignService.changeEventStatus(eventId, status));
+    @PatchMapping("/activities/{campaignActivityId}/status")
+    public ResponseEntity<CampaignActivityResponse> changeCampaignActivityStatus(@PathVariable Long campaignActivityId,
+                                                                                 @RequestParam CampaignActivityStatus status) {
+        return ResponseEntity.ok(campaignService.changeCampaignActivityStatus(campaignActivityId, status));
     }
 
-    // 이벤트를 삭제한다.
-    @DeleteMapping("/events/{eventId}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
-        campaignService.deleteEvent(eventId);
+    @DeleteMapping("/activities/{campaignActivityId}")
+    public ResponseEntity<Void> deleteCampaignActivity(@PathVariable Long campaignActivityId) {
+        campaignService.deleteCampaignActivity(campaignActivityId);
         return ResponseEntity.noContent().build();
     }
 
-    // 전체 이벤트를 조회한다.
-    @GetMapping("/events")
-    public ResponseEntity<List<EventResponse>> getEvents() {
-        return ResponseEntity.ok(campaignService.getAllEvents());
+    @GetMapping("/activities")
+    public ResponseEntity<List<CampaignActivityResponse>> getCampaignActivities() {
+        return ResponseEntity.ok(campaignService.getAllCampaignActivities());
     }
 
-    // 전체 이벤트의 개수를 조회한다.
-    @GetMapping("/events/count")
-    public ResponseEntity<Long> getTotalEventCount() {
-        return ResponseEntity.ok(campaignService.getTotalEventCount());
+    @GetMapping("/activities/count")
+    public ResponseEntity<Long> getTotalCampaignActivityCount() {
+        return ResponseEntity.ok(campaignService.getTotalCampaignActivityCount());
     }
 
-    // 단일 이벤트의 상세 정보를 조회한다.
-    @GetMapping("/events/{eventId}")
-    public ResponseEntity<EventResponse> getEvent(@PathVariable Long eventId) {
-        return ResponseEntity.ok(campaignService.getEvent(eventId));
+    @GetMapping("/activities/{campaignActivityId}")
+    public ResponseEntity<CampaignActivityResponse> getCampaignActivity(@PathVariable Long campaignActivityId) {
+        return ResponseEntity.ok(campaignService.getCampaignActivity(campaignActivityId));
     }
 
-    // 캠페인 이름 중복을 확인한다.
     @GetMapping("/exists")
     public ResponseEntity<Boolean> checkCampaignName(@RequestParam String name) {
         return ResponseEntity.ok(campaignService.isCampaignNameTaken(name));
