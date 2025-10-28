@@ -101,7 +101,58 @@
                     </div>
                     <div>
                         <label class="form-label">필터 제한</label>
-                        <label class="flex items-center"><input type="checkbox" class="form-checkbox"><span class="ml-2">미구현 섹터</span></label>
+                        <div id="filter-container" class="space-y-4">
+                            <!-- 나이 필터 -->
+                            <div class="filter-group">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="AGE">
+                                    <span class="ml-2 font-medium">나이 제한</span>
+                                </label>
+                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="AGE">
+                                    <div id="age-filter-inputs">
+                                        <!-- 나이 범위 입력란이 동적으로 추가될 영역 -->
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <input type="number" placeholder="20" class="form-input age-range-start w-20"> ~ <input type="number" placeholder="29" class="form-input age-range-end w-20">
+                                        </div>
+                                    </div>
+                                    <button type="button" id="add-age-range-btn" class="btn-secondary text-sm py-1 px-2">+ 범위 추가</button>
+                                </div>
+                            </div>
+                            <!-- 지역 필터 -->
+                            <div class="filter-group">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="REGION">
+                                    <span class="ml-2 font-medium">지역 제한</span>
+                                </label>
+                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="REGION">
+                                    <div class="flex items-center gap-2">
+                                        <select id="region-sido-select" class="form-input flex-grow">
+                                            <option value="">시/도 선택</option>
+                                        </select>
+                                        <select id="region-sigungu-select" class="form-input flex-grow">
+                                            <option value="">시/군/구 선택</option>
+                                        </select>
+                                    </div>
+                                    <div id="selected-regions-container" class="mt-2"></div>
+                                </div>
+                            </div>
+                            <!-- VIP 등급 필터 (예시) -->
+                            <div class="filter-group">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="VIP_TIER">
+                                    <span class="ml-2 font-medium">VIP 등급 제한</span>
+                                </label>
+                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="VIP_TIER">
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="BRONZE"><span class="ml-2">브론즈</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="SILVER"><span class="ml-2">실버</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="GOLD"><span class="ml-2">골드</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="PLATINUM"><span class="ml-2">플레티</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="DIAMOND"><span class="ml-2">다이아몬드</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="VIP"><span class="ml-2">VIP</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="VVIP"><span class="ml-2">VVIP</span></label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
