@@ -26,7 +26,6 @@ public class EntryController {
     public ResponseEntity<Void> createEntry(@RequestBody EntryRequestDto requestDto,
                                             @AuthenticationPrincipal UserDetails userDetails) {
         log.info("요청 확인 {}", requestDto);
-        // TODO: 추후 Spring Security를 통해 JWT 토큰에서 실제 userId를 추출해야 함
         long userId = Long.parseLong(userDetails.getUsername());
 
         long timestamp = Instant.now().toEpochMilli();

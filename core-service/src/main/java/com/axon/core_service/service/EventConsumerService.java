@@ -29,7 +29,7 @@ public class EventConsumerService {
     public void consume(KafkaProducerDto event) {
         log.info("Consumed message: {}", event);
 
-        EventType type = event.getCampaignType();
+        EventType type = event.getEventType();
         CampaignStrategy strategy = strategies.get(type);
 
         if (strategy != null) {

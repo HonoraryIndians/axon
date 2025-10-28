@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Axon - 태그 관리</title>
+
+    <!-- Vendor scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- External stylesheet (extracted from inline <style> blocks) -->
+    <link rel="stylesheet" href="./styles.css" />
+
+    <!-- Tailwind theme using CSS variables -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ...{
+                "transparent":"transparent",
+                "current":"currentColor",
+                "black":"#000000",
+                "white":"#ffffff",
+                "gray":{"50":"#f9fafb","100":"#f3f4f6","200":"#e5e7eb","300":"#d1d5db","400":"#9ca3af","500":"#6b7280","600":"#4b5563","700":"#374151","800":"#1f2937","900":"#111827"},
+                "red":{"50":"#fef2f2","100":"#fee2e2","200":"#fecaca","300":"#fca5a5","400":"#f87171","500":"#ef4444","600":"#dc2626","700":"#b91c1c","800":"#991b1b","900":"#7f1d1d"},
+                "yellow":{"50":"#fffbeb","100":"#fef3c7","200":"#fde68a","300":"#fcd34d","400":"#fbbf24","500":"#f59e0b","600":"#d97706","700":"#b45309","800":"#92400e","900":"#78350f"},
+                "green":{"50":"#ecfdf5","100":"#d1fae5","200":"#a7f3d0","300":"#6ee7b7","400":"#34d399","500":"#10b981","600":"#059669","700":"#047857","800":"#065f46","900":"#064e3b"},
+                "blue":{"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a"},
+                "indigo":{"50":"#eef2ff","100":"#e0e7ff","200":"#c7d2fe","300":"#a5b4fc","400":"#818cf8","500":"#6366f1","600":"#4f46e5","700":"#4338ca","800":"#3730a3","900":"#312e81"},
+                "purple":{"50":"#f5f3ff","100":"#ede9fe","200":"#ddd6fe","300":"#c4b5fd","400":"#a78bfa","500":"#8b5cf6","600":"#7c3aed","700":"#6d28d9","800":"#5b21b6","900":"#4c1d95"},
+                "pink":{"50":"#fdf2f8","100":"#fce7f3","200":"#fbcfe8","300":"#f9a8d4","400":"#f472b6","500":"#ec4899","600":"#db2777","700":"#be185d","800":"#9d174d","900":"#831843"}
+              },
+              ...{
+                "primary":{"50":"var(--color-primary-50)","100":"var(--color-primary-100)","200":"var(--color-primary-200)","300":"var(--color-primary-300)","400":"var(--color-primary-400)","500":"var(--color-primary-500)","600":"var(--color-primary-600)","700":"var(--color-primary-700)","800":"var(--color-primary-800)","900":"var(--color-primary-900)","DEFAULT":"var(--color-primary)","focus":"var(--color-primary-focus)","content":"var(--color-primary-content)"},
+                "secondary":{"50":"var(--color-secondary-50)","100":"var(--color-secondary-100)","200":"var(--color-secondary-200)","300":"var(--color-secondary-300)","400":"var(--color-secondary-400)","500":"var(--color-secondary-500)","600":"var(--color-secondary-600)","700":"var(--color-secondary-700)","800":"var(--color-secondary-800)","900":"var(--color-secondary-900)","DEFAULT":"var(--color-secondary)","focus":"var(--color-secondary-focus)","content":"var(--color-secondary-content)"},
+                "accent":{"50":"var(--color-accent-50)","100":"var(--color-accent-100)","200":"var(--color-accent-200)","300":"var(--color-accent-300)","400":"var(--color-accent-400)","500":"var(--color-accent-500)","600":"var(--color-accent-600)","700":"var(--color-accent-700)","800":"var(--color-accent-800)","900":"var(--color-accent-900)","DEFAULT":"var(--color-accent)","focus":"var(--color-accent-focus)","content":"var(--color-accent-content)"},
+                "neutral":{"50":"var(--color-neutral-50)","100":"var(--color-neutral-100)","200":"var(--color-neutral-200)","300":"var(--color-neutral-300)","400":"var(--color-neutral-400)","500":"var(--color-neutral-500)","600":"var(--color-neutral-600)","700":"var(--color-neutral-700)","800":"var(--color-neutral-800)","900":"var(--color-neutral-900)","DEFAULT":"var(--color-neutral)","focus":"var(--color-neutral-focus)","content":"var(--color-neutral-content)"},
+                "info":{"50":"var(--color-info-50)","100":"var(--color-info-100)","200":"var(--color-info-200)","300":"var(--color-info-300)","400":"var(--color-info-400)","500":"var(--color-info-500)","600":"var(--color-info-600)","700":"var(--color-info-700)","800":"var(--color-info-800)","900":"var(--color-info-900)","DEFAULT":"var(--color-info)","focus":"var(--color-info-focus)","content":"var(--color-info-content)"},
+                "success":{"50":"var(--color-success-50)","100":"var(--color-success-100)","200":"var(--color-success-200)","300":"var(--color-success-300)","400":"var(--color-success-400)","500":"var(--color-success-500)","600":"var(--color-success-600)","700":"var(--color-success-700)","800":"var(--color-success-800)","900":"var(--color-success-900)","DEFAULT":"var(--color-success)","focus":"var(--color-success-focus)","content":"var(--color-success-content)"},
+                "warning":{"50":"var(--color-warning-50)","100":"var(--color-warning-100)","200":"var(--color-warning-200)","300":"var(--color-warning-300)","400":"var(--color-warning-400)","500":"var(--color-warning-500)","600":"var(--color-warning-600)","700":"var(--color-warning-700)","800":"var(--color-warning-800)","900":"var(--color-warning-900)","DEFAULT":"var(--color-warning)","focus":"var(--color-warning-focus)","content":"var(--color-warning-content)"},
+                "error":{"50":"var(--color-error-50)","100":"var(--color-error-100)","200":"var(--color-error-200)","300":"var(--color-error-300)","400":"var(--color-error-400)","500":"var(--color-error-500)","600":"var(--color-error-600)","700":"var(--color-error-700)","800":"var(--color-error-800)","900":"var(--color-error-900)","DEFAULT":"var(--color-error)","focus":"var(--color-error-focus)","content":"var(--color-error-content)"},
+                "danger":{"50":"var(--color-error-50)","100":"var(--color-error-100)","200":"var(--color-error-200)","300":"var(--color-error-300)","400":"var(--color-error-400)","500":"var(--color-error-500)","600":"var(--color-error-600)","700":"var(--color-error-700)","800":"var(--color-error-800)","900":"var(--color-error-900)","DEFAULT":"var(--color-error)","focus":"var(--color-error-focus)","content":"var(--color-error-content)"},
+                "failure":{"50":"var(--color-error-50)","100":"var(--color-error-100)","200":"var(--color-error-200)","300":"var(--color-error-300)","400":"var(--color-error-400)","500":"var(--color-error-500)","600":"var(--color-error-600)","700":"var(--color-error-700)","800":"var(--color-error-800)","900":"var(--color-error-900)","DEFAULT":"var(--color-error)","focus":"var(--color-error-focus)","content":"var(--color-error-content)"}
+              }
+            }
+          },
+        },
+        variants: {
+          extend: {
+            backgroundColor: ['active', 'group-hover'],
+            textColor: ['active', 'group-hover'],
+          },
+        },
+        plugins: [],
+      };
+    </script>
+  </head>
+
+  <body class="h-full text-base-content bg-neutral-50">
+    <header id="header" class="bg-white border-b border-neutral-200">
+      <div class="flex items-center justify-between px-6 py-4">
+        <div class="flex items-center space-x-8">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-neutral-800 rounded-lg flex items-center justify-center">
+              <i class="fa-solid fa-bolt text-white text-sm"></i>
+            </div>
+            <span class="text-xl text-neutral-900">Axon</span>
+          </div>
+          <nav class="flex space-x-6">
+            <a href="#" class="text-neutral-600 hover:text-neutral-900">대시보드</a>
+            <a href="#" class="text-neutral-600 hover:text-neutral-900">캠페인</a>
+            <a href="#" class="text-neutral-900 border-b-2 border-neutral-900 pb-1">태그 관리</a>
+          </nav>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button class="bg-neutral-900 text-white px-4 py-2 rounded-lg hover:bg-neutral-800 flex items-center space-x-2">
+            <i class="fa-solid fa-plus text-sm"></i>
+            <span>새 태그 만들기</span>
+          </button>
+          <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=456" alt="User Avatar" class="w-8 h-8 rounded-full">
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="p-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="mb-6">
+          <h1 class="text-2xl text-neutral-900 mb-2">태그 관리</h1>
+          <p class="text-neutral-600">데이터 수집 센서 목록 및 관리 센터</p>
+        </div>
+
+        <div id="search-filter-bar" class="bg-white rounded-lg border border-neutral-200 p-4 mb-6">
+          <div class="flex items-center space-x-4">
+            <div class="flex-1">
+              <div class="relative">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+                <input type="text" placeholder="태그 이름 또는 설명으로 검색" class="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-transparent">
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <select class="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-transparent">
+                <option>상태: 전체</option>
+                <option>활성</option>
+                <option>비활성</option>
+              </select>
+              <select class="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-transparent">
+                <option>유형: 전체</option>
+                <option>페이지 뷰</option>
+                <option>클릭</option>
+                <option>폼 제출</option>
+              </select>
+              <button class="bg-neutral-900 text-white px-4 py-2 rounded-lg hover:bg-neutral-800">적용</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="tags-table-container" class="bg-white rounded-lg border border-neutral-200">
+          <div class="p-4 border-b border-neutral-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
+                <span class="text-sm text-neutral-600">전체 선택</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">일괄 활성화</button>
+                <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">일괄 비활성화</button>
+                <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">일괄 삭제</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-neutral-50">
+                <tr>
+                  <th class="w-12 px-4 py-3 text-left">
+                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
+                  </th>
+                  <th class="px-4 py-3 text-left text-sm text-neutral-700">태그 이름</th>
+                  <th class="px-4 py-3 text-left text-sm text-neutral-700">상태</th>
+                  <th class="px-4 py-3 text-left text-sm text-neutral-700">유형</th>
+                  <th class="px-4 py-3 text-left text-sm text-neutral-700">트리거 조건</th>
+                  <th class="px-4 py-3 text-left text-sm text-neutral-700">설명</th>
+                  <th class="px-4 py-3 text-left text-sm text-neutral-700">최근 수정일</th>
+                  <th class="w-12 px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-neutral-200">
+                <tr class="hover:bg-neutral-50">
+                  <td class="px-4 py-4">
+                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
+                  </td>
+                  <td class="px-4 py-4">
+                    <a href="#" class="text-neutral-900 hover:text-neutral-700">상품 상세 페이지 조회</a>
+                  </td>
+                  <td class="px-4 py-4">
+                    <label class="flex items-center cursor-pointer">
+                      <input type="checkbox" checked class="sr-only">
+                      <div class="relative">
+                        <div class="w-10 h-6 bg-neutral-900 rounded-full shadow-inner"></div>
+                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 right-1 transition-transform"></div>
+                      </div>
+                    </label>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">페이지 뷰</span>
+                  </td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">URL Contains '/products/'</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">제품 상세 페이지 방문 추적</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-15</td>
+                  <td class="px-4 py-4">
+                    <div class="relative">
+                      <button class="text-neutral-400 hover:text-neutral-600">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-neutral-50">
+                  <td class="px-4 py-4">
+                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
+                  </td>
+                  <td class="px-4 py-4">
+                    <a href="#" class="text-neutral-900 hover:text-neutral-700">구매하기 버튼 클릭</a>
+                  </td>
+                  <td class="px-4 py-4">
+                    <label class="flex items-center cursor-pointer">
+                      <input type="checkbox" checked class="sr-only">
+                      <div class="relative">
+                        <div class="w-10 h-6 bg-neutral-900 rounded-full shadow-inner"></div>
+                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 right-1 transition-transform"></div>
+                      </div>
+                    </label>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">클릭</span>
+                  </td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">Selector '#buy-button'</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">구매 버튼 클릭 이벤트 추적</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-14</td>
+                  <td class="px-4 py-4">
+                    <div class="relative">
+                      <button class="text-neutral-400 hover:text-neutral-600">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-neutral-50">
+                  <td class="px-4 py-4">
+                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
+                  </td>
+                  <td class="px-4 py-4">
+                    <a href="#" class="text-neutral-900 hover:text-neutral-700">회원가입 폼 제출</a>
+                  </td>
+                  <td class="px-4 py-4">
+                    <label class="flex items-center cursor-pointer">
+                      <input type="checkbox" class="sr-only">
+                      <div class="relative">
+                        <div class="w-10 h-6 bg-neutral-300 rounded-full shadow-inner"></div>
+                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 left-1 transition-transform"></div>
+                      </div>
+                    </label>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">폼 제출</span>
+                  </td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">Form ID 'signup-form'</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">신규 회원가입 완료 추적</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-13</td>
+                  <td class="px-4 py-4">
+                    <div class="relative">
+                      <button class="text-neutral-400 hover:text-neutral-600">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-neutral-50">
+                  <td class="px-4 py-4">
+                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
+                  </td>
+                  <td class="px-4 py-4">
+                    <a href="#" class="text-neutral-900 hover:text-neutral-700">장바구니 추가</a>
+                  </td>
+                  <td class="px-4 py-4">
+                    <label class="flex items-center cursor-pointer">
+                      <input type="checkbox" checked class="sr-only">
+                      <div class="relative">
+                        <div class="w-10 h-6 bg-neutral-900 rounded-full shadow-inner"></div>
+                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 right-1 transition-transform"></div>
+                      </div>
+                    </label>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">클릭</span>
+                  </td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">Class '.add-to-cart'</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">제품 장바구니 추가 이벤트</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-12</td>
+                  <td class="px-4 py-4">
+                    <div class="relative">
+                      <button class="text-neutral-400 hover:text-neutral-600">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-neutral-50">
+                  <td class="px-4 py-4">
+                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
+                  </td>
+                  <td class="px-4 py-4">
+                    <a href="#" class="text-neutral-900 hover:text-neutral-700">결제 완료</a>
+                  </td>
+                  <td class="px-4 py-4">
+                    <label class="flex items-center cursor-pointer">
+                      <input type="checkbox" checked class="sr-only">
+                      <div class="relative">
+                        <div class="w-10 h-6 bg-neutral-900 rounded-full shadow-inner"></div>
+                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 right-1 transition-transform"></div>
+                      </div>
+                    </label>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">페이지 뷰</span>
+                  </td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">URL Equals '/checkout/success'</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">구매 완료 페이지 도달 추적</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-11</td>
+                  <td class="px-4 py-4">
+                    <div class="relative">
+                      <button class="text-neutral-400 hover:text-neutral-600">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="pagination" class="flex items-center justify-between px-4 py-4 border-t border-neutral-200">
+            <div class="text-sm text-neutral-600">
+              총 47개 태그 중 1-5개 표시
+            </div>
+            <div class="flex items-center space-x-2">
+              <button class="px-3 py-1 text-sm text-neutral-400 border border-neutral-300 rounded cursor-not-allowed">이전</button>
+              <button class="px-3 py-1 text-sm bg-neutral-900 text-white rounded">1</button>
+              <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">2</button>
+              <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">3</button>
+              <span class="px-2 text-neutral-400">...</span>
+              <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">10</button>
+              <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">다음</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

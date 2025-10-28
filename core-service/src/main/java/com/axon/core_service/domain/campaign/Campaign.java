@@ -3,6 +3,7 @@ package com.axon.core_service.domain.campaign;
 import com.axon.core_service.domain.dto.event.EventStatus;
 import com.axon.core_service.domain.event.Event;
 import com.axon.core_service.domain.common.BaseTimeEntity;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -49,6 +51,17 @@ public class Campaign extends BaseTimeEntity {
     public Campaign(String name) {
         this.name = name;
     }
+
+    @Builder
+    public Campaign(String name, LocalDateTime startAt, LocalDateTime endAt, Long targetSegmentId, String rewardType, String rewardPayload) {
+        this.name = name;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.targetSegmentId = targetSegmentId;
+        this.rewardType = rewardType;
+        this.rewardPayload = rewardPayload;
+    }
+
 
     public void updateSchedule(LocalDateTime startAt, LocalDateTime endAt) {
         this.startAt = startAt;

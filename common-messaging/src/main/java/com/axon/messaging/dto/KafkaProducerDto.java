@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KafkaProducerDto {
-    private EventType campaignType;
+    private EventType eventType;
     private Long eventId;
     private Long userId;
     private Long productId;

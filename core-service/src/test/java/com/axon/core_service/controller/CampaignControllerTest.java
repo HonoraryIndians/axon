@@ -40,25 +40,21 @@ class CampaignControllerTest {
     void createCampaign_returnsCreatedCampaign() throws Exception {
         CampaignRequest request = CampaignRequest.builder()
                 .name("Black Friday")
-                .type(EventType.FIRST_COME_FIRST_SERVE)
                 .targetSegmentId(42L)
                 .rewardType("COUPON")
                 .rewardPayload("{\"amount\":1000}")
                 .startAt(LocalDateTime.now().plusDays(1))
                 .endAt(LocalDateTime.now().plusDays(7))
-                .status(EventStatus.DRAFT)
                 .build();
 
         CampaignResponse response = CampaignResponse.builder()
                 .id(1L)
                 .name("Black Friday")
-                .type(EventType.FIRST_COME_FIRST_SERVE)
                 .targetSegmentId(42L)
                 .rewardType("COUPON")
                 .rewardPayload("{\"amount\":1000}")
                 .startAt(request.getStartAt())
                 .endAt(request.getEndAt())
-                .status(EventStatus.DRAFT)
                 .build();
 
         Mockito.when(campaignService.createCampaign(any()))
@@ -77,11 +73,9 @@ class CampaignControllerTest {
         CampaignResponse response = CampaignResponse.builder()
                 .id(1L)
                 .name("Black Friday")
-                .type(EventType.FIRST_COME_FIRST_SERVE)
                 .targetSegmentId(42L)
                 .rewardType("COUPON")
                 .rewardPayload("{\"amount\":1000}")
-                .status(EventStatus.DRAFT)
                 .build();
 
         Mockito.when(campaignService.getCampaigns())
