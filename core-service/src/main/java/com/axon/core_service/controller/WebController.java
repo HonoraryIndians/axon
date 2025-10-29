@@ -15,7 +15,7 @@ public class WebController {
     }
 
     @GetMapping("/")
-    public String loginSuccess() {
+    public String welcomepage() {
         log.info("Serving welcomepage.html");
         return "welcomepage.html";
         //TO-DO: 로그아웃 이후 임시 대피처 재정의 필요

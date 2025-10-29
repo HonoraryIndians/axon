@@ -128,6 +128,53 @@ const modalHandler = {
                                         <label class="form-label">참여 인원 수</label>
                                         <input id="editLimitCountInput" type="number" class="form-input" placeholder="최대 참여 인원을 입력하세요" value="${activityDetails.limitCount || ''}">
                                     </div>
+                                    <div>
+                                        <label class="form-label">필터 제한</label>
+                                        <div class="space-y-4">
+                                            <div class="filter-group">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="AGE">
+                                                    <span class="ml-2 font-medium">나이 제한</span>
+                                                </label>
+                                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="AGE">
+                                                    <div id="edit-age-filter-inputs"></div>
+                                                    <button type="button" id="edit-add-age-range-btn" class="btn-secondary text-sm py-1 px-2">+ 범위 추가</button>
+                                                </div>
+                                            </div>
+                                            <div class="filter-group">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="REGION">
+                                                    <span class="ml-2 font-medium">지역 제한</span>
+                                                </label>
+                                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="REGION">
+                                                    <div class="flex items-center gap-2">
+                                                        <select id="edit-region-sido-select" class="form-input flex-grow">
+                                                            <option value="">시/도 선택</option>
+                                                        </select>
+                                                        <select id="edit-region-sigungu-select" class="form-input flex-grow">
+                                                            <option value="">시/군/구 선택</option>
+                                                        </select>
+                                                    </div>
+                                                    <div id="edit-selected-regions-container" class="mt-2"></div>
+                                                </div>
+                                            </div>
+                                            <div class="filter-group">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="VIP_TIER">
+                                                    <span class="ml-2 font-medium">VIP 등급 제한</span>
+                                                </label>
+                                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="VIP_TIER">
+                                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" value="BRONZE"><span class="ml-2">브론즈</span></label>
+                                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" value="SILVER"><span class="ml-2">실버</span></label>
+                                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" value="GOLD"><span class="ml-2">골드</span></label>
+                                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" value="PLATINUM"><span class="ml-2">플레티넘</span></label>
+                                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" value="DIAMOND"><span class="ml-2">다이아몬드</span></label>
+                                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" value="VIP"><span class="ml-2">VIP</span></label>
+                                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" value="VVIP"><span class="ml-2">VVIP</span></label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </section>
                             <section class="section-card">
@@ -161,6 +208,11 @@ const modalHandler = {
         const closeModal = () => modalBackdrop.remove();
         modalBackdrop.querySelector('.modal-close-button').addEventListener('click', closeModal);
         document.getElementById('cancel-edit-btn').addEventListener('click', closeModal);
+        const modalContent = modalBackdrop.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.style.maxHeight = '85vh';
+            modalContent.style.overflowY = 'auto';
+        }
 
         document.getElementById('editCampaignActivityTypeGroup').querySelectorAll('.selectable').forEach(button => {
             button.addEventListener('click', () => {
@@ -169,6 +221,171 @@ const modalHandler = {
                 document.getElementById('editCampaignActivityTypeInput').value = button.dataset.type;
             });
         });
+
+        const filterTypeCheckboxes = modalBackdrop.querySelectorAll('.filter-type-checkbox');
+        const ageInputsContainer = modalBackdrop.querySelector('#edit-age-filter-inputs');
+        const addAgeRangeBtn = modalBackdrop.querySelector('#edit-add-age-range-btn');
+        const sidoSelect = modalBackdrop.querySelector('#edit-region-sido-select');
+        const sigunguSelect = modalBackdrop.querySelector('#edit-region-sigungu-select');
+        const selectedRegionsContainer = modalBackdrop.querySelector('#edit-selected-regions-container');
+
+        const createAgeRangeRow = (start = '', end = '') => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'edit-age-range-row flex items-center gap-2 mb-2';
+            wrapper.innerHTML = `
+                <input type="number" placeholder="20" class="form-input age-range-start w-20">
+                <span>~</span>
+                <input type="number" placeholder="29" class="form-input age-range-end w-20">
+                <button type="button" class="remove-age-range-btn text-red-500">-</button>
+            `;
+            wrapper.querySelector('.age-range-start').value = start ?? '';
+            wrapper.querySelector('.age-range-end').value = end ?? '';
+            return wrapper;
+        };
+
+        const ensureAgeRows = () => {
+            if (!ageInputsContainer) return;
+            const ageCheckbox = modalBackdrop.querySelector('.filter-type-checkbox[data-filter-type="AGE"]');
+            if (ageCheckbox && !ageCheckbox.checked) return;
+            if (!ageInputsContainer.children.length) {
+                ageInputsContainer.appendChild(createAgeRangeRow());
+            }
+        };
+
+        const toggleDetails = (checkbox, forceShow = false) => {
+            const details = modalBackdrop.querySelector(`.filter-details[data-filter-details="${checkbox.dataset.filterType}"]`);
+            if (!details) return;
+            const shouldShow = forceShow || checkbox.checked;
+            details.classList.toggle('hidden', !shouldShow);
+            if (!shouldShow) {
+                if (checkbox.dataset.filterType === 'AGE' && ageInputsContainer) {
+                    ageInputsContainer.innerHTML = '';
+                }
+                if (checkbox.dataset.filterType === 'REGION' && selectedRegionsContainer) {
+                    selectedRegionsContainer.innerHTML = '';
+                }
+                if (checkbox.dataset.filterType !== 'AGE' && checkbox.dataset.filterType !== 'REGION') {
+                    details.querySelectorAll('.filter-value-checkbox').forEach(cb => cb.checked = false);
+                }
+            } else if (checkbox.dataset.filterType === 'AGE') {
+                ensureAgeRows();
+            }
+        };
+
+        filterTypeCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => toggleDetails(checkbox));
+        });
+
+        if (ageInputsContainer && addAgeRangeBtn) {
+            addAgeRangeBtn.addEventListener('click', () => {
+                if (ageInputsContainer.children.length >= 10) return;
+                ageInputsContainer.appendChild(createAgeRangeRow());
+            });
+            ageInputsContainer.addEventListener('click', (event) => {
+                if (event.target.classList.contains('remove-age-range-btn')) {
+                    event.target.parentElement.remove();
+                    ensureAgeRows();
+                }
+            });
+        }
+
+        const addRegionTag = (value) => {
+            if (!selectedRegionsContainer || !value) return;
+            if (selectedRegionsContainer.querySelector(`[data-region="${value}"]`)) {
+                alert('이미 추가된 지역입니다.');
+                return;
+            }
+            const tag = document.createElement('span');
+            tag.className = 'selected-region-tag bg-gray-200 text-gray-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded';
+            tag.dataset.region = value;
+            const label = value.includes('-') ? value.replace('-', ' ') : `${value} 전체`;
+            tag.textContent = label;
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-region-btn ml-2 text-red-500';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.addEventListener('click', () => tag.remove());
+            tag.appendChild(removeBtn);
+            selectedRegionsContainer.appendChild(tag);
+        };
+
+        if (selectedRegionsContainer) {
+            selectedRegionsContainer.addEventListener('click', (event) => {
+                if (event.target.classList.contains('remove-region-btn')) {
+                    event.target.parentElement.remove();
+                }
+            });
+        }
+
+        let districtData = {};
+
+        const populateSidoOptions = () => {
+            if (!sidoSelect) return;
+            sidoSelect.innerHTML = '<option value="">시/도 선택</option>';
+            Object.keys(districtData).forEach(sido => {
+                sidoSelect.add(new Option(sido, sido));
+            });
+        };
+
+        const populateSigunguOptions = (sido) => {
+            if (!sigunguSelect) return;
+            sigunguSelect.innerHTML = '<option value="">시/군/구 선택</option>';
+            if (!sido || !districtData[sido]) return;
+            sigunguSelect.add(new Option('전체', 'ALL'));
+            districtData[sido].forEach(sigungu => sigunguSelect.add(new Option(sigungu, sigungu)));
+        };
+
+        if (sidoSelect && sigunguSelect) {
+            sidoSelect.addEventListener('change', () => {
+                populateSigunguOptions(sidoSelect.value);
+                sigunguSelect.value = '';
+            });
+
+            sigunguSelect.addEventListener('change', () => {
+                const sido = sidoSelect.value;
+                const sigungu = sigunguSelect.value;
+                if (!sido || !sigungu) return;
+                const value = sigungu === 'ALL' ? sido : `${sido}-${sigungu}`;
+                addRegionTag(value);
+                sigunguSelect.value = '';
+            });
+        }
+
+        if (sidoSelect) {
+            fetch('/data/korean-districts.json')
+                .then(res => res.json())
+                .then(data => {
+                    districtData = data || {};
+                    populateSidoOptions();
+                })
+                .catch(error => console.error('지역 데이터를 불러오지 못했습니다.', error));
+        }
+
+        const existingFilters = Array.isArray(activityDetails.filters) ? activityDetails.filters : [];
+        existingFilters.forEach(filter => {
+            const checkbox = modalBackdrop.querySelector(`.filter-type-checkbox[data-filter-type="${filter.type}"]`);
+            if (!checkbox) return;
+            checkbox.checked = true;
+            toggleDetails(checkbox, true);
+
+            if (filter.type === 'AGE' && ageInputsContainer) {
+                ageInputsContainer.innerHTML = '';
+                (filter.values || []).forEach(value => {
+                    const [start, end] = String(value || '').split('-');
+                    ageInputsContainer.appendChild(createAgeRangeRow(start, end));
+                });
+                ensureAgeRows();
+            } else if (filter.type === 'REGION' && selectedRegionsContainer) {
+                selectedRegionsContainer.innerHTML = '';
+                (filter.values || []).forEach(value => addRegionTag(value));
+            } else {
+                (filter.values || []).forEach(value => {
+                    const input = modalBackdrop.querySelector(`.filter-details[data-filter-details="${filter.type}"] .filter-value-checkbox[value="${value}"]`);
+                    if (input) input.checked = true;
+                });
+            }
+        });
+        ensureAgeRows();
 
         document.getElementById('save-edit-btn').addEventListener('click', async () => {
             const form = document.getElementById('edit-activity-form');
@@ -184,6 +401,68 @@ const modalHandler = {
             if (end <= nowtime) { alert("종료 시간은 현재 시간보다 미래여야 합니다."); return; }
             if (end <= start) { alert("종료 시간은 시작 시간보다 미래여야 합니다."); return; }
 
+            const filters = [];
+            let hasFilterValidationError = false;
+
+            modalBackdrop.querySelectorAll('.filter-type-checkbox:checked').forEach(checkbox => {
+                if (hasFilterValidationError) return;
+                const type = checkbox.dataset.filterType;
+                let values = [];
+
+                if (type === 'AGE' && ageInputsContainer) {
+                    const rows = Array.from(ageInputsContainer.querySelectorAll('.edit-age-range-row'));
+                    if (!rows.length) {
+                        alert('나이 범위를 추가해주세요.');
+                        hasFilterValidationError = true;
+                        return;
+                    }
+                    for (const row of rows) {
+                        const startVal = row.querySelector('.age-range-start').value;
+                        const endVal = row.querySelector('.age-range-end').value;
+                        if (!startVal || !endVal) {
+                            alert('나이 범위를 모두 입력해주세요.');
+                            hasFilterValidationError = true;
+                            break;
+                        }
+                        if (Number(startVal) < 0 || Number(endVal) < 0) {
+                            alert('나이는 0 이상이어야 합니다.');
+                            hasFilterValidationError = true;
+                            break;
+                        }
+                        if (Number(endVal) < Number(startVal)) {
+                            alert('끝 나이는 시작 나이보다 크거나 같아야 합니다.');
+                            hasFilterValidationError = true;
+                            break;
+                        }
+                        values.push(`${startVal}-${endVal}`);
+                    }
+                } else if (type === 'REGION' && selectedRegionsContainer) {
+                    const regionTags = selectedRegionsContainer.querySelectorAll('.selected-region-tag');
+                    if (!regionTags.length) {
+                        alert('지역 필터를 선택했지만 지역을 추가하지 않았습니다.');
+                        hasFilterValidationError = true;
+                        return;
+                    }
+                    regionTags.forEach(tag => values.push(tag.dataset.region));
+                } else {
+                    const checked = modalBackdrop.querySelectorAll(`.filter-details[data-filter-details="${type}"] .filter-value-checkbox:checked`);
+                    if (!checked.length) {
+                        alert('선택한 필터에 대한 값을 하나 이상 선택하세요.');
+                        hasFilterValidationError = true;
+                        return;
+                    }
+                    values = Array.from(checked).map(cb => cb.value);
+                }
+
+                if (!hasFilterValidationError && values.length) {
+                    filters.push({ type, values });
+                }
+            });
+
+            if (hasFilterValidationError) {
+                return;
+            }
+
             const payload = {
                 name: document.getElementById('editActivityName').value,
                 limitCount: parseInt(document.getElementById('editLimitCountInput').value) || 0,
@@ -191,7 +470,7 @@ const modalHandler = {
                 startDate: document.getElementById('editStartDate').value + ':00',
                 endDate: document.getElementById('editEndDate').value + ':00',
                 activityType: document.getElementById('editCampaignActivityTypeInput').value,
-                filters: activityDetails.filters ?? []
+                filters
             };
 
             const token = common.getCookie("accessToken");
