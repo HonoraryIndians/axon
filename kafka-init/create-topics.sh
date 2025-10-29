@@ -11,6 +11,7 @@ done
 echo "Creating Kafka topics..."
 kafka-topics --create --if-not-exists --topic event --bootstrap-server broker_1:29092 --partitions 1 --replication-factor 1
 kafka-topics --create --if-not-exists --topic log --bootstrap-server broker_1:29092 --partitions 1 --replication-factor 1
+kafka-topics --create --if-not-exists --topic userlogininfo --bootstrap-server broker_1:29092 --partitions 1 --replication-factor 1
 kafka-topics --list --bootstrap-server broker_1:29092
 
 echo "Kafka topics created successfully!"
