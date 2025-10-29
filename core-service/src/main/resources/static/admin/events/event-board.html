@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Axon - 태그 관리</title>
+    <title>Axon - 이벤트 관리</title>
 
     <!-- Vendor scripts -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <!-- External stylesheet (extracted from inline <style> blocks) -->
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./event-board.css" />
 
     <!-- Tailwind theme using CSS variables -->
     <script>
@@ -75,13 +75,13 @@
           <nav class="flex space-x-6">
             <a href="#" class="text-neutral-600 hover:text-neutral-900">대시보드</a>
             <a href="#" class="text-neutral-600 hover:text-neutral-900">캠페인</a>
-            <a href="#" class="text-neutral-900 border-b-2 border-neutral-900 pb-1">태그 관리</a>
+            <a href="#" class="text-neutral-900 border-b-2 border-neutral-900 pb-1">이벤트 관리</a>
           </nav>
         </div>
         <div class="flex items-center space-x-4">
-          <button class="bg-neutral-900 text-white px-4 py-2 rounded-lg hover:bg-neutral-800 flex items-center space-x-2">
+          <button class="bg-neutral-900 text-white px-4 py-2 rounded-lg hover:bg-neutral-800 flex items-center space-x-2" data-event-create-button>
             <i class="fa-solid fa-plus text-sm"></i>
-            <span>새 태그 만들기</span>
+            <span>새 이벤트</span>
           </button>
           <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=456" alt="User Avatar" class="w-8 h-8 rounded-full">
         </div>
@@ -91,7 +91,7 @@
     <main id="main-content" class="p-6">
       <div class="max-w-7xl mx-auto">
         <div class="mb-6">
-          <h1 class="text-2xl text-neutral-900 mb-2">태그 관리</h1>
+          <h1 class="text-2xl text-neutral-900 mb-2">이벤트 관리</h1>
           <p class="text-neutral-600">데이터 수집 센서 목록 및 관리 센터</p>
         </div>
 
@@ -100,7 +100,7 @@
             <div class="flex-1">
               <div class="relative">
                 <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
-                <input type="text" placeholder="태그 이름 또는 설명으로 검색" class="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-transparent">
+                <input type="text" placeholder="이벤트 이름 또는 설명으로 검색" class="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-900 focus:border-transparent">
               </div>
             </div>
             <div class="flex items-center space-x-3">
@@ -142,7 +142,7 @@
                   <th class="w-12 px-4 py-3 text-left">
                     <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
                   </th>
-                  <th class="px-4 py-3 text-left text-sm text-neutral-700">태그 이름</th>
+                  <th class="px-4 py-3 text-left text-sm text-neutral-700">이벤트 이름</th>
                   <th class="px-4 py-3 text-left text-sm text-neutral-700">상태</th>
                   <th class="px-4 py-3 text-left text-sm text-neutral-700">유형</th>
                   <th class="px-4 py-3 text-left text-sm text-neutral-700">트리거 조건</th>
@@ -151,159 +151,10 @@
                   <th class="w-12 px-4 py-3"></th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-neutral-200">
-                <tr class="hover:bg-neutral-50">
-                  <td class="px-4 py-4">
-                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
-                  </td>
-                  <td class="px-4 py-4">
-                    <a href="#" class="text-neutral-900 hover:text-neutral-700">상품 상세 페이지 조회</a>
-                  </td>
-                  <td class="px-4 py-4">
-                    <label class="flex items-center cursor-pointer">
-                      <input type="checkbox" checked class="sr-only">
-                      <div class="relative">
-                        <div class="w-10 h-6 bg-neutral-900 rounded-full shadow-inner"></div>
-                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 right-1 transition-transform"></div>
-                      </div>
-                    </label>
-                  </td>
-                  <td class="px-4 py-4">
-                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">페이지 뷰</span>
-                  </td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">URL Contains '/products/'</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">제품 상세 페이지 방문 추적</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-15</td>
-                  <td class="px-4 py-4">
-                    <div class="relative">
-                      <button class="text-neutral-400 hover:text-neutral-600">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr class="hover:bg-neutral-50">
-                  <td class="px-4 py-4">
-                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
-                  </td>
-                  <td class="px-4 py-4">
-                    <a href="#" class="text-neutral-900 hover:text-neutral-700">구매하기 버튼 클릭</a>
-                  </td>
-                  <td class="px-4 py-4">
-                    <label class="flex items-center cursor-pointer">
-                      <input type="checkbox" checked class="sr-only">
-                      <div class="relative">
-                        <div class="w-10 h-6 bg-neutral-900 rounded-full shadow-inner"></div>
-                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 right-1 transition-transform"></div>
-                      </div>
-                    </label>
-                  </td>
-                  <td class="px-4 py-4">
-                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">클릭</span>
-                  </td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">Selector '#buy-button'</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">구매 버튼 클릭 이벤트 추적</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-14</td>
-                  <td class="px-4 py-4">
-                    <div class="relative">
-                      <button class="text-neutral-400 hover:text-neutral-600">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr class="hover:bg-neutral-50">
-                  <td class="px-4 py-4">
-                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
-                  </td>
-                  <td class="px-4 py-4">
-                    <a href="#" class="text-neutral-900 hover:text-neutral-700">회원가입 폼 제출</a>
-                  </td>
-                  <td class="px-4 py-4">
-                    <label class="flex items-center cursor-pointer">
-                      <input type="checkbox" class="sr-only">
-                      <div class="relative">
-                        <div class="w-10 h-6 bg-neutral-300 rounded-full shadow-inner"></div>
-                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 left-1 transition-transform"></div>
-                      </div>
-                    </label>
-                  </td>
-                  <td class="px-4 py-4">
-                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">폼 제출</span>
-                  </td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">Form ID 'signup-form'</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">신규 회원가입 완료 추적</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-13</td>
-                  <td class="px-4 py-4">
-                    <div class="relative">
-                      <button class="text-neutral-400 hover:text-neutral-600">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr class="hover:bg-neutral-50">
-                  <td class="px-4 py-4">
-                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
-                  </td>
-                  <td class="px-4 py-4">
-                    <a href="#" class="text-neutral-900 hover:text-neutral-700">장바구니 추가</a>
-                  </td>
-                  <td class="px-4 py-4">
-                    <label class="flex items-center cursor-pointer">
-                      <input type="checkbox" checked class="sr-only">
-                      <div class="relative">
-                        <div class="w-10 h-6 bg-neutral-900 rounded-full shadow-inner"></div>
-                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 right-1 transition-transform"></div>
-                      </div>
-                    </label>
-                  </td>
-                  <td class="px-4 py-4">
-                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">클릭</span>
-                  </td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">Class '.add-to-cart'</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">제품 장바구니 추가 이벤트</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-12</td>
-                  <td class="px-4 py-4">
-                    <div class="relative">
-                      <button class="text-neutral-400 hover:text-neutral-600">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr class="hover:bg-neutral-50">
-                  <td class="px-4 py-4">
-                    <input type="checkbox" class="w-4 h-4 rounded border-neutral-300">
-                  </td>
-                  <td class="px-4 py-4">
-                    <a href="#" class="text-neutral-900 hover:text-neutral-700">결제 완료</a>
-                  </td>
-                  <td class="px-4 py-4">
-                    <label class="flex items-center cursor-pointer">
-                      <input type="checkbox" checked class="sr-only">
-                      <div class="relative">
-                        <div class="w-10 h-6 bg-neutral-900 rounded-full shadow-inner"></div>
-                        <div class="absolute w-4 h-4 bg-white rounded-full shadow top-1 right-1 transition-transform"></div>
-                      </div>
-                    </label>
-                  </td>
-                  <td class="px-4 py-4">
-                    <span class="px-2 py-1 text-xs bg-neutral-100 text-neutral-800 rounded-full">페이지 뷰</span>
-                  </td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">URL Equals '/checkout/success'</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">구매 완료 페이지 도달 추적</td>
-                  <td class="px-4 py-4 text-sm text-neutral-600">2025-01-11</td>
-                  <td class="px-4 py-4">
-                    <div class="relative">
-                      <button class="text-neutral-400 hover:text-neutral-600">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                      </button>
-                    </div>
+              <tbody class="divide-y divide-neutral-200" data-event-table-body>
+                <tr>
+                  <td colspan="8" class="px-4 py-6 text-center text-sm text-neutral-500" data-empty-state>
+                    아직 등록된 이벤트가 없습니다. 오른쪽 상단의 "새 이벤트" 버튼으로 추가해 보세요.
                   </td>
                 </tr>
               </tbody>
@@ -312,20 +163,84 @@
 
           <div id="pagination" class="flex items-center justify-between px-4 py-4 border-t border-neutral-200">
             <div class="text-sm text-neutral-600">
-              총 47개 태그 중 1-5개 표시
+              총 <span data-event-count>0</span>개 이벤트
             </div>
-            <div class="flex items-center space-x-2">
-              <button class="px-3 py-1 text-sm text-neutral-400 border border-neutral-300 rounded cursor-not-allowed">이전</button>
-              <button class="px-3 py-1 text-sm bg-neutral-900 text-white rounded">1</button>
-              <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">2</button>
-              <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">3</button>
-              <span class="px-2 text-neutral-400">...</span>
-              <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">10</button>
-              <button class="px-3 py-1 text-sm text-neutral-600 border border-neutral-300 rounded hover:bg-neutral-50">다음</button>
-            </div>
+            <div class="text-xs text-neutral-400">페이지네이션은 추후 지원 예정입니다.</div>
           </div>
         </div>
       </div>
     </main>
+
+    <!-- Event create/edit modal -->
+    <div id="event-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 hidden">
+      <div class="w-full max-w-2xl p-6 bg-white rounded-xl shadow-xl">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <h2 class="text-xl font-semibold text-neutral-900" data-event-modal-title>이벤트 생성</h2>
+            <p class="mt-1 text-sm text-neutral-500">트리거 조건을 JSON 형태로 입력해 주세요.</p>
+          </div>
+          <button class="text-neutral-400 hover:text-neutral-600" data-close-modal>
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="event-form" class="space-y-4">
+          <div>
+            <label for="event-name" class="block text-sm font-medium text-neutral-700">이벤트 이름</label>
+            <input id="event-name" type="text" required
+                   class="mt-1 block w-full rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                   placeholder="예: 구매하기 버튼 클릭" />
+          </div>
+
+          <div>
+            <label for="event-description" class="block text-sm font-medium text-neutral-700">설명</label>
+            <textarea id="event-description" rows="3"
+                      class="mt-1 block w-full rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                      placeholder="이 이벤트가 추적하는 내용을 설명해 주세요"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label for="event-trigger-type" class="block text-sm font-medium text-neutral-700">트리거 타입</label>
+              <select id="event-trigger-type" required
+                      class="mt-1 block w-full rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                <option value="" disabled selected>선택하세요</option>
+                <option value="PAGE_VIEW">페이지 뷰</option>
+                <option value="CLICK">클릭</option>
+                <option value="FORM_SUBMISSION">폼 제출</option>
+                <option value="SCROLL_DEPTH">스크롤 도달</option>
+              </select>
+            </div>
+            <div>
+              <label for="event-status" class="block text-sm font-medium text-neutral-700">상태</label>
+              <select id="event-status"
+                      class="mt-1 block w-full rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                <option value="ACTIVE">활성</option>
+                <option value="INACTIVE">비활성</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="event-payload" class="block text-sm font-medium text-neutral-700">트리거 조건(JSON)</label>
+            <textarea id="event-payload" rows="6"
+                      class="mt-1 block w-full font-mono text-sm rounded-md border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                      placeholder='예) {"selector": "#purchase-now"}'></textarea>
+            <p class="mt-1 text-xs text-red-500" data-payload-error></p>
+          </div>
+
+          <div class="flex items-center justify-end space-x-2">
+            <button type="button" class="px-4 py-2 text-sm text-neutral-600 border border-neutral-300 rounded-md hover:bg-neutral-50" data-close-modal>
+              취소
+            </button>
+            <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-primary-600 rounded-md hover:bg-primary-700">
+              저장
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/admin/events/event-board.js"></script>
   </body>
 </html>

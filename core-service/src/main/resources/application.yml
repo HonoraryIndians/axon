@@ -9,7 +9,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update # Use 'update' or 'validate' in production
+      ddl-auto: create # Use 'update' or 'validate' in production
     properties:
       hibernate:
         format_sql: true
