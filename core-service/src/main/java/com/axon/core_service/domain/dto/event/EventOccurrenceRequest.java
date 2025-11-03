@@ -22,7 +22,7 @@ public class EventOccurrenceRequest {
 
     private LocalDateTime occurredAt;
 
-    private String userId;
+    private Long userId;
 
     private String pageUrl;
 

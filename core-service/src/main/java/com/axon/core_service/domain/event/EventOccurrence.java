@@ -38,8 +38,8 @@ public class EventOccurrence extends BaseTimeEntity {
     @Column(name = "occurred_at", nullable = false)
     private LocalDateTime occurredAt;
 
-    @Column(name = "user_id", length = 255)
-    private String userId;
+    @Column(name = "user_id")
+    private Long userId;
 
     @Column(name = "page_url", length = 2048)
     private String pageUrl;
@@ -51,7 +51,7 @@ public class EventOccurrence extends BaseTimeEntity {
     @Builder
     private EventOccurrence(Event event,
                             LocalDateTime occurredAt,
-                            String userId,
+                            Long userId,
                             String pageUrl,
                             Map<String, Object> context) {
         this.event = Objects.requireNonNull(event, "event must not be null");

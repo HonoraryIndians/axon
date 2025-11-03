@@ -44,4 +44,10 @@ public class WebController {
         log.info("Serving admin_create_campaignActivitys.html");
         return "admin_create_campaignActivitys.html";
     }
+
+    @GetMapping("/shoppingmall")
+    public String shoppingmall() {
+        log.info("Serving shoppingmall.html");
+        return "shoppingmall.html";
+    }
 }

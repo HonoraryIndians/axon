@@ -12,7 +12,7 @@ public class EventOccurrenceResponse {
     private final Long id;
     private final Long eventId;
     private final LocalDateTime occurredAt;
-    private final String userId;
+    private final Long userId;
     private final String pageUrl;
 
     public static EventOccurrenceResponse from(EventOccurrence occurrence) {

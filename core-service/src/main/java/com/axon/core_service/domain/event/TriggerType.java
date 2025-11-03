@@ -4,5 +4,6 @@ public enum TriggerType {
     PAGE_VIEW,
     CLICK,
     FORM_SUBMISSION,
-    SCROLL_DEPTH
+    SCROLL_DEPTH,
+    PURCHASE
 }
