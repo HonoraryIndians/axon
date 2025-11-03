@@ -1,8 +1,13 @@
 server:
   port: 8081
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
   profiles:
     include: oauth
+
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -18,3 +23,6 @@ spring:
         spring.json.trusted.packages: "*"
 jwt:
   secret: YOUR_VERY_SECRET_RANDOM_STRING_THAT_IS_LONG_ENOUGH_axonskusw
+axon:
+  core-service:
+    base-url: http://localhost:8080
