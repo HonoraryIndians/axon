@@ -4,7 +4,7 @@ import com.axon.core_service.domain.campaignactivity.CampaignActivity;
 import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntry;
 import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntryStatus;
 import com.axon.core_service.repository.CampaignActivityEntryRepository;
-import com.axon.messaging.dto.KafkaProducerDto;
+import com.axon.messaging.dto.CampaignActivityKafkaProducerDto;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class CampaignActivityEntryService {
     private final ProductService productService;
 
     public CampaignActivityEntry upsertEntry(CampaignActivity campaignActivity,
-                                            KafkaProducerDto dto,
+                                            CampaignActivityKafkaProducerDto dto,
                                             CampaignActivityEntryStatus nextStatus,
                                             boolean processed) {
         Instant requestedAt = Optional.ofNullable(dto.getTimestamp())

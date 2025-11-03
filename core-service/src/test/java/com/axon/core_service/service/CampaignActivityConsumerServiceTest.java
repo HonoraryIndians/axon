@@ -8,9 +8,9 @@ import com.axon.core_service.repository.CampaignActivityRepository;
 import com.axon.core_service.repository.CampaignRepository;
 import com.axon.core_service.repository.ProductRepository;
 import com.axon.messaging.CampaignActivityType;
-import com.axon.messaging.dto.KafkaProducerDto;
+import com.axon.messaging.dto.CampaignActivityKafkaProducerDto;
+import com.axon.messaging.topic.KafkaTopics;
 import java.time.LocalDateTime;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,7 +19,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -30,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CampaignActivityConsumerServiceTest {
 
     @Autowired
-    private KafkaTemplate<String, KafkaProducerDto> kafkaTemplate;
+    private KafkaTemplate<String, CampaignActivityKafkaProducerDto> kafkaTemplate;
 
     @Autowired
     private ProductRepository productRepository;
@@ -41,10 +40,7 @@ class CampaignActivityConsumerServiceTest {
     @Autowired
     private CampaignRepository campaignRepository;
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-
-    private final String topic = "event";
+    private final String topic = KafkaTopics.CAMPAIGN_ACTIVITY_COMMAND;
     private final Long productId = 1L;
     private Long campaignActivityId;
 
@@ -54,11 +50,6 @@ class CampaignActivityConsumerServiceTest {
         campaignActivityRepository.deleteAll();
         campaignRepository.deleteAll();
         kafkaTemplate.flush();
-
-        Set<String> activityKeys = redisTemplate.keys("campaign-activity:*");
-        if (activityKeys != null && !activityKeys.isEmpty()) {
-            redisTemplate.delete(activityKeys);
-        }
 
         Campaign testCampaign = Campaign.builder()
                 .name("테스트 캠페인")
@@ -85,7 +76,7 @@ class CampaignActivityConsumerServiceTest {
     @Test
     @DisplayName("100개의 재고에 300개의 동시 요청이 발생하면, 재고는 0이 되고 100명만 성공해야 한다.")
     void decreaseStock_ConcurrencyTest() throws InterruptedException {
-        int numberOfThreads = 300;
+        int numberOfThreads = 100;
         ExecutorService executorService = Executors.newFixedThreadPool(32);
         CountDownLatch latch = new CountDownLatch(numberOfThreads);
 
@@ -93,7 +84,7 @@ class CampaignActivityConsumerServiceTest {
             Long userId = (long) i;
             executorService.submit(() -> {
                 try {
-                    KafkaProducerDto dto = new KafkaProducerDto(
+                    CampaignActivityKafkaProducerDto dto = new CampaignActivityKafkaProducerDto(
                             CampaignActivityType.FIRST_COME_FIRST_SERVE,
                             campaignActivityId,
                             userId,

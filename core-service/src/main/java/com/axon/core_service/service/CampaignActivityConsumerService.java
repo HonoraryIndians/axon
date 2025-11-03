@@ -2,7 +2,8 @@ package com.axon.core_service.service;
 
 import com.axon.core_service.service.strategy.CampaignStrategy;
 import com.axon.messaging.CampaignActivityType;
-import com.axon.messaging.dto.KafkaProducerDto;
+import com.axon.messaging.dto.CampaignActivityKafkaProducerDto;
+import com.axon.messaging.topic.KafkaTopics;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -16,15 +17,14 @@ import org.springframework.stereotype.Service;
 public class CampaignActivityConsumerService {
 
     private final Map<CampaignActivityType, CampaignStrategy> strategies;
-    private final String topic = "event";
 
     public CampaignActivityConsumerService(List<CampaignStrategy> strategyList) {
         this.strategies = strategyList.stream()
                 .collect(Collectors.toUnmodifiableMap(CampaignStrategy::getType, Function.identity()));
     }
 
-    @KafkaListener(topics = topic, groupId = "axon-group")
-    public void consume(KafkaProducerDto message) {
+    @KafkaListener(topics = KafkaTopics.CAMPAIGN_ACTIVITY_COMMAND, groupId = "axon-group")
+    public void consume(CampaignActivityKafkaProducerDto message) {
         log.info("Consumed message: {}", message);
 
         CampaignActivityType type = message.getCampaignActivityType();
