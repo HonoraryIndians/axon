@@ -9,9 +9,16 @@ for i in {1..30}; do
 done
 
 echo "Creating Kafka topics..."
-kafka-topics --create --if-not-exists --topic event --bootstrap-server broker_1:29092 --partitions 1 --replication-factor 1
-kafka-topics --create --if-not-exists --topic log --bootstrap-server broker_1:29092 --partitions 1 --replication-factor 1
-kafka-topics --create --if-not-exists --topic userlogininfo --bootstrap-server broker_1:29092 --partitions 1 --replication-factor 1
+TOPICS=(
+  "axon.campaign-activity.command"
+  "axon.campaign-activity.log"
+  "axon.event.raw"
+  "axon.user.login"
+)
+
+for TOPIC in "${TOPICS[@]}"; do
+  kafka-topics --create --if-not-exists --topic "$TOPIC" --bootstrap-server broker_1:29092 --partitions 1 --replication-factor 1
+done
 kafka-topics --list --bootstrap-server broker_1:29092
 
 echo "Kafka topics created successfully!"

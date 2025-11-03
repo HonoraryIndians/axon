@@ -7,6 +7,7 @@ import com.axon.core_service.service.CampaignActivityService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/campaign")
 @RequiredArgsConstructor
+@Slf4j
 public class CampaignActivityController {
 
     private final CampaignActivityService campaignActivityService;
@@ -67,6 +69,7 @@ public class CampaignActivityController {
 
     @GetMapping("/activities/{campaignActivityId}")
     public ResponseEntity<CampaignActivityResponse> getCampaignActivity(@PathVariable Long campaignActivityId) {
+        log.info("Fetching campaign activity with ID: {}", campaignActivityId);
         return ResponseEntity.ok(campaignActivityService.getCampaignActivity(campaignActivityId));
     }
 }

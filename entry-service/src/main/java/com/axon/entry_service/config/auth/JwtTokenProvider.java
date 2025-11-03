@@ -43,6 +43,29 @@ public class JwtTokenProvider {
         return generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
     }
 
+    // userId를 직접 받아서 토큰을 생성하는 메소드 추가
+    public String generateAccessToken(Long userId) {
+        return generateToken(userId, ACCESS_TOKEN_EXPIRE_TIME);
+    }
+
+    public String generateRefreshToken(Long userId) {
+        return generateToken(userId, REFRESH_TOKEN_EXPIRE_TIME);
+    }
+
+    private String generateToken(Long userId, long expireTime) {
+        long now = (new Date()).getTime();
+        Date validity = new Date(now + expireTime);
+
+        return Jwts.builder()
+                .setSubject(userId.toString())
+                .claim("auth", "ROLE_SYSTEM") // 시스템 권한 추가
+                .setIssuedAt(new Date())
+                .setExpiration(validity)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // 기존 generateToken 메소드 (Authentication 객체 사용)
     private String generateToken(Authentication authentication, long expireTime) {
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

@@ -99,7 +99,7 @@ class CampaignActivityControllerTest {
                 .name("웰컴")
                 .limitCount(50)
                 .status(CampaignActivityStatus.ACTIVE)
-                .activityType(CampaignActivityType.RAFFLE)
+                .activityType(CampaignActivityType.FIRST_COME_FIRST_SERVE)
                 .participantCount(20L)
                 .build();
 

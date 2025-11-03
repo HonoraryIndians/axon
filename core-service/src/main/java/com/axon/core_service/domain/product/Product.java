@@ -21,8 +21,8 @@ public class Product {
     @Column(nullable = false)
     private Long stock; // 재고 수량
 
-    @Version
-    private Long version; // 낙관적 락을 위한 버전 필드
+//    @Version
+//    private Long version; // 낙관적 락을 위한 버전 필드
 
     public Product(String productName, Long stock) {
         this.productName = productName;

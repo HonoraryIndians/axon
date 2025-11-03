@@ -1,8 +1,9 @@
 package com.axon.core_service.config.auth;
 
-
+import com.axon.core_service.domain.user.CustomOAuth2User;
 import com.axon.core_service.service.producer.CoreServiceKafkaProducer;
 import com.axon.messaging.dto.UserLoginInfo;
+import com.axon.messaging.topic.KafkaTopics;
 import com.axon.util.CookieUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -18,8 +19,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
-
-import com.axon.core_service.domain.user.CustomOAuth2User;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 
@@ -31,7 +30,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final JwtTokenProvider jwtTokenProvider;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
     private final CoreServiceKafkaProducer kafkaProducer;
-    private final String LoginLogTopic = "userlogininfo";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -82,10 +80,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .loggedAt(Instant.now())
                 .build();
         try {
-            kafkaProducer.send(LoginLogTopic, userLoginInfo);
-            log.info("Handler send to Consumer : TOPIC {} User {}", LoginLogTopic, userLoginInfo.getUserId());
+            kafkaProducer.send(KafkaTopics.USER_LOGIN, userLoginInfo);
+            log.info("Handler send to Consumer : TOPIC {} User {}", KafkaTopics.USER_LOGIN, userLoginInfo.getUserId());
         } catch (Exception e) {
-            log.error("Handler logger is occurred error || TOPIC {}", LoginLogTopic, e);
+            log.error("Handler logger is occurred error || TOPIC {}", KafkaTopics.USER_LOGIN, e);
         }
     }
 
