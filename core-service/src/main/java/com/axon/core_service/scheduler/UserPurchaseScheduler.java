@@ -19,7 +19,7 @@ public class UserPurchaseScheduler {
     private final JobLauncher jobLauncher;
     private final Job UserPurchaseJob;
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 6000000)
     public void RunUserPurchaseJob() {
         try {
             LocalDateTime now = LocalDateTime.now();

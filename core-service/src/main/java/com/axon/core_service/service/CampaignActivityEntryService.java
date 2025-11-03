@@ -20,6 +20,7 @@ public class CampaignActivityEntryService {
 
     private final CampaignActivityEntryRepository campaignActivityEntryRepository;
     private final ProductService productService;
+    private final UserSummaryService userSummaryService;
 
     public CampaignActivityEntry upsertEntry(CampaignActivity campaignActivity,
                                             CampaignActivityKafkaProducerDto dto,
@@ -46,6 +47,11 @@ public class CampaignActivityEntryService {
 
         if (nextStatus == CampaignActivityEntryStatus.APPROVED) {
             productService.decreaseStock(dto.getProductId());
+        }
+
+        if (nextStatus == CampaignActivityEntryStatus.APPROVED
+                && campaignActivity.getActivityType().isPurchaseRelated()) {
+            userSummaryService.recordPurchase(dto.getUserId(), requestedAt);
         }
 
         return campaignActivityEntryRepository.save(entry);

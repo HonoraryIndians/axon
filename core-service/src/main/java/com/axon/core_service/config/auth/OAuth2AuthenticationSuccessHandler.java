@@ -1,6 +1,7 @@
 package com.axon.core_service.config.auth;
 
 import com.axon.core_service.domain.user.CustomOAuth2User;
+import com.axon.core_service.service.UserSummaryService;
 import com.axon.core_service.service.producer.CoreServiceKafkaProducer;
 import com.axon.messaging.dto.UserLoginInfo;
 import com.axon.messaging.topic.KafkaTopics;
@@ -30,6 +31,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final JwtTokenProvider jwtTokenProvider;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
     private final CoreServiceKafkaProducer kafkaProducer;
+    private final UserSummaryService userSummaryService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -39,6 +41,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             logger.debug("Response has already been committed. Unable to redirect to " + targetUrl);
             return;
         }
+        CustomOAuth2User CustomOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+        Long userId = CustomOAuth2User.getUserId();
+        userSummaryService.recordLogin(userId, Instant.now());
 
         clearAuthenticationAttributes(request, response);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);

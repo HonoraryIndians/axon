@@ -16,7 +16,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class Security_Config {
+public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 

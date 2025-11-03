@@ -17,7 +17,7 @@ import java.util.Map;
 
 @EnableKafka
 @Configuration
-public class Kafka_Config {
+public class KafkaConfig {
 
     private final String broker_port ="localhost:9092";
     @Bean
