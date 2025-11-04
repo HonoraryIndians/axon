@@ -40,6 +40,7 @@ public class CampaignActivityEntryService {
 
         entry.updateProduct(dto.getProductId());
         entry.updateStatus(nextStatus);
+
         if (processed) {
             entry.markProcessedNow();
         }
@@ -47,6 +48,8 @@ public class CampaignActivityEntryService {
         if (nextStatus == CampaignActivityEntryStatus.APPROVED) {
             productService.decreaseStock(dto.getProductId());
         }
+
+
 
         return campaignActivityEntryRepository.save(entry);
     }

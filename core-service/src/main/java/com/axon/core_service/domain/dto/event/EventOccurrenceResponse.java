@@ -8,20 +8,15 @@ import lombok.Getter;
 @Getter
 @Builder
 public class EventOccurrenceResponse {
-
-    private final Long id;
     private final Long eventId;
     private final LocalDateTime occurredAt;
     private final Long userId;
-    private final String pageUrl;
 
-    public static EventOccurrenceResponse from(EventOccurrence occurrence) {
+    public static EventOccurrenceResponse from(EventOccurrenceRequest occurrence) {
         return EventOccurrenceResponse.builder()
-                .id(occurrence.getId())
-                .eventId(occurrence.getEvent().getId())
+                .eventId(occurrence.getEventId())
                 .occurredAt(occurrence.getOccurredAt())
                 .userId(occurrence.getUserId())
-                .pageUrl(occurrence.getPageUrl())
                 .build();
     }
 }
