@@ -46,7 +46,7 @@ public class EntryController {
         ReservationResult result = reservationService.reserve(campaignActivityId, userId, meta, now);
 
         if (result.status() == ReservationStatus.DUPLICATED) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+                return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         if (result.status() == ReservationStatus.SOLD_OUT) {
             return ResponseEntity.status(HttpStatus.GONE).build();
