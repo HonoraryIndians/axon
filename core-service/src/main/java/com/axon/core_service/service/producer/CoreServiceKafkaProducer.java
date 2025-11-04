@@ -16,7 +16,7 @@ public class CoreServiceKafkaProducer {
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
                         log.error("카프카 전송 실패 topic={} payload={}", topic, payload, ex);
-                    } else {
+                    } else if (result != null) {
                         log.info("카프카 전송 완료 topic={} partition={} offset={}",
                                 result.getRecordMetadata().topic(),
                                 result.getRecordMetadata().partition(),
@@ -25,4 +25,3 @@ public class CoreServiceKafkaProducer {
                 });
     }
 }
-
