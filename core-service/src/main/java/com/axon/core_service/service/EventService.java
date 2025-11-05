@@ -1,9 +1,11 @@
 package com.axon.core_service.service;
 
+import com.axon.core_service.domain.dto.event.EventDefinitionResponse;
 import com.axon.core_service.domain.dto.event.EventRequest;
 import com.axon.core_service.domain.dto.event.EventResponse;
 import com.axon.core_service.domain.event.Event;
 import com.axon.core_service.domain.event.EventStatus;
+import com.axon.core_service.domain.event.TriggerType;
 import com.axon.core_service.repository.EventRepository;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +68,17 @@ public class EventService {
     public List<EventResponse> getEvents() {
         return eventRepository.findAll().stream()
                 .map(EventResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventDefinitionResponse> getActiveEventDefinitions(TriggerType triggerType) {
+        List<Event> events = triggerType != null
+                ? eventRepository.findAllByTriggerCondition_TriggerTypeAndStatusOrderByIdAsc(triggerType, EventStatus.ACTIVE)
+                : eventRepository.findAllByStatusOrderByIdAsc(EventStatus.ACTIVE);
+
+        return events.stream()
+                .map(EventDefinitionResponse::from)
                 .toList();
     }
 

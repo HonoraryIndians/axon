@@ -1,7 +1,9 @@
 package com.axon.core_service.controller;
 
+import com.axon.core_service.domain.dto.event.EventDefinitionResponse;
 import com.axon.core_service.domain.dto.event.EventRequest;
 import com.axon.core_service.domain.dto.event.EventResponse;
+import com.axon.core_service.domain.event.TriggerType;
 import com.axon.core_service.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -36,6 +39,12 @@ public class EventController {
     @GetMapping
     public ResponseEntity<List<EventResponse>> getEvents() {
         return ResponseEntity.ok(eventService.getEvents());
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<List<EventDefinitionResponse>> getActiveEvents(
+            @RequestParam(value = "triggerType", required = false) TriggerType triggerType) {
+        return ResponseEntity.ok(eventService.getActiveEventDefinitions(triggerType));
     }
     //하나 조회
     @GetMapping("/{id}")
