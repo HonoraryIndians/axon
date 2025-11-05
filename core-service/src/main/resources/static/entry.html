@@ -76,5 +76,15 @@
     });
 </script>
 
+<script>
+    window.__AXON_TRACKER_OVERRIDES__ = {
+        apiBaseUrl: 'http://localhost:8080',
+        collectEndpoint: 'http://localhost:8081/api/v1/behavior/events',
+        tokenProvider: () => common.getCookie('accessToken'),
+        debug: true
+    };
+</script>
+<script src="/js/axon-tracker-config.js"></script>
+
 </body>
 </html>
