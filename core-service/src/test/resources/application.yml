@@ -19,5 +19,9 @@ spring:
         spring.json.trusted.packages: "*"
       auto-offset-reset: earliest # 테스트 실행 시 이전에 놓친 메시지도 읽어오도록 설정
 
+  sql:
+    init:
+     mode: never
+
 jwt:
   secret: 'this-is-a-test-secret-key-for-unit-tests-only-1234567890'
