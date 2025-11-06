@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FilterDetail {
     private String type;
+    private String operator;
     private List<String> values;
 }
