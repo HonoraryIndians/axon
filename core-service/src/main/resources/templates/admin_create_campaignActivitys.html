@@ -1,22 +1,16 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('새 캠페인 활동 만들기', 'h-full text-base-content', ~{::head/content()}, ~{::section})">
 <head>
-    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>새 캠페인 활동 만들기</title>
-
-    <!-- Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
-
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/admin_create_event.css" />
+    <link rel="stylesheet" th:href="@{/css/admin_create_event.css}" />
 </head>
 
-<body class="h-full text-base-content">
-<!-- 헤더 -->
-<header class="bg-white border-b border-neutral-200 fixed top-0 left-0 right-0 z-50">
+<section>
+    <header class="bg-white border-b border-neutral-200 fixed top-0 left-0 right-0 z-50">
     <div class="flex items-center justify-between px-6 py-4">
         <div class="flex items-center space-x-4">
             <a href="/admin_board"
@@ -34,8 +28,7 @@
     </div>
 </header>
 
-<!-- 메인 -->
-<main class="pt-20 pb-8 px-6 max-w-6xl mx-auto">
+    <main class="pt-20 pb-8 px-6 max-w-6xl mx-auto">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         <!-- 좌측 폼 -->
@@ -259,8 +252,7 @@
             </section>
         </div>
     </div>
-<script src="/js/common.js"></script>
-<script src="/js/admin_create_campaignActivitys.js"></script>
-</main>
-</body>
+    </main>
+</section>
+<script th:src="@{/js/admin_create_campaignActivitys.js}"></script>
 </html>

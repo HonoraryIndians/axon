@@ -25,7 +25,6 @@ public class CampaignActivityConsumerService {
 
     @KafkaListener(topics = KafkaTopics.CAMPAIGN_ACTIVITY_COMMAND, groupId = "axon-group")
     public void consume(CampaignActivityKafkaProducerDto message) {
-        log.info("Consumed message: {}", message);
 
         CampaignActivityType type = message.getCampaignActivityType();
         CampaignStrategy strategy = strategies.get(type);
@@ -35,5 +34,6 @@ public class CampaignActivityConsumerService {
         } else {
             log.warn("지원하지 않는 캠페인 활동 타입입니다: {}", type);
         }
+        log.info("Consumed message: {}", message);
     }
 }

@@ -1,23 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>상품 구매</title>
-</head>
-<body>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('상품 구매', null, ~{::head/content()}, ~{::section})">
+<head></head>
+<section>
     <h1>상품 구매</h1>
     <hr>
     <h3>테스트 용</h3>
     <button id="buy-item">구매하기</button>
-</body>
-<script src="/js/common.js"></script>
-<script>
+</section>
+<script data-role="post" th:inline="javascript">
     document.getElementById("buy-item").addEventListener('click', function () {
         const token = common.getCookie('accessToken');
         const info = {
             productId: 101,
             amount: 49000,
-            quantity: 1,
+            quantity: 1
         };
 
         const payload = {
@@ -25,8 +22,7 @@
             occurredAt: new Date().toISOString(),
             pageUrl: "local",
             payload: info
-        }
-
+        };
 
         fetch('/collect/events/purchase', {
             method: 'POST',

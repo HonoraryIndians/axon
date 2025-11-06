@@ -11,6 +11,9 @@
 
   const overrides = global.__AXON_TRACKER_OVERRIDES__ || {};
 
+  console.log('[AxonTracker] overrides', overrides);
+
+  console.log('[AxonTracker] init config', overrides);
   global.AxonTrackerConfig = Object.assign(
     {
       apiBaseUrl: overrides.apiBaseUrl || global.__AXON_TRACKER_API_BASE__ || DEFAULT_API_BASE,
@@ -30,6 +33,7 @@
   );
 
   const trackerSrc = overrides.scriptSrc || global.__AXON_TRACKER_SCRIPT_SRC__ || DEFAULT_SCRIPT_SRC;
+  console.log('[AxonTracker] loading tracker', trackerSrc);
 
   function initTracker() {
     if (!global.AxonBehaviorTracker) {
@@ -39,15 +43,22 @@
   }
 
   if (global.AxonBehaviorTracker) {
+    console.log('[AxonTracker] init tracker inline');
     initTracker();
   } else {
+    console.log('[AxonTracker] load tracker async');
     const script = document.createElement('script');
     script.src = trackerSrc;
     script.async = true;
-    script.onload = initTracker;
+    script.onload = function () {
+      console.log('[AxonTracker] tracker script loaded');
+      initTracker();
+    };
     script.onerror = function (error) {
+      console.error('[AxonTracker] failed to load tracker', trackerSrc, error);
       console.error('[AxonTracker] Failed to load tracker script:', trackerSrc, error);
     };
     document.head.appendChild(script);
+    console.log('[AxonTracker] script appended');
   }
 })(window);

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('Axon Campaign Activity Platform', null, ~{::head/content()}, ~{::section})">
+<head>
+    <style>
+        body { font-family: sans-serif; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid #ccc; }
+        nav a { margin-left: 15px; text-decoration: none; color: #007bff; }
+        main { padding: 20px; }
+        .campaign-activity-list a { display: block; margin-bottom: 10px; }
+    </style>
+</head>
+<section>
+    <header>
+        <h1>Axon Events</h1>
+        <nav id="nav-area"></nav>
+    </header>
+
+    <main>
+        <h2>진행중인 이벤트</h2>
+        <div class="campaign-activity-list">
+            <a href="#" class="campaign-activity-link" data-activity-id="1">선착순 캠페인 활동 1 (로그인 필요)</a>
+            <a href="#" class="campaign-activity-link" data-activity-id="2">선착순 캠페인 활동 2 (로그인 필요)</a>
+        </div>
+    </main>
+
+    <script th:inline="javascript">
+        window.addEventListener('DOMContentLoaded', function() {
+            const navArea = document.getElementById('nav-area');
+            const accessToken = common.getCookie('accessToken');
+
+            if (accessToken) {
+                navArea.innerHTML = '<a href="#">마이페이지</a><a href="/logout" id="logout-button">로그아웃</a>';
+            } else {
+                navArea.innerHTML = '<a href="/oauth2/authorization/naver">네이버 로그인</a>';
+            }
+
+            document.querySelectorAll('.campaign-activity-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (!accessToken) {
+                        alert('로그인이 필요합니다.');
+                    } else {
+                        const campaignActivityId = this.getAttribute('data-activity-id');
+                        window.location.href = `/entry?campaignActivityId=${campaignActivityId}`;
+                    }
+                });
+            });
+        });
+    </script>
+</section>
+</html>

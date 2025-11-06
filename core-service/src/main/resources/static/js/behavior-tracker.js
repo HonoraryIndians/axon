@@ -23,6 +23,7 @@
    * - entry-service에 전달한다.
    */
   function BehaviorTracker() {
+    console.log('[AxonBehaviorTracker] constructor');
     this.config = { ...DEFAULTS };
     this.state = {
       events: [],
@@ -36,12 +37,14 @@
    * 사용자 정의 설정을 적용하고 트래커를 초기화한다.
    */
   BehaviorTracker.prototype.init = async function init(userConfig = {}) {
+    console.log('[AxonBehaviorTracker] init', userConfig);
     if (this.state.initialized) {
       this.log('Tracker already initialized, skipping init.');
       return this.state.initialized;
     }
 
     this.config = { ...DEFAULTS, ...userConfig };
+    console.log('[AxonBehaviorTracker] config', this.config);
     this.state.initialized = await this.fetchAndBind();
 
     if (this.config.autoRefreshMs > 0) {
@@ -56,6 +59,7 @@
    * 이벤트 정의를 조회하고 핸들러를 등록한다.
    */
   BehaviorTracker.prototype.fetchAndBind = async function fetchAndBind() {
+    console.log('[AxonBehaviorTracker] fetchAndBind start');
     try {
       const events = await this.fetchActiveEvents();
       this.state.events = events || [];
@@ -69,6 +73,7 @@
   };
 
   BehaviorTracker.prototype.refreshEvents = async function refreshEvents() {
+    console.log('[AxonBehaviorTracker] refreshEvents');
     if (this.state.refreshing) {
       return;
     }
@@ -90,7 +95,9 @@
   BehaviorTracker.prototype.fetchActiveEvents = async function fetchActiveEvents() {
     const url = this.resolveUrl(this.config.eventsEndpoint);
     const headers = await this.buildAuthHeaders();
+    console.log('[AxonBehaviorTracker] headers', headers);
 
+    console.log('[AxonBehaviorTracker] fetch active events', url);
     const response = await fetch(url, {
       method: 'GET',
       headers,
@@ -109,6 +116,7 @@
    */
   BehaviorTracker.prototype.registerHandlers = function registerHandlers() {
     this.registerPageViewHandlers();
+        this.registerClickHandlers();
     this.registerClickHandlers();
   };
 
@@ -116,6 +124,7 @@
    * History API를 감시해 PAGE_VIEW 이벤트를 감지한다.
    */
   BehaviorTracker.prototype.registerPageViewHandlers = function registerPageViewHandlers() {
+    console.log('[AxonBehaviorTracker] registerPageViewHandlers');
     const check = () => this.handlePageView();
 
     window.addEventListener('load', check, { once: true });
@@ -139,11 +148,13 @@
    * 현재 URL이 등록된 패턴과 일치하는지 확인하고, 해당 이벤트를 전송한다.
    */
   BehaviorTracker.prototype.handlePageView = function handlePageView() {
-    const url = window.location.pathname + window.location.search;
+    console.log('[AxonBehaviorTracker] handlePageView');
+    const fullPath = window.location.pathname + window.location.search;
+    const pathOnly = window.location.pathname;
     const matching = this.state.events.filter(
       (event) =>
         event.triggerType === TriggerType.PAGE_VIEW &&
-        this.matchesUrl(event.triggerPayload, url)
+        (this.matchesUrl(event.triggerPayload, fullPath) || this.matchesUrl(event.triggerPayload, pathOnly))
     );
 
     matching.forEach((event) => {
@@ -172,6 +183,7 @@
    * 캡처 가능한 클릭 이벤트를 등록하고 전송한다.
    */
   BehaviorTracker.prototype.registerClickHandlers = function registerClickHandlers() {
+    console.log('[AxonBehaviorTracker] registerClickHandlers');
     const clickEvents = this.state.events.filter(
       (event) => event.triggerType === TriggerType.CLICK
     );
@@ -212,6 +224,7 @@
    * - 동일 이벤트의 과도한 전송을 막기 위해 cooldown을 적용한다.
    */
   BehaviorTracker.prototype.sendEvent = async function sendEvent(eventDefinition, properties = {}) {
+    console.log('[AxonBehaviorTracker] sendEvent', eventDefinition);
     if (!eventDefinition || !eventDefinition.triggerType) {
       this.log('Skip sending event: invalid definition', eventDefinition);
       return;
@@ -226,7 +239,7 @@
 
     this.state.lastSentAt.set(eventDefinition.id, now);
 
-    const payload = {
+    const requestPayload = {
       eventId: eventDefinition.id,
       eventName: eventDefinition.name,
       triggerType: eventDefinition.triggerType,
@@ -240,13 +253,15 @@
 
     const url = this.resolveUrl(this.config.collectEndpoint);
     const headers = await this.buildAuthHeaders();
+    console.log('[AxonBehaviorTracker] headers', headers);
     headers['Content-Type'] = 'application/json';
 
     try {
+      console.log('[AxonBehaviorTracker] sending event', url, requestPayload);
       const response = await fetch(url, {
         method: 'POST',
         headers,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(requestPayload),
         credentials: this.config.withCredentials ? 'include' : 'same-origin',
         keepalive: true
       });
@@ -255,7 +270,7 @@
         throw new Error(`Failed to send event: ${response.status}`);
       }
 
-      this.log('Sent behavior event', payload);
+      this.log('Sent behavior event', requestPayload);
     } catch (error) {
       console.error('[AxonTracker] Failed to send behavior event', error);
     }
@@ -265,6 +280,7 @@
    * Authorization 헤더를 구성한다.
    */
   BehaviorTracker.prototype.buildAuthHeaders = async function buildAuthHeaders() {
+    console.log('[AxonBehaviorTracker] buildAuthHeaders');
     const headers = {};
     const token = await resolveValue(this.config.tokenProvider);
     if (token) {
@@ -277,6 +293,7 @@
    * 상대 경로를 apiBaseUrl 기준으로 절대 URL로 변환한다.
    */
   BehaviorTracker.prototype.resolveUrl = function resolveUrl(path) {
+    console.log('[AxonBehaviorTracker] resolveUrl', path);
     if (!path) {
       return '';
     }
@@ -292,7 +309,7 @@
 
   BehaviorTracker.prototype.log = function log(...args) {
     if (this.config.debug) {
-      console.debug('[AxonTracker]', ...args);
+      console.log('[AxonTracker]', ...args);
     }
   };
 
@@ -308,6 +325,7 @@
    * 값이 함수라면 실행하고, 아니면 그대로 반환한다.
    */
   async function resolveValue(candidate) {
+    console.log('[AxonBehaviorTracker] resolveValue', candidate);
     if (typeof candidate === 'function') {
       return candidate();
     }
