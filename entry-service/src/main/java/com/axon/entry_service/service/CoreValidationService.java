@@ -13,7 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class CoreValidationService {
     private final WebClient webClient;
 
-    public boolean isEligible(String Token, Long campaignActivityId) {
+    public ValidationResponse isEligible(String Token, Long campaignActivityId) {
         try {
             ValidationResponse response = webClient.get()
                     .uri(uriBuilder ->uriBuilder
@@ -25,10 +25,10 @@ public class CoreValidationService {
                     .bodyToMono(ValidationResponse.class)
                     .block();
             log.info("SERVICE - return {} || {} ", response.isEligible(),response);
-            return response != null && response.isEligible();
+            return response;
         } catch (Exception e) {
             log.error("CoreService로의 검증 로직에 오류가 발생 ", e);
-            return false;
+            return ValidationResponse.builder().eligible(false).errorMessage("서버 오류").build();
         }
     }
 }

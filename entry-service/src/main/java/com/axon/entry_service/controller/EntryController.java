@@ -10,6 +10,7 @@ import com.axon.entry_service.service.CoreValidationService;
 import com.axon.entry_service.service.EntryReservationService;
 import com.axon.messaging.CampaignActivityType;
 import com.axon.messaging.dto.CampaignActivityKafkaProducerDto;
+import com.axon.messaging.dto.validation.ValidationResponse;
 import com.axon.messaging.topic.KafkaTopics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,11 +46,12 @@ public class EntryController {
         if (meta == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+
         // 무거운 검증
-        boolean isEligible = coreValidationService.isEligible(token, requestDto.getCampaignActivityId());
-        if (!isEligible) {
+        ValidationResponse response = coreValidationService.isEligible(token, requestDto.getCampaignActivityId());
+        if (!response.isEligible()) {
             log.info("{} 사용자의 요청이 {}번 응모요청의 자격미달로 통과하지 못했습니다.",userDetails.getUsername(), requestDto.getCampaignActivityId());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("자격조건이 미달입니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getErrorMessage());
         }
 
         // 원자적 검증

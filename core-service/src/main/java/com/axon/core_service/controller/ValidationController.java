@@ -24,7 +24,7 @@ public class ValidationController {
     public ResponseEntity<ValidationResponse> validateCampaignActivityLimit(@AuthenticationPrincipal UserDetails userdetails, @RequestParam Long campaignActivityId) {
         long userId = Long.parseLong(userdetails.getUsername());
         if(campaignActivityId == null) {return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();}
-        boolean isEligible = dynamicValidationService.validate(userId, campaignActivityId);
-        return ResponseEntity.ok(ValidationResponse.builder().eligible(isEligible).build());
+        ValidationResponse res = dynamicValidationService.validate(userId, campaignActivityId);
+        return ResponseEntity.ok(res);
     }
 }

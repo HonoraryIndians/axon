@@ -3,7 +3,7 @@ package com.axon.core_service.service.validation.CampaignActivityLimit;
 import com.axon.core_service.domain.campaignactivity.CampaignActivity;
 import com.axon.core_service.domain.dto.campaignactivity.filter.FilterDetail;
 import com.axon.core_service.repository.CampaignActivityRepository;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.axon.messaging.dto.validation.ValidationResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,17 +18,16 @@ import java.util.List;
 public class DynamicValidationService {
     private final CampaignActivityRepository campaignActivityRepository;
     private final ValidationLimitFactoryService validationLimitFactoryService;
-    private final ObjectMapper objectMapper;
 
     @Transactional(readOnly = true)
-    public boolean validate(Long userId, Long campaignActivityId) {
+    public ValidationResponse validate(Long userId, Long campaignActivityId) {
         CampaignActivity campaignActivity = campaignActivityRepository.findById(campaignActivityId)
                 .orElseThrow(() -> new IllegalArgumentException("campaignActivityId not found" +  campaignActivityId));
         List<FilterDetail> limitFilter = campaignActivity.getFilters();
 
         log.info("리미트 필터 확인 limitFilter : {}", limitFilter);
         //filter가 없으면 바로 통과시키기
-        if(limitFilter == null || limitFilter.isEmpty()) {return true;}
+        if(limitFilter == null || limitFilter.isEmpty()) {return ValidationResponse.builder().eligible(true).build();}
         try {
             for(FilterDetail filter : limitFilter) {
                 String filterName = filter.getType();
@@ -39,18 +38,14 @@ public class DynamicValidationService {
                 ValidationLimitStrategy strategy = validationLimitFactoryService.getStrategy(filterName);
                 if(strategy == null) {
                     log.warn("{} 의 전략함수는 존재하지 않습니다.", filterName);
-                    continue;
+                    return ValidationResponse.builder().eligible(false).errorMessage("응모 요청 페이지에 오류가 발생했습니다.").build();
                 }
-
-                if(!strategy.validateCampaignActivityLimit(userId, operator , filterValues)) {
-                    log.info("{}번 사용자가 {} 조건을 만족하지 못했습니다.", userId, filterName);
-                    return false;
-                }
+                return strategy.validateCampaignActivityLimit(userId, operator, filterValues);
             }
         } catch (Exception err) {
             log.error("Dynamic Validation Error (userId: {})", userId, err);
-            return false;
+            return ValidationResponse.builder().eligible(false).errorMessage("해당 페이지의 참여조건을 알 수 없습니다.").build();
         }
-        return true;
+        return ValidationResponse.builder().eligible(false).errorMessage("UNKNOWN_ERROR").build();
     }
 }
