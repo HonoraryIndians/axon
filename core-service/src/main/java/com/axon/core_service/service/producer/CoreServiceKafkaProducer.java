@@ -11,6 +11,14 @@ import org.springframework.stereotype.Service;
 public class CoreServiceKafkaProducer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    /**
+     * Publish a payload to the specified Kafka topic and log the send outcome.
+     *
+     * On failure logs the topic, payload and the exception; on success logs the topic, partition and offset.
+     *
+     * @param topic   the Kafka topic to publish the payload to
+     * @param payload the message payload to send
+     */
     public void send(String topic, Object payload) {
         kafkaTemplate.send(topic, payload)
                 .whenComplete((result, ex) -> {

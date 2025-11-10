@@ -6,6 +6,11 @@ public enum CampaignActivityStatus {
     PAUSED,
     ENDED;
 
+    /**
+     * Indicates whether this status represents an active campaign.
+     *
+     * @return true if the status is ACTIVE, false otherwise.
+     */
     public boolean isActive() {
         return this == ACTIVE;
     }

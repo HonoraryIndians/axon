@@ -16,6 +16,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @Configuration
 @EnableConfigurationProperties(BatchProperties.class)
 public class BatchInitalTableConfig {
+    /**
+     * Create a BatchDataSourceScriptDatabaseInitializer that initializes Spring Batch metadata only when the batch tables are not present.
+     *
+     * When batch metadata is detected the initializer is configured with mode = NEVER; when absent it is configured with mode = ALWAYS and continueOnError = false.
+     *
+     * @param dataSource the DataSource to inspect and to initialize if needed
+     * @param properties BatchProperties used to obtain JDBC settings (including table prefix)
+     * @return a BatchDataSourceScriptDatabaseInitializer configured to skip initialization if metadata exists or to run schema initialization otherwise
+     */
     @Bean
     BatchDataSourceScriptDatabaseInitializer batchInitializer(DataSource dataSource, BatchProperties properties) {
         DatabaseInitializationSettings settings = BatchDataSourceScriptDatabaseInitializer.getSettings(dataSource, properties.getJdbc());
@@ -28,6 +37,15 @@ public class BatchInitalTableConfig {
         return new BatchDataSourceScriptDatabaseInitializer(dataSource, settings);
     }
 
+    /**
+     * Checks whether Spring Batch metadata tables already exist by querying the JOB_INSTANCE table.
+     *
+     * Uses the JDBC table prefix from {@code properties.getJdbc().getTablePrefix()}, defaulting to {@code "BATCH_"} when not set.
+     *
+     * @param dataSource the DataSource to run the probe query against
+     * @param properties Batch properties that may contain a JDBC table prefix
+     * @return {@code true} if the JOB_INSTANCE table contains at least one row (metadata present), {@code false} otherwise
+     */
     private boolean isBatchMetadataPresent(DataSource dataSource, BatchProperties properties) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String tablePrefix = Optional.ofNullable(properties.getJdbc().getTablePrefix()).orElse("BATCH_");

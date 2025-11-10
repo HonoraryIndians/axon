@@ -51,6 +51,16 @@ public class CampaignActivityEntry extends BaseTimeEntity {
     @Column(name = "additional_data")
     private String info;
 
+    /**
+     * Initializes a CampaignActivityEntry with the provided campaign activity, user, product, and request timestamp.
+     *
+     * The entry's status is set to `PENDING`.
+     *
+     * @param campaignActivity the associated campaign activity
+     * @param userId the identifier of the user who requested the entry
+     * @param productId the identifier of the product related to the entry (may be null)
+     * @param requestedAt the instant when the entry was requested
+     */
     private CampaignActivityEntry(CampaignActivity campaignActivity,
                                   Long userId,
                                   Long productId,
@@ -62,6 +72,15 @@ public class CampaignActivityEntry extends BaseTimeEntity {
         this.status = CampaignActivityEntryStatus.PENDING;
     }
 
+    /**
+     * Creates a new CampaignActivityEntry for the given campaign activity with the provided user, product, and request time.
+     *
+     * @param campaignActivity the associated CampaignActivity
+     * @param userId the ID of the user who requested the entry
+     * @param productId the ID of the related product; may be null
+     * @param requestedAt the timestamp when the entry was requested
+     * @return the newly created CampaignActivityEntry with initial status set to PENDING
+     */
     public static CampaignActivityEntry create(CampaignActivity campaignActivity,
                                                Long userId,
                                                Long productId,
@@ -69,24 +88,47 @@ public class CampaignActivityEntry extends BaseTimeEntity {
         return new CampaignActivityEntry(campaignActivity, userId, productId, requestedAt);
     }
 
+    /**
+     * Sets the entry's status to the provided value.
+     *
+     * @param status the new status for this campaign activity entry
+     */
     public void updateStatus(CampaignActivityEntryStatus status) {
         this.status = status;
     }
 
+    /**
+     * Set the timestamp when this entry was processed.
+     *
+     * @param processedAt the processing timestamp to record
+     */
     public void markProcessedAt(Instant processedAt) {
         this.processedAt = processedAt;
     }
 
+    /**
+     * Sets the processedAt timestamp to the current instant.
+     */
     public void markProcessedNow() {
         markProcessedAt(Instant.now());
     }
 
+    /**
+     * Update the entry's product identifier when a non-null value is provided.
+     *
+     * @param productId the new product identifier; if `null`, the current productId is not modified
+     */
     public void updateProduct(Long productId) {
         if (productId != null) {
             this.productId = productId;
         }
     }
 
+    /**
+     * Sets the entry's additional information.
+     *
+     * @param info the additional information to store; may be `null` to clear existing info
+     */
     public void updateInfo(String info) {
         this.info = info;
     }

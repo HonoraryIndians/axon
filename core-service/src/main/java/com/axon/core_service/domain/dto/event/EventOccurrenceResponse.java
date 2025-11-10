@@ -12,6 +12,12 @@ public class EventOccurrenceResponse {
     private final LocalDateTime occurredAt;
     private final Long userId;
 
+    /**
+     * Create an EventOccurrenceResponse populated from the given EventOccurrenceRequest.
+     *
+     * @param occurrence the source request containing eventId, occurredAt, and userId
+     * @return an EventOccurrenceResponse with its eventId, occurredAt, and userId copied from {@code occurrence}
+     */
     public static EventOccurrenceResponse from(EventOccurrenceRequest occurrence) {
         return EventOccurrenceResponse.builder()
                 .eventId(occurrence.getEventId())

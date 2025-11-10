@@ -24,10 +24,23 @@ public class CampaignActivityResponse {
     private final Long participantCount;
     private final List<FilterDetail> filters;
 
+    /**
+     * Create a CampaignActivityResponse from a CampaignActivity with no participant count.
+     *
+     * @param campaignActivity the source CampaignActivity to map into the response
+     * @return a CampaignActivityResponse populated from the given CampaignActivity with `participantCount` set to {@code null}
+     */
     public static CampaignActivityResponse from(CampaignActivity campaignActivity) {
         return from(campaignActivity, null);
     }
 
+    /**
+     * Create a CampaignActivityResponse DTO from a CampaignActivity entity, optionally including participant count.
+     *
+     * @param campaignActivity the source domain entity whose fields are copied into the DTO
+     * @param participantCount the participant count to assign to the DTO; may be {@code null}
+     * @return a CampaignActivityResponse populated from the provided entity and participant count
+     */
     public static CampaignActivityResponse from(CampaignActivity campaignActivity, Long participantCount) {
         return CampaignActivityResponse.builder()
                 .id(campaignActivity.getId())

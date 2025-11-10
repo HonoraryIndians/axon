@@ -21,6 +21,13 @@ public class UserBehaviorEvent {
     private final String userAgent;
     private final Map<String, Object> properties;
 
+    /**
+     * Creates a UserBehaviorEvent instance, normalizing optional fields to ensure non-null and immutable state.
+     *
+     * @param occurredAt the time the event occurred; if {@code null}, the current instant is used
+     * @param properties a map of event properties; if {@code null} or empty an empty map is assigned,
+     *                   otherwise a new insertion-ordered unmodifiable copy is created
+     */
     @Builder
     private UserBehaviorEvent(Long eventId,
                               String eventName,

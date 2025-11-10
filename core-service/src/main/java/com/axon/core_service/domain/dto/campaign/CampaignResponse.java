@@ -17,6 +17,12 @@ public class CampaignResponse {
     private final LocalDateTime startAt;
     private final LocalDateTime endAt;
 
+    /**
+     * Creates a CampaignResponse DTO populated from the given Campaign domain object.
+     *
+     * @param campaign the Campaign whose fields will be copied into the response DTO
+     * @return a CampaignResponse with fields populated from the provided Campaign
+     */
     public static CampaignResponse from(Campaign campaign) {
         return CampaignResponse.builder()
                 .id(campaign.getId())

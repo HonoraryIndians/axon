@@ -21,6 +21,12 @@ public class EventResponse {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
+    /**
+     * Create an EventResponse DTO populated from the given Event entity.
+     *
+     * @param event the source Event to map values from; triggerType and triggerPayload are derived from event.getTriggerCondition()
+     * @return an EventResponse with id, name, description, status, triggerType, triggerPayload, createdAt, and updatedAt copied from the source Event
+     */
     public static EventResponse from(Event event) {
         return EventResponse.builder()
                 .id(event.getId())
