@@ -28,6 +28,15 @@ public class CampaignActivityMetaService {
     private final ObjectMapper objectMapper;
     private final JwtTokenProvider jwtTokenProvider;
 
+    /**
+     * Retrieves the CampaignActivityMeta for the given campaign activity ID and stores it in the cache.
+     *
+     * Attempts to return a cached meta if present; otherwise fetches the campaign activity, derives
+     * validation-phase flags, constructs the meta, caches it (5-minute TTL), and returns it.
+     *
+     * @param campaignActivityId the campaign activity identifier
+     * @return the CampaignActivityMeta for the specified campaign activity, or `null` if the activity is not found
+     */
     public CampaignActivityMeta getMeta(Long campaignActivityId) {
         Objects.requireNonNull(campaignActivityId, "campaignActivityId must not be null");
         String cacheKey = metaCacheKey(campaignActivityId);
@@ -80,10 +89,22 @@ public class CampaignActivityMetaService {
         return meta;
     }
 
+    /**
+     * Remove the cached CampaignActivityMeta for the given campaign activity ID.
+     *
+     * @param campaignActivityId the campaign activity identifier whose cached meta will be removed
+     */
     public void evictMeta(Long campaignActivityId) {
         redisTemplate.delete(metaCacheKey(campaignActivityId));
     }
 
+    /**
+     * Fetches the campaign activity summary from the external campaign API for the given campaign activity ID.
+     *
+     * @param campaignActivityId the campaign activity identifier to retrieve
+     * @return the CampaignActivitySummaryResponse for the requested ID, or `null` if the external service returns 404 (not found)
+     * @throws IllegalStateException if the request fails for reasons other than a 404 Not Found
+     */
     private CampaignActivitySummaryResponse fetchCampaignActivity(Long campaignActivityId) {
         try {
             String accessToken = jwtTokenProvider.generateAccessToken(0L);// system user
@@ -102,6 +123,12 @@ public class CampaignActivityMetaService {
         }
     }
 
+    /**
+     * Constructs the Redis cache key for a campaign activity's meta entry.
+     *
+     * @param campaignActivityId the campaign activity identifier
+     * @return the cache key in the format "campaign:{id}:meta"
+     */
     private String metaCacheKey(Long campaignActivityId) {
         return "campaign:%s:meta".formatted(campaignActivityId);
     }

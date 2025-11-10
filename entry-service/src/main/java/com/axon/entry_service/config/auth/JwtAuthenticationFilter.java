@@ -26,6 +26,13 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
     public static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     private final JwtTokenProvider jwtTokenProvider;
 
+    /**
+     * Populates the security context with an Authentication derived from a valid JWT on the incoming request.
+     *
+     * <p>Extracts a JWT from the Authorization header (Bearer) or the "accessToken" cookie, validates it using
+     * the JwtTokenProvider, and sets the resulting Authentication into SecurityContextHolder when valid.
+     * The filter chain is always continued regardless of token presence or validity.</p>
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -43,6 +50,15 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         chain.doFilter(request, response);
     }
 
+    /**
+     * Extracts a JWT access token from the given HTTP request.
+     *
+     * <p>First checks the Authorization header for a Bearer token; if absent, falls back to a cookie
+     * named "accessToken".</p>
+     *
+     * @param request the incoming HTTP request to read the header or cookie from
+     * @return the token string if present, `null` otherwise
+     */
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {

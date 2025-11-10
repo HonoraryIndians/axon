@@ -23,9 +23,10 @@ public class TestController {
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
-     * 개발용 테스트 토큰을 발급하는 API
-     * @param userId 토큰에 포함시킬 사용자 ID
-     * @return 생성된 Access Token
+     * Issue a development-only access token for the specified user ID.
+     *
+     * @param userId the user ID to include as the token principal
+     * @return the generated access token string
      */
     @GetMapping("/auth/token")
     public ResponseEntity<String> getTestToken(@RequestParam int userId) {

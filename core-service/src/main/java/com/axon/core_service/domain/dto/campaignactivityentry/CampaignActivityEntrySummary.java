@@ -18,6 +18,12 @@ public class CampaignActivityEntrySummary {
     private final Instant processedAt;
     private final String info;
 
+    /**
+     * Create a CampaignActivityEntrySummary from a CampaignActivityEntry.
+     *
+     * @param entry the source CampaignActivityEntry to convert
+     * @return a CampaignActivityEntrySummary populated with the source entry's fields
+     */
     public static CampaignActivityEntrySummary from(CampaignActivityEntry entry) {
         return CampaignActivityEntrySummary.builder()
                 .entryId(entry.getId())

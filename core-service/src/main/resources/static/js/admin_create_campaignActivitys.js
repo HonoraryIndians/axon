@@ -11,6 +11,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const campaignSelect = document.getElementById("campaignId");
     const activityTypeInput = document.getElementById("activityTypeInput");
 
+    /**
+     * Fetches campaign list from the server and populates the campaign select with option elements.
+     *
+     * On success, creates an <option> per campaign using the campaign's name as the label and id as the value,
+     * appending each to the global `campaignSelect` element.
+     *
+     * On failure, logs the error and, if present, updates the element with id "cam_default" to indicate campaigns
+     * could not be loaded.
+     */
     function loadCampaigns() {
         fetch("/api/v1/campaign")
             .then(res => res.json())

@@ -48,6 +48,17 @@ public class EventOccurrence extends BaseTimeEntity {
     @Column(name = "event_context", columnDefinition = "TEXT", nullable = false)
     private Map<String, Object> context = Collections.emptyMap();
 
+    /**
+     * Constructs an EventOccurrence instance used by the Lombok builder, applying validation and defaulting rules.
+     *
+     * @param event      the associated Event; must not be null
+     * @param occurredAt the timestamp when the event occurred; if null, defaults to the current time
+     * @param userId     identifier of the related user, may be null
+     * @param pageUrl    URL associated with the occurrence, may be null
+     * @param context    event context payload; if null or empty, an immutable empty map is stored,
+     *                   otherwise an unmodifiable insertion-order-preserving copy is stored
+     * @throws NullPointerException if {@code event} is null
+     */
     @Builder
     private EventOccurrence(Event event,
                             LocalDateTime occurredAt,

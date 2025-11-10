@@ -37,19 +37,43 @@ public class JwtTokenProvider {
         return generateToken(authentication, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
+    /**
+     * Generate a refresh JWT for the given authentication.
+     *
+     * @param authentication the authenticated principal whose subject and authorities are embedded in the token
+     * @return a refresh JWT string valid for seven days
+     */
     public String generateRefreshToken(Authentication authentication) {
         return generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
     }
 
-    // userId를 직접 받아서 토큰을 생성하는 메소드 추가
+    /**
+     * Create an access JWT for the specified user ID.
+     *
+     * @param userId the user identifier to set as the token subject
+     * @return the generated JWT access token string
+     */
     public String generateAccessToken(Long userId) {
         return generateToken(userId, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
+    /**
+     * Generate a refresh JWT for the given user ID.
+     *
+     * @param userId the user's identifier to set as the token subject
+     * @return the signed JWT refresh token string (expires according to REFRESH_TOKEN_EXPIRE_TIME)
+     */
     public String generateRefreshToken(Long userId) {
         return generateToken(userId, REFRESH_TOKEN_EXPIRE_TIME);
     }
 
+    /**
+     * Creates a signed JWT whose subject is the given user ID and which carries a fixed system role.
+     *
+     * @param userId     the user identifier to set as the token subject
+     * @param expireTime the token lifetime in milliseconds from now
+     * @return           a compact JWT string signed with the provider's key, containing the subject, an "auth" claim set to "ROLE_SYSTEM", an issued-at timestamp, and an expiration timestamp
+     */
     private String generateToken(Long userId, long expireTime) {
         long now = (new Date()).getTime();
         Date validity = new Date(now + expireTime);
@@ -63,7 +87,16 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // 기존 generateToken 메소드 (Authentication 객체 사용)
+    /**
+     * Creates a signed JWT for the given authenticated principal.
+     *
+     * The token's subject is set from the authentication's name and the "auth" claim
+     * contains a comma-separated list of the principal's authorities.
+     *
+     * @param authentication the authenticated principal whose name and authorities populate the token
+     * @param expireTime the token lifetime in milliseconds
+     * @return a compact JWT string signed with HS256 containing subject, `auth`, issued-at, and expiration claims
+     */
     private String generateToken(Authentication authentication, long expireTime) {
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

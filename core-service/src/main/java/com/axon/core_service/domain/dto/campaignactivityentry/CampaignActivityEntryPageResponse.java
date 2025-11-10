@@ -20,6 +20,17 @@ public class CampaignActivityEntryPageResponse {
     private final int totalPages;
     private final List<CampaignActivityEntrySummary> entries;
 
+    /**
+     * Create a paginated response DTO for campaign activity entries.
+     *
+     * Converts the given Page of CampaignActivityEntry into a CampaignActivityEntryPageResponse by mapping
+     * page content to entry summaries and copying pagination metadata.
+     *
+     * @param campaignActivityId the identifier of the campaign activity these entries belong to
+     * @param status             an optional status filter applied to the entries; may be null
+     * @param page               the Spring Data Page containing CampaignActivityEntry elements and pagination info
+     * @return                   a CampaignActivityEntryPageResponse containing entry summaries and pagination fields
+     */
     public static CampaignActivityEntryPageResponse from(Long campaignActivityId,
                                                          @Nullable CampaignActivityEntryStatus status,
                                                          Page<CampaignActivityEntry> page) {

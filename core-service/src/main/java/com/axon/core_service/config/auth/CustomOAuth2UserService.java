@@ -25,6 +25,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final UserRepository userRepository;
 
+    /**
+     * Load or create an application user from the OAuth2 provider response and return a CustomOAuth2User representing that user.
+     *
+     * @param userRequest the incoming OAuth2UserRequest containing client registration and access token used to fetch provider user information
+     * @return an OAuth2User (specifically a CustomOAuth2User) whose authorities, attributes, and name-attribute key are set from the provider and which includes the application's user id
+     * @throws OAuth2AuthenticationException if fetching or processing the provider's user information fails
+     */
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         //log.info("--- CustomOAuth2UserService.loadUser() --- START");

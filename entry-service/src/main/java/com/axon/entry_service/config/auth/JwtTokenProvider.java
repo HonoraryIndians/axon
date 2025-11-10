@@ -28,30 +28,68 @@ public class JwtTokenProvider {
 
     // Token 만료 시간
     private static final long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L; // 30분
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000L; // 7일
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000L; /**
+     * Create a JwtTokenProvider and initialize the HMAC-SHA signing key from the configured JWT secret.
+     *
+     * @param secretKey the JWT secret (from configuration) used to derive the HMAC-SHA key for signing and verifying tokens
+     */
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * Creates a JWT access token for the given authenticated principal.
+     *
+     * @param authentication the Authentication whose name and authorities will be embedded in the token
+     * @return a JWT access token string that expires in 30 minutes
+     */
     public String generateAccessToken(Authentication authentication) {
         return generateToken(authentication, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
+    /**
+     * Create a refresh JWT embedding the authentication's principal name and authorities.
+     *
+     * @param authentication the authentication whose principal name and granted authorities will be included in the token
+     * @return the signed JWT string to be used as a refresh token
+     */
     public String generateRefreshToken(Authentication authentication) {
         return generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
     }
 
-    // userId를 직접 받아서 토큰을 생성하는 메소드 추가
+    /**
+     * Create an access JWT for the given user ID.
+     *
+     * @param userId the user identifier to set as the token subject
+     * @return the access token JWT string that expires in 30 minutes
+     */
     public String generateAccessToken(Long userId) {
         return generateToken(userId, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
+    /**
+     * Create a JWT refresh token for the given user ID.
+     *
+     * @param userId the user's identifier to set as the token subject
+     * @return the JWT refresh token string that expires in seven days
+     */
     public String generateRefreshToken(Long userId) {
         return generateToken(userId, REFRESH_TOKEN_EXPIRE_TIME);
     }
 
+    /**
+     * Builds a signed JWT whose subject is the given user ID and which includes a system role claim.
+     *
+     * The token's expiration time is set to the current time plus {@code expireTime}, and the token
+     * is signed with the provider's configured HS256 key. The token includes a claim named
+     * {@code "auth"} with value {@code "ROLE_SYSTEM"}.
+     *
+     * @param userId     the user identifier to set as the JWT subject
+     * @param expireTime the token lifetime in milliseconds from the current time
+     * @return           the compact serialized JWT string
+     */
     private String generateToken(Long userId, long expireTime) {
         long now = (new Date()).getTime();
         Date validity = new Date(now + expireTime);
@@ -65,7 +103,13 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // 기존 generateToken 메소드 (Authentication 객체 사용)
+    /**
+     * Builds a signed JWT for the given Authentication and expiry duration.
+     *
+     * @param authentication the authentication whose name is used as the token subject and whose authorities are stored in the `auth` claim as a comma-separated string
+     * @param expireTime     token lifetime in milliseconds
+     * @return               the signed JWT as a compact string
+     */
     private String generateToken(Authentication authentication, long expireTime) {
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -83,6 +127,16 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    /**
+     * Reconstructs an Authentication object from the given JWT access token.
+     *
+     * Parses the token's claims, extracts the "auth" claim as a comma-separated list of authorities,
+     * and returns a UsernamePasswordAuthenticationToken with a User principal built from the token subject and those authorities.
+     *
+     * @param accessToken the JWT access token containing the subject and an "auth" claim
+     * @return an Authentication whose principal is the token subject and whose authorities come from the "auth" claim
+     * @throws RuntimeException if the token does not contain an "auth" claim
+     */
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
 
@@ -99,6 +153,12 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
+    /**
+     * Validate a JWT string's signature and structure using the configured signing key.
+     *
+     * @param token the JWT compact-serialization string to validate
+     * @return `true` if the token is valid and not expired, `false` otherwise
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -115,6 +175,12 @@ public class JwtTokenProvider {
         return false;
     }
 
+    /**
+     * Extracts JWT claims from the provided token.
+     *
+     * @param accessToken the JWT string to parse; may be expired
+     * @return the token's Claims, or the claims carried by the ExpiredJwtException if the token has expired
+     */
     private Claims parseClaims(String accessToken) {
         try {
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();

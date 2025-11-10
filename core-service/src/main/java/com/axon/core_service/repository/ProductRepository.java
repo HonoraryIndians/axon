@@ -11,10 +11,10 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     /**
-     * 비관적 쓰기 락(Pessimistic Write Lock)을 사용하여 상품을 조회합니다.
-     * 이 메소드를 호출한 트랜잭션이 완료될 때까지 다른 트랜잭션은 해당 레코드에 접근할 수 없습니다.
-     * @param id 상품 ID
-     * @return Product
+     * Retrieve a Product by its id while applying a pessimistic write lock to the selected row.
+     *
+     * @param id the product id to look up
+     * @return an Optional containing the Product if found, or {@code Optional.empty()} if not found
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :id")

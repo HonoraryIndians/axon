@@ -13,6 +13,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class CoreValidationService {
     private final WebClient webClient;
 
+    /**
+     * Determine eligibility by calling the core validation API for a campaign activity.
+     *
+     * @param Token               the Authorization header value (including scheme, e.g. "Bearer ...")
+     * @param campaignActivityId  the ID of the campaign activity to validate
+     * @return                    a ValidationResponse containing the eligibility result; if the external call fails, `eligible` will be `false` and `errorMessage` will be "서버 오류"
+     */
     public ValidationResponse isEligible(String Token, Long campaignActivityId) {
         try {
             ValidationResponse response = webClient.get()

@@ -11,12 +11,22 @@ import java.util.stream.Collectors;
 public class ValidationLimitFactoryService {
     private final Map<String, ValidationLimitStrategy> strategyMap;
 
-    // Spring이 시작될 때 ValidationLimitStrategy 타입의 모든 빈을 리스트로 주입받음
+    /**
+     * Create a ValidationLimitFactoryService and register the provided strategies keyed by each strategy's limit name.
+     *
+     * @param strategies list of ValidationLimitStrategy instances (injected by Spring) to be indexed by their limit names
+     */
     public ValidationLimitFactoryService(List<ValidationLimitStrategy> strategies) {
         this.strategyMap = strategies.stream()
                 .collect(Collectors.toMap(ValidationLimitStrategy::getLimitName, Function.identity()));
     }
 
+    /**
+     * Retrieve the ValidationLimitStrategy registered under the given limit name.
+     *
+     * @param limitName the strategy's limit name key used to look up the strategy
+     * @return the matching ValidationLimitStrategy, or {@code null} if no strategy is registered for the given name
+     */
     public ValidationLimitStrategy getStrategy(String limitName) {
         return strategyMap.get(limitName);
     }

@@ -19,6 +19,12 @@ public class UserPurchaseScheduler {
     private final JobLauncher jobLauncher;
     private final Job UserPurchaseJob;
 
+    /**
+     * Scheduled task (fixed rate: 6,000,000 ms) that launches the UserPurchaseJob to aggregate monthly user purchase counts.
+     *
+     * The job is executed with JobParameters containing `startDateTime` (one minute before now), `endDateTime` (now),
+     * `metricWindow` (a TEST-prefixed timestamp), and a unique `runId`.
+     */
     @Scheduled(fixedRate = 6000000)
     public void RunUserPurchaseJob() {
         try {

@@ -20,6 +20,11 @@ import java.util.Map;
 public class KafkaConfig {
 
     private final String broker_port ="localhost:9092";
+    /**
+     * Create a ProducerFactory configured for String keys and JSON-serialized values using the configured broker address.
+     *
+     * @return a ProducerFactory that produces String-keyed, JSON-valued Kafka producers configured with the application's broker address
+     */
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> data = new HashMap<>();
@@ -30,11 +35,26 @@ public class KafkaConfig {
         return new DefaultKafkaProducerFactory<>(data);
     }
 
+    /**
+     * Create a KafkaTemplate configured to send messages with String keys and JSON-serialized values to the configured Kafka broker.
+     *
+     * @return a KafkaTemplate for sending messages with String keys and JSON-serialized values
+     */
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
+    /**
+     * Create a ConsumerFactory<String, Object> configured for JSON value deserialization.
+     *
+     * The factory is configured to connect to the broker at {@code broker_port}, use the consumer group
+     * id "axon-group", use {@link org.apache.kafka.common.serialization.StringDeserializer} for keys,
+     * and a {@link org.springframework.kafka.support.serializer.JsonDeserializer} for values with all
+     * packages trusted.
+     *
+     * @return a {@code DefaultKafkaConsumerFactory<String,Object>} with the described key and value deserializers
+     */
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         JsonDeserializer<Object> deserializer = new JsonDeserializer<>();
@@ -49,6 +69,11 @@ public class KafkaConfig {
         return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
     }
 
+    /**
+     * Creates a ConcurrentKafkaListenerContainerFactory configured with the application's consumer factory for use by annotated Kafka listeners.
+     *
+     * @return a ConcurrentKafkaListenerContainerFactory<String, Object> that uses the configured ConsumerFactory
+     */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();

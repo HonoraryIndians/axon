@@ -16,6 +16,12 @@ public class EventDefinitionResponse {
     private final TriggerType triggerType;
     private final Map<String, Object> triggerPayload;
 
+    /**
+     * Create an EventDefinitionResponse populated from the given Event.
+     *
+     * @param event the source Event whose id, name, description, and triggerCondition are used to populate the response; its triggerCondition must be non-null
+     * @return an EventDefinitionResponse with id, name, description, triggerType, and triggerPayload taken from the provided event
+     */
     public static EventDefinitionResponse from(Event event) {
         return EventDefinitionResponse.builder()
                 .id(event.getId())

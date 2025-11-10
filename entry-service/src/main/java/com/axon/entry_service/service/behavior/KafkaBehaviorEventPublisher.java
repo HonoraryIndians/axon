@@ -17,6 +17,15 @@ public class KafkaBehaviorEventPublisher implements BehaviorEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    /**
+     * Publish the given user behavior event to the raw Kafka topic.
+     *
+     * Maps the event to a transport message and sends it to Kafka topic {@code KafkaTopics.EVENT_RAW}.
+     * On send completion, logs an error with the event ID and trigger type if publishing fails,
+     * or logs the topic and offset when publishing succeeds.
+     *
+     * @param event the user behavior event to publish
+     */
     @Override
     public void publish(UserBehaviorEvent event) {
         UserBehaviorEventMessage message = mapToMessage(event);
@@ -32,6 +41,15 @@ public class KafkaBehaviorEventPublisher implements BehaviorEventPublisher {
         });
     }
 
+    /**
+     * Convert a UserBehaviorEvent into a UserBehaviorEventMessage.
+     *
+     * <p>If the source event's properties map is empty, the message's `properties` field is set to
+     * `null` instead of an empty map.</p>
+     *
+     * @param event the source event to map
+     * @return the mapped UserBehaviorEventMessage
+     */
     private UserBehaviorEventMessage mapToMessage(UserBehaviorEvent event) {
         Map<String, Object> props = event.getProperties().isEmpty()
                 ? null

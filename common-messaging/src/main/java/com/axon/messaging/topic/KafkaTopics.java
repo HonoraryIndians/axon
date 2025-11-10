@@ -2,6 +2,9 @@ package com.axon.messaging.topic;
 
 public final class KafkaTopics {
 
+    /**
+     * Prevents instantiation of this utility class containing Kafka topic name constants.
+     */
     private KafkaTopics() {
     }
 

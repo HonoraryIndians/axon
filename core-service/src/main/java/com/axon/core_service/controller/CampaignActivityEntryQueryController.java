@@ -23,6 +23,15 @@ public class CampaignActivityEntryQueryController {
 
     private final CampaignActivityEntryQueryService campaignActivityEntryQueryService;
 
+    /**
+     * Retrieve a paginated page of entries for the specified campaign activity, optionally filtered by entry status.
+     *
+     * @param campaignActivityId the ID of the campaign activity whose entries are being requested
+     * @param status             optional filter to return only entries with the given status
+     * @param page               zero-based page index to return; values less than 0 will be treated as 0
+     * @param size               maximum number of entries per page; values are constrained to the range [1, 100]
+     * @return                   a CampaignActivityEntryPageResponse containing the requested page of entries and pagination metadata
+     */
     @GetMapping("/{campaignActivityId}/entries")
     public ResponseEntity<CampaignActivityEntryPageResponse> getEntries(@PathVariable Long campaignActivityId,
                                                                         @RequestParam(required = false) CampaignActivityEntryStatus status,

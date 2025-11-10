@@ -20,12 +20,22 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    /**
+     * Create a JwtAuthenticationFilter configured with the injected JwtTokenProvider.
+     *
+     * @return a JwtAuthenticationFilter initialized with the configured JwtTokenProvider
+     */
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(jwtTokenProvider);
     }
 
-    // CORS 설정을 위한 Bean
+    /**
+     * Creates a CorsConfigurationSource that permits cross-origin requests from http://localhost:8080
+     * with specific methods, headers, and credentials enabled for all paths.
+     *
+     * @return a CorsConfigurationSource that allows origin http://localhost:8080; methods GET, POST, PUT, DELETE, OPTIONS; headers Authorization and Content-Type; credentials enabled; registered for /**.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -38,6 +48,15 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * Configures and builds the application's security filter chain: applies CORS, disables HTTP Basic and CSRF,
+     * sets stateless session management, requires authentication for "/api/v1/entries", permits all other requests,
+     * and registers the provided JWT authentication filter before the username/password filter.
+     *
+     * @param http the HttpSecurity to configure
+     * @param jwtAuthenticationFilter the JWT filter to insert into the filter chain
+     * @return the configured SecurityFilterChain
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http

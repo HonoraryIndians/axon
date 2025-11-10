@@ -43,6 +43,18 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private final RedisTemplate<String, Object> redisTemplate;
 
+    /**
+     * Handle a successful OAuth2 authentication: determine the redirect URL, record the login event,
+     * optionally cache the user's summary in Redis (1 day TTL), clear authentication attributes, and redirect.
+     *
+     * <p>If caching to Redis fails the exception is logged and does not prevent the redirect.</p>
+     *
+     * @param request the HTTP request
+     * @param response the HTTP response
+     * @param authentication the authentication token containing the authenticated principal
+     * @throws IOException if an I/O error occurs during redirect
+     * @throws ServletException if a servlet error occurs during processing
+     */
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         String targetUrl = determineTargetUrl(request, response, authentication);
@@ -79,6 +91,18 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
+    /**
+     * Constructs a redirect URL containing newly generated JWT access and refresh tokens for the authenticated user.
+     *
+     * <p>Generates access and refresh tokens using the authenticated user's internal userId, stores the access token
+     * in a non-HttpOnly cookie, publishes a user login event, and appends both tokens as query parameters to the
+     * resolved target URL (either from a redirect-cookie or the default target URL).</p>
+     *
+     * @param request the incoming HTTP request (used to resolve optional redirect URI cookie)
+     * @param response the HTTP response used to set the access token cookie
+     * @param authentication the authentication whose principal is a CustomOAuth2User (its userId is used to generate tokens)
+     * @return the redirect URL with `accessToken` and `refreshToken` query parameters
+     */
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         Optional<String> redirectUri = CookieUtils.getCookie(request, HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME)
                 .map(Cookie::getValue);
@@ -110,6 +134,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .build().toUriString();
     }
 
+    /**
+     * Publish a user login event to the USER_LOGIN Kafka topic.
+     *
+     * Builds a UserLoginInfo payload with the provided userId and the current timestamp,
+     * sends it to the Kafka topic, and logs success or failure.
+     *
+     * @param userId ID of the user who just logged in
+     */
     private void PublishUserLoginLog(Long userId) {
         UserLoginInfo userLoginInfo = UserLoginInfo.builder()
                 .userId(userId)
@@ -123,6 +155,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         }
     }
 
+    /**
+     * Clears stored authentication attributes and removes the OAuth2 authorization request cookies.
+     *
+     * @param request  the current HTTP request from which authentication attributes and cookies are cleared
+     * @param response the current HTTP response used to remove authorization request cookies
+     */
     protected void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {
         super.clearAuthenticationAttributes(request);
         httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);

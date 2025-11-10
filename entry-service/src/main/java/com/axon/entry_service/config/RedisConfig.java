@@ -9,6 +9,12 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisConfig {
+    /**
+     * Configure and provide a RedisTemplate<String, Object> that uses string serialization for keys
+     * and JSON serialization for values.
+     *
+     * @return a RedisTemplate configured to serialize keys and hash keys as strings and values and hash values as JSON
+     */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();

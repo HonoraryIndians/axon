@@ -55,6 +55,17 @@ public class User extends BaseTimeEntity {
     @Column
     private Integer age;
 
+    /**
+     * Constructs a User with the given identity and account attributes.
+     *
+     * @param name the user's display name
+     * @param email the user's unique email address
+     * @param picture URL or identifier for the user's avatar, or {@code null}
+     * @param role the user's role
+     * @param provider external authentication provider name, or {@code null}
+     * @param providerId identifier from the external provider, or {@code null}
+     * @param grade the user's grade; if {@code null}, defaults to {@code Grade.BRONZE}
+     */
     @Builder
     public User(String name, String email, String picture, Role role, String provider, String providerId, Grade grade) {
         this.name = name;
@@ -68,20 +79,42 @@ public class User extends BaseTimeEntity {
         this.grade = grade == null ? Grade.BRONZE : grade;
     }
 
+    /**
+     * Update the user's name and profile picture.
+     *
+     * @param name the new display name
+     * @param picture the new profile image URL or identifier; may be null
+     * @return this User instance with updated fields
+     */
     public User update(String name, String picture) {
         this.name = name;
         this.picture = picture;
         return this;
     }
 
+    /**
+     * Obtain the string key that identifies the user's role.
+     *
+     * @return the role key string
+     */
     public String getRoleKey() {
         return this.role.getKey();
     }
 
+    /**
+     * Updates the user's last login timestamp.
+     *
+     * @param loginAt the instant when the user logged in
+     */
     public void recordLogin(Instant loginAt) {
         this.userSummary.updateLastLoginAt(loginAt);
     }
 
+    /**
+     * Update the user's last purchase timestamp.
+     *
+     * @param purchaseAt the instant when the purchase occurred
+     */
     public void recordPurchase(Instant purchaseAt) {
         this.userSummary.updateLastPurchaseAt(purchaseAt);
     }
