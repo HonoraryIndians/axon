@@ -30,6 +30,7 @@ public class DynamicValidationService {
         if(limitFilter == null || limitFilter.isEmpty()) {return ValidationResponse.builder().eligible(true).build();}
         try {
             for(FilterDetail filter : limitFilter) {
+                if(!"HEAVY".equals(filter.getPhase())) {continue;}
                 String filterName = filter.getType();
                 String operator = filter.getOperator() != null ? filter.getOperator() : "BETWEEN";
                 List<String> filterValues = filter.getValues();

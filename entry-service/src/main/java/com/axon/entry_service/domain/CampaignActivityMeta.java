@@ -3,6 +3,8 @@ package com.axon.entry_service.domain;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public record CampaignActivityMeta(
@@ -10,7 +12,10 @@ public record CampaignActivityMeta(
         Integer limitCount,
         CampaignActivityStatus status,
         LocalDateTime startDate,
-        LocalDateTime endDate
+        LocalDateTime endDate,
+        List<Map<String, Object>> filters,
+        boolean hasFastValidation,
+        boolean hasHeavyValidation
 ) {
 
     public CampaignActivityMeta {

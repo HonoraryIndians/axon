@@ -6,6 +6,8 @@ import com.axon.entry_service.dto.CampaignActivitySummaryResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public class CampaignActivityMetaService {
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
     private final JwtTokenProvider jwtTokenProvider;
+
     public CampaignActivityMeta getMeta(Long campaignActivityId) {
         Objects.requireNonNull(campaignActivityId, "campaignActivityId must not be null");
         String cacheKey = metaCacheKey(campaignActivityId);
@@ -44,12 +47,27 @@ public class CampaignActivityMetaService {
             return null;
         }
 
+        List<Map<String, Object>> filters = response.filters();
+        boolean hasFastValidation = false;
+        boolean hasHeavyValidation = false;
+        if(filters != null) {
+            for(Map<String, Object> filter : filters) {
+                String phase = (String) filter.get("phase");
+                if("FAST".equals(phase)) {hasFastValidation = true;}
+                else if("HEAVY".equals(phase)) {hasHeavyValidation = true;}
+                if(hasFastValidation && hasHeavyValidation) {break;}
+            }
+        }
+
         CampaignActivityMeta meta = new CampaignActivityMeta(
                 response.id(),
                 response.limitCount(),
                 response.status(),
                 response.startDate(),
-                response.endDate()
+                response.endDate(),
+                response.filters(),
+                hasFastValidation,
+                hasHeavyValidation
         );
 
         try {

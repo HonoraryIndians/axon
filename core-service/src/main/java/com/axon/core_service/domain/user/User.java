@@ -1,6 +1,7 @@
 package com.axon.core_service.domain.user;
 
 import com.axon.core_service.domain.common.BaseTimeEntity;
+import com.axon.messaging.dto.validation.Grade;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,8 +48,15 @@ public class User extends BaseTimeEntity {
 
     private String providerId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Grade grade;
+
+    @Column
+    private Integer age;
+
     @Builder
-    public User(String name, String email, String picture, Role role, String provider, String providerId) {
+    public User(String name, String email, String picture, Role role, String provider, String providerId, Grade grade) {
         this.name = name;
         this.email = email;
         this.picture = picture;
@@ -56,6 +64,8 @@ public class User extends BaseTimeEntity {
         this.provider = provider;
         this.providerId = providerId;
         this.userSummary = UserSummary.initialize(this);
+        //TODO : 나이, 지역 입력방식 검토
+        this.grade = grade == null ? Grade.BRONZE : grade;
     }
 
     public User update(String name, String picture) {

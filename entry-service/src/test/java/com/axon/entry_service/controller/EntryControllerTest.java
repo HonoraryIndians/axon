@@ -57,7 +57,7 @@ class EntryControllerTest {
                 .roles("USER")
                 .build();
 
-        activeMeta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null);
+        activeMeta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, null, false, false);
     }
 
     @Test
@@ -66,7 +66,7 @@ class EntryControllerTest {
         when(reservationService.reserve(eq(1L), eq(42L), eq(activeMeta), any(Instant.class)))
                 .thenReturn(ReservationResult.success(1L));
 
-        ResponseEntity<Void> response = entryController.createEntry(requestDto, userDetails);
+        ResponseEntity<?> response = entryController.createEntry(requestDto,"FAKETOKEN",userDetails);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         ArgumentCaptor<com.axon.messaging.dto.CampaignActivityKafkaProducerDto> captor = ArgumentCaptor.forClass(com.axon.messaging.dto.CampaignActivityKafkaProducerDto.class);
@@ -80,7 +80,7 @@ class EntryControllerTest {
         when(reservationService.reserve(eq(1L), eq(42L), eq(activeMeta), any(Instant.class)))
                 .thenReturn(ReservationResult.duplicated());
 
-        ResponseEntity<Void> response = entryController.createEntry(requestDto, userDetails);
+        ResponseEntity<?> response = entryController.createEntry(requestDto, "FAKETOKEN",userDetails);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         verify(producer, never()).send(any(), any());
@@ -92,7 +92,7 @@ class EntryControllerTest {
         when(reservationService.reserve(eq(1L), eq(42L), eq(activeMeta), any(Instant.class)))
                 .thenReturn(ReservationResult.soldOut());
 
-        ResponseEntity<Void> response = entryController.createEntry(requestDto, userDetails);
+        ResponseEntity<?> response = entryController.createEntry(requestDto, "FAKETOKEN",userDetails);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.GONE);
         verify(producer, never()).send(any(), any());
@@ -104,7 +104,7 @@ class EntryControllerTest {
         when(reservationService.reserve(eq(1L), eq(42L), eq(activeMeta), any(Instant.class)))
                 .thenReturn(ReservationResult.closed());
 
-        ResponseEntity<Void> response = entryController.createEntry(requestDto, userDetails);
+        ResponseEntity<?> response = entryController.createEntry(requestDto, "FAKETOKEN", userDetails);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         verify(producer, never()).send(any(), any());
@@ -114,7 +114,7 @@ class EntryControllerTest {
     void createEntry_metaNotFoundReturnsNotFound() {
         when(campaignActivityMetaService.getMeta(1L)).thenReturn(null);
 
-        ResponseEntity<Void> response = entryController.createEntry(requestDto, userDetails);
+        ResponseEntity<?> response = entryController.createEntry(requestDto, "FAKETOKEN", userDetails);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         verify(producer, never()).send(any(), any());
@@ -126,7 +126,7 @@ class EntryControllerTest {
         when(reservationService.reserve(eq(1L), eq(42L), eq(activeMeta), any(Instant.class)))
                 .thenReturn(ReservationResult.error());
 
-        ResponseEntity<Void> response = entryController.createEntry(requestDto, userDetails);
+        ResponseEntity<?> response = entryController.createEntry(requestDto, "FAKETOKEN", userDetails);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         verify(producer, never()).send(any(), any());

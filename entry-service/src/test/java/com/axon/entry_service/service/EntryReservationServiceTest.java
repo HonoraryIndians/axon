@@ -34,7 +34,7 @@ class EntryReservationServiceTest {
 
     @BeforeEach
     void setUp() {
-        activeMeta = new CampaignActivityMeta(1L, 3, CampaignActivityStatus.ACTIVE, null, null);
+        activeMeta = new CampaignActivityMeta(1L, 3, CampaignActivityStatus.ACTIVE, null, null, null, false, false);
     }
 
     @Test
@@ -80,7 +80,7 @@ class EntryReservationServiceTest {
 
     @Test
     void reserveClosedWhenActivityInactive() {
-        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 3, CampaignActivityStatus.PAUSED, null, null);
+        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 3, CampaignActivityStatus.PAUSED, null, null, null, false, false);
 
         ReservationResult result = reservationService.reserve(1L, 100L, meta, Instant.now());
 
@@ -94,7 +94,10 @@ class EntryReservationServiceTest {
                 3,
                 CampaignActivityStatus.ACTIVE,
                 Instant.now().plusSeconds(3600).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime(),
-                null
+                null,
+                null,
+                false,
+                false
         );
 
         ReservationResult result = reservationService.reserve(1L, 100L, meta, Instant.now());
