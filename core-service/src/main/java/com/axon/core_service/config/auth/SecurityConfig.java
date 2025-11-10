@@ -26,11 +26,23 @@ public class SecurityConfig {
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
+    /**
+     * Creates a JwtAuthenticationFilter initialized with the configured JwtTokenProvider.
+     *
+     * @return a JwtAuthenticationFilter that validates JWTs using the application's JwtTokenProvider
+     */
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(jwtTokenProvider);
     }
 
+    /**
+     * Configure and build the application's HTTP security chain, including session, CSRF,
+     * authorization rules, OAuth2 login, exception handling, logout, and JWT filter placement.
+     *
+     * @param jwtAuthenticationFilter the JWT authentication filter to add after OAuth2 login processing
+     * @return the configured SecurityFilterChain
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http

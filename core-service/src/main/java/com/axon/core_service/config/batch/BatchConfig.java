@@ -33,6 +33,11 @@ public class BatchConfig {
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
 
+    /**
+     * Defines the batch job that computes and persists user purchase count metrics.
+     *
+     * @return the configured Job named "UserPurchaseCountJob" which starts with the UserPurchaseCountStep
+     */
     @Bean
     public Job UserPurchaseCountJob() {
         return new JobBuilder("UserPurchaseCountJob", jobRepository)
@@ -40,6 +45,13 @@ public class BatchConfig {
     }
 
 
+    /**
+     * Builds a step-scoped JpaPagingItemReader that reads aggregated purchase counts per user for the specified time window.
+     *
+     * @param startDateTimeStr the start of the time window, formatted as "yyyy-MM-dd HH:mm:ss" (provided via jobParameters)
+     * @param endDateTimeStr   the end of the time window, formatted as "yyyy-MM-dd HH:mm:ss" (provided via jobParameters)
+     * @return                 a JpaPagingItemReader yielding UserPurchaseCountDto instances aggregated by user between the given start and end datetimes
+     */
     @Bean
     @StepScope
     public JpaPagingItemReader<UserPurchaseCountDto> UserPurchaseCountReader(
@@ -63,6 +75,12 @@ public class BatchConfig {
                 .build();
     }
 
+    /**
+     * Converts a UserPurchaseCountDto into a UserMetric populated with the user's purchase count and metadata.
+     *
+     * @param metricWindow identifier for the metric's aggregation window (provided via job parameters)
+     * @return an ItemProcessor that maps each UserPurchaseCountDto to a UserMetric with metricName "USER_PURCHASE_COUNT", metricValue set to the purchase count, metricWindow set to the provided value, and last_calculated_at set to the current timestamp
+     */
     @Bean
     @StepScope
     public ItemProcessor<UserPurchaseCountDto, UserMetric> UserPurchaseCountProcessor(@Value("#{jobParameters['metricWindow']}")  String metricWindow) {
@@ -76,12 +94,22 @@ public class BatchConfig {
 
     }
 
+    /**
+     * Creates a JPA item writer configured to persist UserMetric entities using the injected EntityManagerFactory.
+     *
+     * @return a JpaItemWriter that writes and persists UserMetric entities
+     */
     @Bean
     public JpaItemWriter<UserMetric> UserMetricWriter() {
         return new JpaItemWriterBuilder<UserMetric>()
                 .entityManagerFactory(entityManagerFactory).build();
     }
 
+    /**
+     * Configures the step that reads aggregated user purchase counts, converts them to UserMetric, and persists them.
+     *
+     * @return the Step named "UserPurchaseCountStep" that processes UserPurchaseCountDto to UserMetric in chunks of 100
+     */
     @Bean
     public Step UserPurchaseCountStep() {
         return new StepBuilder("UserPurchaseCountStep", jobRepository)

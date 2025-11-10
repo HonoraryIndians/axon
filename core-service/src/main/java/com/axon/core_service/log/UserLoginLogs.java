@@ -10,6 +10,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserLoginLogs {
 
+    /**
+     * Consumes user login messages from the configured Kafka topic and records them to the application log.
+     *
+     * If the provided `loginInfo` is null the message is ignored and a warning is logged; otherwise the user's
+     * identifier and login timestamp are logged at info level.
+     *
+     * @param loginInfo the user login payload to process; may be null
+     */
     @KafkaListener(topics = KafkaTopics.USER_LOGIN, groupId = "loginlog")
     public void consume(UserLoginInfo loginInfo) {
         if (loginInfo == null) {

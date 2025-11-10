@@ -18,11 +18,23 @@ public class CampaignActivityConsumerService {
 
     private final Map<CampaignActivityType, CampaignStrategy> strategies;
 
+    /**
+     * Creates a CampaignActivityConsumerService and builds an unmodifiable map from each strategy's type to the strategy.
+     *
+     * @param strategyList list of CampaignStrategy instances used to populate the internal unmodifiable map keyed by each strategy's type
+     */
     public CampaignActivityConsumerService(List<CampaignStrategy> strategyList) {
         this.strategies = strategyList.stream()
                 .collect(Collectors.toUnmodifiableMap(CampaignStrategy::getType, Function.identity()));
     }
 
+    /**
+     * Handles an incoming campaign activity message from the CAMPAIGN_ACTIVITY_COMMAND topic and delegates processing to the matching CampaignStrategy.
+     *
+     * If a strategy for the message's CampaignActivityType exists, the strategy's processing is invoked; otherwise a warning is logged. The consumed message is also logged.
+     *
+     * @param message the incoming campaign activity message to process
+     */
     @KafkaListener(topics = KafkaTopics.CAMPAIGN_ACTIVITY_COMMAND, groupId = "axon-group")
     public void consume(CampaignActivityKafkaProducerDto message) {
 

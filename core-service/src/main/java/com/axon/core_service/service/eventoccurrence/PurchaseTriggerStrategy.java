@@ -18,11 +18,23 @@ public class PurchaseTriggerStrategy implements EventOccurrenceStrategy {
     private final EventOccurrenceRepository eventOccurrenceRepository;
     private final EventRepository eventRepository;
 
+    /**
+     * Identifies the trigger type handled by this strategy.
+     *
+     * @return the trigger type name "Purchase"
+     */
     @Override
     public String getTriggerType() {
         return "Purchase";
     }
 
+    /**
+     * Creates and persists an EventOccurrence from the given request by resolving the associated Event and populating occurrence fields.
+     *
+     * The occurrence timestamp is taken from request.getOccurredAt() if present, otherwise the current time. If request.getPageUrl() is null or empty, the stored pageUrl will be null.
+     *
+     * @param request the data used to resolve the Event and populate the EventOccurrence
+     */
     @Override
     @Transactional
     public void createEventOccurrence(EventOccurrenceRequest request) {
@@ -39,6 +51,14 @@ public class PurchaseTriggerStrategy implements EventOccurrenceStrategy {
         eventOccurrenceRepository.save(eventOccurrence);
     }
 
+    /**
+     * Resolve the Event to associate with the occurrence described by the request.
+     *
+     * @param request the event occurrence request containing an optional eventId; if `eventId` is present the method resolves that event, otherwise it selects the first active event with trigger type PURCHASE
+     * @return the resolved Event
+     * @throws IllegalArgumentException if `eventId` is provided but no Event with that id exists
+     * @throws IllegalStateException if no active PURCHASE trigger Event is available when `eventId` is not provided
+     */
     private Event resolveEvent(EventOccurrenceRequest request) {
         if (request.getEventId() != null) {
             return eventRepository.findById(request.getEventId())

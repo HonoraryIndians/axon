@@ -13,9 +13,10 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     /**
-     * 상품 재고를 1 감소시킵니다.
-     * 이 메소드는 상위 서비스에서 트랜잭션으로 호출되어야 합니다.
-     * @param productId 상품 ID
+     * Decrements the stock quantity of the specified product by one.
+     *
+     * @param productId the identifier of the product whose stock will be decremented
+     * @throws IllegalArgumentException if no product exists with the given id
      */
     @Transactional
     public void decreaseStock(Long productId) {

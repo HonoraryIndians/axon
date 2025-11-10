@@ -13,12 +13,14 @@ public class CustomOAuth2User extends DefaultOAuth2User {
     private final Long userId;
 
     /**
-     * Constructs a {@code DefaultOAuth2User} using the provided parameters.
+     * Create a CustomOAuth2User with authorities, attributes, a name-attribute key, and a system userId.
+     *
+     * Initializes the underlying OAuth2 user representation and preserves the additional system-specific user identifier.
      *
      * @param authorities      the authorities granted to the user
-     * @param attributes       the attributes about the user
-     * @param nameAttributeKey the key used to access the user's "name" from
-     *                         the {@link #getAttributes()}
+     * @param attributes       the attributes associated with the user
+     * @param nameAttributeKey the key used to obtain the user's name from {@link #getAttributes()}
+     * @param userId           the system-specific user identifier
      */
     public CustomOAuth2User(Collection<? extends GrantedAuthority> authorities,
                             Map<String, Object> attributes,

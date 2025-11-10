@@ -18,6 +18,12 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
     private final CampaignActivityRepository campaignActivityRepository;
     private final CampaignActivityEntryService campaignActivityEntryService;
 
+    /**
+     * Processes a first-come-first-serve campaign event by locating the campaign activity and creating or updating an approved entry for the user.
+     *
+     * @param eventDto the incoming campaign activity event containing the campaign activity ID and user information
+     * @throws IllegalArgumentException if no campaign activity exists with the provided ID
+     */
     @Override
     public void process(CampaignActivityKafkaProducerDto eventDto) {
         CampaignActivity campaignActivity = campaignActivityRepository.findById(eventDto.getCampaignActivityId())
@@ -27,6 +33,11 @@ public class FirstComeFirstServeStrategy implements CampaignStrategy {
         campaignActivityEntryService.upsertEntry(campaignActivity, eventDto, CampaignActivityEntryStatus.APPROVED, true);
     }
 
+    /**
+     * Identifies the campaign activity type handled by this strategy.
+     *
+     * @return the campaign activity type `CampaignActivityType.FIRST_COME_FIRST_SERVE`
+     */
     @Override
     public CampaignActivityType getType() {
         return CampaignActivityType.FIRST_COME_FIRST_SERVE;

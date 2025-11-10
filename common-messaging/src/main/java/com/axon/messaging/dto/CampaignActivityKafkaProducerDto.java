@@ -18,6 +18,13 @@ public class CampaignActivityKafkaProducerDto {
     private Long productId;
     private Long timestamp;
 
+    /**
+     * Get the event time as an Instant.
+     *
+     * If {@code timestamp} is non-null, it is interpreted as epoch milliseconds and converted to an {@link Instant}; otherwise the current system instant is used.
+     *
+     * @return the event time as an {@link Instant}
+     */
     public Instant occurredAt() {
         return timestamp != null ? Instant.ofEpochMilli(timestamp) : Instant.now();
     }
