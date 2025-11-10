@@ -1,9 +1,11 @@
 package com.axon.core_service.config.auth;
 
+import com.axon.util.CookieUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -21,6 +23,9 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String BEARER_PREFIX = "Bearer ";
+
+    // 쿠키 이름을 상수로 정의
+    public static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
 
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -46,6 +51,8 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(7);
         }
-        return null;
+        return CookieUtils.getCookie(request, ACCESS_TOKEN_COOKIE_NAME)
+            .map(Cookie::getValue)
+            .orElse(null);
     }
 }

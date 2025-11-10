@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(pageTitle, bodyClass, headContent, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle} ?: 'Axon'">Axon</title>
+
+    <th:block th:if="${headContent} != null" th:replace="${headContent}"></th:block>
+</head>
+<body th:class="${bodyClass}">
+<main th:if="${content} != null" th:replace="${content}"></main>
+
+<script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/axon-tracker-config.js}"></script>
+</body>
+</html>

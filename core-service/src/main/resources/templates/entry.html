@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('이벤트 응모', null, ~{::head/content()}, ~{::section})">
+<head>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        button { font-size: 1.2em; padding: 10px 15px; }
+        #result { margin-top: 20px; font-weight: bold; }
+    </style>
+    <script th:inline="javascript">
+        window.__AXON_TRACKER_OVERRIDES__ = {
+            apiBaseUrl: 'http://localhost:8080',
+            collectEndpoint: 'http://localhost:8081/api/v1/behavior/events',
+            tokenProvider: () => common.getCookie('accessToken'),
+            debug: true
+        };
+    </script>
+</head>
+<section>
+    <h1 id="event-title">이벤트 정보 로딩 중...</h1>
+    <p>아래 버튼을 눌러 이벤트에 응모하세요.</p>
+    <button id="entryButton">응모하기</button>
+    <div id="result"></div>
+
+    <script th:inline="javascript">
+        const params = new URLSearchParams(window.location.search);
+        const campaignActivityId = params.get('campaignActivityId');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (campaignActivityId) {
+                document.getElementById('event-title').innerText = `선착순 캠페인 활동 #${campaignActivityId}`;
+            } else {
+                document.getElementById('event-title').innerText = '잘못된 이벤트입니다.';
+                document.getElementById('entryButton').disabled = true;
+            }
+        });
+
+        document.getElementById('entryButton').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerText = '응모 요청 중...';
+
+            const accessToken = common.getCookie('accessToken');
+
+            if (!accessToken) {
+                resultDiv.innerText = '오류: 로그인 정보가 없습니다.';
+                return;
+            }
+
+            const eventData = {
+                campaignActivityId: parseInt(campaignActivityId),
+                productId: parseInt(campaignActivityId)
+            };
+
+            fetch('http://localhost:8081/api/v1/entries', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(eventData)
+            })
+            .then(response => {
+                if (response.status === 202) {
+                    return '응모 요청이 성공적으로 접수되었습니다! 선착순 결과는 잠시 후 확인됩니다.';
+                }
+                return response.text().then(text => { throw new Error('응모 요청 실패: ' + text); });
+            })
+            .then(message => {
+                resultDiv.innerText = message;
+                document.getElementById('entryButton').disabled = true;
+            })
+            .catch(error => {
+                resultDiv.innerText = '오류가 발생했습니다: ' + error.message;
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</section>
+</html>

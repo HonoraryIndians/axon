@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('상품 구매', null, ~{::head/content()}, ~{::section})">
+<head></head>
+<section>
+    <h1>상품 구매</h1>
+    <hr>
+    <h3>테스트 용</h3>
+    <button id="buy-item">구매하기</button>
+</section>
+<script data-role="post" th:inline="javascript">
+    document.getElementById("buy-item").addEventListener('click', function () {
+        const token = common.getCookie('accessToken');
+        const info = {
+            productId: 101,
+            amount: 49000,
+            quantity: 1
+        };
+
+        const payload = {
+            eventId: 1,
+            occurredAt: new Date().toISOString(),
+            pageUrl: "local",
+            payload: info
+        };
+
+        fetch('/collect/events/purchase', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('구매 처리 결과:', data);
+            alert('구매가 완료되었습니다.');
+        })
+        .catch(error => {
+            console.error('구매 처리 실패:', error);
+            alert('구매 처리 중 오류가 발생했습니다.');
+        });
+    });
+</script>
+</html>

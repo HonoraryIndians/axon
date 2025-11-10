@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('관리자 페이지', null, ~{::head/content()}, ~{::section})">
+<head></head>
+<section>
+    <h1 style="align-content: center">관리자 페이지</h1>
+    <hr>
+    <nav>
+        <a href="/admin_board">캠페인 대쉬보드</a>
+        <a href="#">사용자 관리</a>
+    </nav>
+</section>
+</html>

@@ -1,0 +1,193 @@
+/* === 전체 기본 설정 === */
+::-webkit-scrollbar {
+    display: none;
+}
+
+body {
+    font-family: "Noto Sans KR", "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f9fafb;
+    color: #111827;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* === 컨테이너 정렬 === */
+main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 100px 48px 80px; /* 헤더 높이 확보 */
+}
+
+/* === grid layout === */
+main .grid {
+    align-items: start;
+    gap: 48px;
+}
+
+/* === 섹션 카드 === */
+.section-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 32px 36px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #111827;
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 8px;
+}
+
+/* === 폼 공통 === */
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.form-input,
+.form-textarea,
+select {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 15px;
+    color: #111827;
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+select:focus {
+    border-color: #000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
+    outline: none;
+}
+
+.form-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.form-checkbox {
+    accent-color: #000;
+}
+
+/* === 캠페인 유형 카드 === */
+.campaign-type {
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.campaign-type:hover {
+    border-color: #000;
+    background: #f9fafb;
+}
+
+.type-icon {
+    font-size: 22px;
+    color: #9ca3af;
+    margin-bottom: 4px;
+}
+
+.type-desc {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* === 업로드 박스 === */
+.upload-box {
+    border: 2px dashed #d1d5db;
+    border-radius: 10px;
+    padding: 32px;
+    text-align: center;
+    transition: all 0.2s;
+    color: #6b7280;
+    background: #fff;
+}
+
+.upload-box:hover {
+    border-color: #9ca3af;
+    background-color: #f9fafb;
+}
+
+/* === 미리보기 영역 === */
+.section-card.sticky {
+    position: sticky;
+    top: 100px; /* 헤더 높이 */
+}
+
+.section-card.sticky .section-title {
+    border: none;
+    padding-bottom: 0;
+}
+
+/* === 미리보기 내부 === */
+.section-card.sticky h3 {
+    font-weight: 600;
+    color: #111827;
+}
+
+.section-card.sticky .text-sm {
+    font-size: 14px;
+}
+
+.campaign-type.selected {
+    border: 2px solid #000;
+    background-color: #f4f4f4;
+}
+
+/* === 버튼 === */
+button {
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* === 헤더 버튼 (상단 고정) === */
+header {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+header button {
+    font-size: 14px;
+}
+
+/* === 반응형 === */
+@media (max-width: 1024px) {
+    main {
+        padding: 80px 24px 60px;
+    }
+    main .grid {
+        gap: 32px;
+    }
+    .section-card {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    main .grid {
+        grid-template-columns: 1fr !important;
+    }
+    .section-card.sticky {
+        position: relative;
+        top: 0;
+    }
+}

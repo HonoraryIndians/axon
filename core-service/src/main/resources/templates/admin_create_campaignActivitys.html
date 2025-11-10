@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('새 캠페인 활동 만들기', 'h-full text-base-content', ~{::head/content()}, ~{::section})">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" th:href="@{/css/admin_create_event.css}" />
+</head>
+
+<section>
+    <header class="bg-white border-b border-neutral-200 fixed top-0 left-0 right-0 z-50">
+    <div class="flex items-center justify-between px-6 py-4">
+        <div class="flex items-center space-x-4">
+            <a href="/admin_board"
+                    class="flex items-center space-x-2 text-neutral-600 hover:text-neutral-800">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>캠페인 활동 목록</span>
+            </a>
+        </div>
+        <h1 class="text-xl text-neutral-900">새 캠페인 활동 만들기</h1>
+        <div class="flex items-center space-x-3">
+            <button id="submit" class="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800">
+                등록 완료
+            </button>
+        </div>
+    </div>
+</header>
+
+    <main class="pt-20 pb-8 px-6 max-w-6xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- 좌측 폼 -->
+        <div class="lg:col-span-2 space-y-8">
+
+            <!-- 기본 정보 -->
+            <section class="section-card">
+                <h2 class="section-title">캠페인 활동 기본 정보</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="form-label">캠페인 활동 이름 *</label>
+                        <label for="activityName"></label><input id="activityName" type="text" class="form-input" placeholder="캠페인 활동명을 입력하세요">
+                    </div>
+                    <div>
+                        <label class="form-label">캠페인 활동 설명</label>
+                        <label>
+                            <textarea class="form-textarea" placeholder="캠페인 활동 목적 및 요약을 입력하세요"></textarea>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="form-label">캠페인 유형 *</label>
+                        <label>
+                            <select id="campaignId" class="form-input">
+                                <option id="cam_default" value="">캠페인을 선택하세요</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <input type="hidden" id="activityTypeInput" name="campaignType" />
+                    <div id="campaignActivityTypeGroup" class="grid grid-cols-3 gap-4">
+                        <button type="button" class="campaign-type selectable" data-type=FIRST_COME_FIRST_SERVE>
+                            <i class="fa-solid fa-clock type-icon"></i>
+                            <div>선착순</div>
+                            <div class="type-desc">먼저 참여한 순서대로</div>
+                        </button>
+                        <button type="button" class="campaign-type selectable" data-type=COUPON>
+                            <i class="fa-solid fa-check-circle type-icon"></i>
+                            <div>조건부</div>
+                            <div class="type-desc">특정 조건 달성 시</div>
+                        </button>
+                        <button type="button" class="campaign-type selectable" data-type=GIVEAWAY>
+                            <i class="fa-solid fa-gift type-icon"></i>
+                            <div>응모/추첨</div>
+                            <div class="type-desc">추첨을 통한 당첨</div>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 조건 -->
+            <section class="section-card">
+                <h2 class="section-title">캠페인 활동 조건 설정</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="form-label">참여 인원 수</label>
+                        <label for="limitCountInput"></label><input id="limitCountInput" type="number" class="form-input" placeholder="최대 참여 인원을 입력하세요">
+                    </div>
+                    <div>
+                        <label class="form-label">참여 제한 옵션</label>
+                        <div class="space-y-3">
+                            <label class="flex items-center"><input type="checkbox" class="form-checkbox"><span class="ml-2">미구현 섹터</span></label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label">필터 제한</label>
+                        <div id="filter-container" class="space-y-4">
+                            <!-- 나이 필터 -->
+                            <div class="filter-group">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="AGE">
+                                    <span class="ml-2 font-medium">나이 제한</span>
+                                </label>
+                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="AGE">
+                                    <div id="age-filter-inputs">
+                                        <!-- 나이 범위 입력란이 동적으로 추가될 영역 -->
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <input type="number" placeholder="20" class="form-input age-range-start w-20"> ~ <input type="number" placeholder="29" class="form-input age-range-end w-20">
+                                        </div>
+                                    </div>
+                                    <button type="button" id="add-age-range-btn" class="btn-secondary text-sm py-1 px-2">+ 범위 추가</button>
+                                </div>
+                            </div>
+                            <!-- 지역 필터 -->
+                            <div class="filter-group">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="REGION">
+                                    <span class="ml-2 font-medium">지역 제한</span>
+                                </label>
+                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="REGION">
+                                    <div class="flex items-center gap-2">
+                                        <select id="region-sido-select" class="form-input flex-grow">
+                                            <option value="">시/도 선택</option>
+                                        </select>
+                                        <select id="region-sigungu-select" class="form-input flex-grow">
+                                            <option value="">시/군/구 선택</option>
+                                        </select>
+                                    </div>
+                                    <div id="selected-regions-container" class="mt-2"></div>
+                                </div>
+                            </div>
+                            <!-- VIP 등급 필터 (예시) -->
+                            <div class="filter-group">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="VIP_TIER">
+                                    <span class="ml-2 font-medium">VIP 등급 제한</span>
+                                </label>
+
+                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="VIP_TIER">
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="BRONZE"><span class="ml-2">브론즈</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="SILVER"><span class="ml-2">실버</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="GOLD"><span class="ml-2">골드</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="PLATINUM"><span class="ml-2">플레티</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="DIAMOND"><span class="ml-2">다이아몬드</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="VIP"><span class="ml-2">VIP</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="VVIP"><span class="ml-2">VVIP</span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 보상 -->
+            <!--
+            <section class="section-card">
+                <h2 class="section-title">보상 설정 (구현예정)</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="form-label">보상 유형 *</label>
+                        <label>
+                            <select class="form-input">
+                                <option>보상 유형을 선택하세요</option>
+                                <option>쿠폰</option>
+                                <option>포인트</option>
+                                <option>경품</option>
+                                <option>기타</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="form-label">보상 이름 *</label>
+                        <label>
+                            <input type="text" class="form-input" placeholder="예: 5% 할인 쿠폰">
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label">보상 수량</label>
+                            <label>
+                                <input type="number" class="form-input" placeholder="지급 가능 수량">
+                            </label>
+                        </div>
+                        <div>
+                            <label class="form-label">보상 조건</label>
+                            <label>
+                                <select class="form-input">
+                                    <option>참여 완료 시</option>
+                                    <option>당첨 시</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label">보상 유효기간</label>
+                        <label>
+                            <input type="date" class="form-input">
+                        </label>
+                    </div>
+                </div>
+            </section>
+            -->
+
+            <!-- 일정 -->
+            <section class="section-card">
+                <h2 class="section-title">일정 설정</h2>
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label">시작일 *</label>
+                            <label>
+                                <input type="datetime-local" id="startDate" class="form-input">
+                            </label>
+                        </div>
+                        <div>
+                            <label class="form-label">종료일 *</label>
+                            <label>
+                                <input type="datetime-local" id="endDate" class="form-input">
+                            </label>
+                        </div>
+                    </div>
+                    <label class="flex items-center"><input type="checkbox" class="form-checkbox"><span class="ml-2">예약 상태로 등록 (자동 시작)</span></label>
+                </div>
+            </section>
+        </div>
+
+        <!-- 미리보기 -->
+        <div class="lg:col-span-1">
+            <section class="section-card sticky top-24">
+                <h2 class="section-title">미리보기</h2>
+                <div class="border border-neutral-200 rounded-lg overflow-hidden">
+                    <div class="bg-neutral-300 h-32 flex items-center justify-center"><span class="text-white text-sm">대표 이미지</span></div>
+                    <div class="p-4">
+                        <h3 class="text-neutral-900 mb-2">캠페인 제목</h3>
+                        <div class="space-y-2 text-sm text-neutral-600">
+                            <div class="flex items-center"><i class="fa-solid fa-calendar mr-2"></i><span>2025-01-01 ~ 2025-01-31</span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-tag mr-2"></i><span>선착순</span></div>
+                            <div class="flex items-center"><i class="fa-solid fa-gift mr-2"></i><span>보상 정보</span></div>
+                        </div>
+                        <button class="w-full mt-4 bg-black text-white py-2 rounded-lg text-sm">참여하기</button>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-neutral-50 border border-neutral-200 rounded-lg">
+                    <div class="flex items-start">
+                        <i class="fa-solid fa-exclamation-triangle text-neutral-600 mr-2 mt-0.5"></i>
+                        <div class="text-sm text-neutral-800">
+                            <div>필수 입력 확인</div>
+                            <div>캠페인 이름, 유형, 보상 정보를 입력하세요.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    </main>
+</section>
+<script th:src="@{/js/admin_create_campaignActivitys.js}"></script>
+</html>

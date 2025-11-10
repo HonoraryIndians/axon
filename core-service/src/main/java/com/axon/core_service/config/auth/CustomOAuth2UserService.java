@@ -1,8 +1,10 @@
 package com.axon.core_service.config.auth;
 
+import com.axon.core_service.domain.user.CustomOAuth2User;
+
 import com.axon.core_service.config.auth.dto.OAuthAttributes;
 import com.axon.core_service.domain.user.User;
-import com.axon.core_service.domain.user.UserRepository;
+import com.axon.core_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -41,10 +43,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         //log.info("User successfully loaded/saved. Email: {}", user.getEmail());
         //log.info("--- CustomOAuth2UserService.loadUser() --- END");
 
-        return new DefaultOAuth2User(
+        return new CustomOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority(user.getRoleKey())),
                 attributes.getAttributes(),
-                attributes.getNameAttributeKey()
+                attributes.getNameAttributeKey(),
+                user.getId() // CustomOAuth2User에 우리 DB의 userId를 담아서 반환
         );
     }
 

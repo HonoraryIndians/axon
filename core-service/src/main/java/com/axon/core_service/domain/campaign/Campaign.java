@@ -1,0 +1,81 @@
+package com.axon.core_service.domain.campaign;
+
+import com.axon.core_service.domain.campaignactivity.CampaignActivity;
+import com.axon.core_service.domain.common.BaseTimeEntity;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(name = "campaigns")
+public class Campaign extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    private LocalDateTime startAt;
+
+    private LocalDateTime endAt;
+
+    private Long targetSegmentId;
+
+    private String rewardType;
+
+    @Column(length = 2000)
+    private String rewardPayload;
+
+    @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<CampaignActivity> campaignActivities = new ArrayList<>();
+
+    public Campaign(String name) {
+        this.name = name;
+    }
+
+    @Builder
+    public Campaign(String name,
+                    LocalDateTime startAt,
+                    LocalDateTime endAt,
+                    Long targetSegmentId,
+                    String rewardType,
+                    String rewardPayload) {
+        this.name = name;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.targetSegmentId = targetSegmentId;
+        this.rewardType = rewardType;
+        this.rewardPayload = rewardPayload;
+    }
+
+    public void updateSchedule(LocalDateTime startAt, LocalDateTime endAt) {
+        this.startAt = startAt;
+        this.endAt = endAt;
+    }
+
+    public void updateReward(String rewardType, String rewardPayload) {
+        this.rewardType = rewardType;
+        this.rewardPayload = rewardPayload;
+    }
+
+    public void updateBasicInfo(String name, Long targetSegmentId) {
+        this.name = name;
+        this.targetSegmentId = targetSegmentId;
+    }
+}
