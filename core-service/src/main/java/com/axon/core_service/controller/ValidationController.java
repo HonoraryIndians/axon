@@ -20,6 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class ValidationController {
     private final DynamicValidationService dynamicValidationService;
 
+    /**
+     * Validate whether the authenticated user is allowed to perform the specified campaign activity.
+     *
+     * @param userdetails          the authenticated user's details (used to identify the user)
+     * @param campaignActivityId   the campaign activity identifier to validate; if `null` the endpoint responds with HTTP 401
+     * @return                     a ResponseEntity containing the validation result as a ValidationResponse, or an empty 401 Unauthorized response when `campaignActivityId` is `null`
+     */
     @GetMapping
     public ResponseEntity<ValidationResponse> validateCampaignActivityLimit(@AuthenticationPrincipal UserDetails userdetails, @RequestParam Long campaignActivityId) {
         long userId = Long.parseLong(userdetails.getUsername());

@@ -17,10 +17,15 @@
   };
 
   /**
-   * 메인 트래커 클래스
-   * - 이벤트 정의를 주기적으로 조회하고
-   * - 지정된 트리거에 맞춰 클라이언트 행동을 수집
-   * - entry-service에 전달한다.
+   * Tracker that periodically loads event definitions, registers client-side handlers for configured triggers,
+   * and prepares collected behavior events for delivery to the backend.
+   *
+   * Initializes the instance configuration from defaults and establishes initial runtime state:
+   * - config: merged configuration values
+   * - state.events: loaded event definitions
+   * - state.lastSentAt: per-event cooldown tracking
+   * - state.initialized / state.refreshing flags
+   * @constructor
    */
   function BehaviorTracker() {
     console.log('[AxonBehaviorTracker] constructor');
@@ -314,7 +319,9 @@
   };
 
   /**
-   * 요소의 텍스트를 최대 200자까지 정제한다.
+   * Extracts visible text from a DOM element, trims surrounding whitespace, and truncates it to 200 characters.
+   * @param {Element} element - The DOM element to read text from.
+   * @returns {string} The trimmed text content of the element, limited to 200 characters.
    */
   function getSanitizedText(element) {
     const text = element.innerText || element.textContent || '';
@@ -322,7 +329,9 @@
   }
 
   /**
-   * 값이 함수라면 실행하고, 아니면 그대로 반환한다.
+   * Resolve a value or, if given a function, invoke it and return its result.
+   * @param {*} candidate - A value or function. If a function, it will be called and its return value used.
+   * @returns {*} The candidate value, the result of invoking the candidate when it is a function, or `null` if the candidate is `undefined`.
    */
   async function resolveValue(candidate) {
     console.log('[AxonBehaviorTracker] resolveValue', candidate);

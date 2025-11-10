@@ -32,6 +32,20 @@ public class EntryController {
     private final CoreValidationService coreValidationService;
     private final FastValidationService fastValidationService;
 
+    /**
+     * Processes an entry creation request: validates eligibility, attempts an atomic reservation, and emits a campaign activity event.
+     *
+     * @param requestDto the entry request containing campaignActivityId, productId, and optional campaignActivityType
+     * @param token the raw "Authorization" header value used for heavy eligibility validation
+     * @param userDetails the authenticated principal whose username is parsed as the numeric userId
+     * @return a ResponseEntity with status:
+     *         202 Accepted on successful reservation and event emission;
+     *         404 Not Found if campaign metadata is missing;
+     *         400 Bad Request for fast- or heavy-validation failures or when the activity is closed;
+     *         409 Conflict when the entry is duplicated;
+     *         410 Gone when the activity is sold out;
+     *         500 Internal Server Error for unexpected reservation failures.
+     */
     @PostMapping
     public ResponseEntity<?> createEntry(@RequestBody EntryRequestDto requestDto,
                                             @RequestHeader("Authorization") String token,

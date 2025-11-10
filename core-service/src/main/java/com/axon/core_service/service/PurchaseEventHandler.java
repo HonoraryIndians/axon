@@ -20,6 +20,15 @@ public class PurchaseEventHandler {
     private final UserSummaryService userSummaryService;
     private final EventOccurrenceService eventOccurrenceService;
 
+    /**
+     * Handle a CampaignActivityApprovedEvent by applying purchase side effects and recording an occurrence.
+     *
+     * Processes the event by decreasing the product stock, recording the user's purchase activity, and creating
+     * an EventOccurrenceRequest with the event's timestamp, userId, and a context containing campaignActivityId
+     * and productId, then forwards it to the EventOccurrenceService with type "Purchase".
+     *
+     * @param event the campaign activity approval event containing userId, productId, campaignActivityId, and occurredAt
+     */
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     @Transactional
     public void handle(CampaignActivityApprovedEvent event) {

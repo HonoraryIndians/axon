@@ -23,6 +23,15 @@ public class CampaignActivityEntryService {
     private final CampaignActivityEntryRepository campaignActivityEntryRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * Upserts a CampaignActivityEntry for the given campaign activity and DTO, persists it, and emits an approval event when the entry is approved for a purchase-related activity.
+     *
+     * @param campaignActivity the campaign activity associated with the entry
+     * @param dto source data containing the user ID, product ID, and an optional epoch-millisecond timestamp
+     * @param nextStatus the status to set on the entry
+     * @param processed if true, marks the entry as processed at the current time
+     * @return the persisted CampaignActivityEntry
+     */
     public CampaignActivityEntry upsertEntry(CampaignActivity campaignActivity,
                                             CampaignActivityKafkaProducerDto dto,
                                             CampaignActivityEntryStatus nextStatus,

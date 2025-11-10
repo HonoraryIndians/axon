@@ -16,6 +16,19 @@
     CLICK: 'CLICK'
   };
 
+  /**
+   * Creates a new BehaviorTracker instance with default configuration and initial runtime state.
+   *
+   * The instance exposes two primary properties:
+   * - `config`: a shallow copy of the module defaults used for runtime behavior.
+   * - `state`: an object holding runtime data:
+   *     - `events` (Array): currently loaded event definitions.
+   *     - `lastSentAt` (Map): per-event timestamps used for cooldown enforcement.
+   *     - `initialized` (boolean): whether initialization completed.
+   *     - `refreshing` (boolean): whether an events refresh is in progress.
+   *
+   * @constructor
+   */
   function BehaviorTracker() {
     this.config = { ...DEFAULTS };
     this.state = {
@@ -256,11 +269,21 @@
     }
   };
 
+  /**
+   * Extracts and returns the element's visible text, trimmed and limited to 200 characters.
+   * @param {Element} element - DOM element to read text from; prefers `innerText` and falls back to `textContent`.
+   * @returns {string} The element text trimmed of surrounding whitespace and truncated to at most 200 characters.
+   */
   function getSanitizedText(element) {
     const text = element.innerText || element.textContent || '';
     return text.trim().slice(0, 200);
   }
 
+  /**
+   * Resolve a value or invoke and return the result if the candidate is a function.
+   * @param {*} candidate - A value or a function that returns a value (or a Promise).
+   * @returns {*} The candidate's resolved value, or `null` when the candidate is `undefined` or `null`.
+   */
   async function resolveValue(candidate) {
     if (typeof candidate === 'function') {
       return candidate();

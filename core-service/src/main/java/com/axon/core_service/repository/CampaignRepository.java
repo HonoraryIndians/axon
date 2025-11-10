@@ -6,5 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface CampaignRepository extends JpaRepository<Campaign, Long> {
-    Optional<Campaign> findByName(String name);
+    /**
+ * Finds a campaign by its name.
+ *
+ * @param name the campaign name to search for
+ * @return an Optional containing the Campaign with the given name, or empty if none exists
+ */
+Optional<Campaign> findByName(String name);
 }

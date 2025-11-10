@@ -35,6 +35,9 @@
   const trackerSrc = overrides.scriptSrc || global.__AXON_TRACKER_SCRIPT_SRC__ || DEFAULT_SCRIPT_SRC;
   console.log('[AxonTracker] loading tracker', trackerSrc);
 
+  /**
+   * Initializes the global AxonBehaviorTracker using the global AxonTrackerConfig if the tracker is present.
+   */
   function initTracker() {
     if (!global.AxonBehaviorTracker) {
       return;

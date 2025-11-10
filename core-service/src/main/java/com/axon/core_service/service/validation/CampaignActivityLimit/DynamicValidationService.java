@@ -19,6 +19,19 @@ public class DynamicValidationService {
     private final CampaignActivityRepository campaignActivityRepository;
     private final ValidationLimitFactoryService validationLimitFactoryService;
 
+    /**
+     * Validates whether a user satisfies the participation limits of a campaign activity.
+     *
+     * <p>When the campaign has no filters, returns an eligible response. For each filter with phase
+     * "HEAVY", delegates validation to the corresponding ValidationLimitStrategy and returns its result.
+     * If a strategy for a filter does not exist or an error occurs during validation, returns an
+     * ineligible response with a user-facing error message.</p>
+     *
+     * @param userId             the identifier of the user to validate
+     * @param campaignActivityId the identifier of the campaign activity whose limits are validated
+     * @return a ValidationResponse indicating eligibility and, on failure, a user-facing error message
+     * @throws IllegalArgumentException if the campaignActivityId does not correspond to an existing campaign activity
+     */
     @Transactional(readOnly = true)
     public ValidationResponse validate(Long userId, Long campaignActivityId) {
         CampaignActivity campaignActivity = campaignActivityRepository.findById(campaignActivityId)

@@ -21,6 +21,15 @@ public class CampaignActivityEntryQueryService {
     private final CampaignActivityRepository campaignActivityRepository;
     private final CampaignActivityEntryRepository campaignActivityEntryRepository;
 
+    /**
+     * Retrieve a paginated view of entries for a specific campaign activity.
+     *
+     * @param campaignActivityId the ID of the campaign activity to fetch entries for
+     * @param status             optional filter to restrict entries to the given status; pass `null` to include all statuses
+     * @param pageable           pagination and sorting information for the result set
+     * @return                   a CampaignActivityEntryPageResponse containing the requested entries and pagination metadata
+     * @throws CampaignActivityNotFoundException if no campaign activity exists with the provided `campaignActivityId`
+     */
     @Transactional(readOnly = true)
     public CampaignActivityEntryPageResponse findEntries(Long campaignActivityId,
                                                          @Nullable CampaignActivityEntryStatus status,

@@ -10,6 +10,13 @@ import java.util.Optional;
 
 public class CookieUtils {
 
+    /**
+     * Retrieve a cookie with the given name from the HTTP request.
+     *
+     * @param request the HTTP servlet request to search for the cookie
+     * @param name    the name of the cookie to find
+     * @return        an Optional containing the matching Cookie if present, `Optional.empty()` otherwise
+     */
     public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
 
@@ -24,6 +31,15 @@ public class CookieUtils {
         return Optional.empty();
     }
 
+    /**
+     * Add a cookie to the HTTP response with the specified name, value, path, max age, and HttpOnly flag.
+     *
+     * @param response the HttpServletResponse to which the cookie will be added
+     * @param name     the cookie name
+     * @param value    the cookie value
+     * @param maxAge   the cookie lifetime in seconds
+     * @param httpOnly whether the cookie should be marked HttpOnly
+     */
     public static void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean httpOnly) {
         Cookie cookie = new Cookie(name, value);
         cookie.setPath("/");

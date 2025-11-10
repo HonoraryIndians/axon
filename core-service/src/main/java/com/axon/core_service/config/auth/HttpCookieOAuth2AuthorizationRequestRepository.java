@@ -30,6 +30,15 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
                 });
     }
 
+    /**
+     * Persists the OAuth2 authorization request and optional redirect URI into cookies, or removes those cookies when the request is null.
+     *
+     * If {@code authorizationRequest} is non-null, serializes and stores it in the cookie named "oauth2_auth_request" and, if the request contains a non-blank parameter named "redirect_uri", stores that value in the cookie named "redirect_uri". If {@code authorizationRequest} is null, deletes both cookies.
+     *
+     * @param authorizationRequest the authorization request to save; if null, related cookies are removed
+     * @param request the HTTP request which may contain a "redirect_uri" parameter
+     * @param response the HTTP response used to add or remove cookies
+     */
     @Override
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
         if (authorizationRequest == null) {

@@ -23,6 +23,12 @@ public record CampaignActivityMeta(
         Objects.requireNonNull(status, "status must not be null");
     }
 
+    /**
+     * Determines whether the campaign activity is eligible for participation at the given instant.
+     *
+     * @param now the reference instant used to evaluate eligibility (converted to the system default time zone)
+     * @return true if the activity's limit is greater than zero or unset, the status is active, the reference time is not before `startDate` (if set), and not after `endDate` (if set); false otherwise
+     */
     public boolean isParticipatable(Instant now) {
         if (limitCount != null && limitCount <= 0) {
             return false;

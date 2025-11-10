@@ -20,6 +20,13 @@ public class UserMetricId implements Serializable {
     private String metricName;
     private String metricWindow;
 
+    /**
+     * Determine whether another object is equal to this UserMetricId based on all key fields.
+     *
+     * @param o the object to compare with this instance
+     * @return {@code true} if {@code o} is a {@code UserMetricId} and its {@code userId}, {@code metricName},
+     *         and {@code metricWindow} are equal to this instance's corresponding fields, {@code false} otherwise
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -28,6 +35,11 @@ public class UserMetricId implements Serializable {
         return Objects.equals(userId, that.userId) && Objects.equals(metricName, that.metricName) && Objects.equals(metricWindow, that.metricWindow);
     }
 
+    /**
+     * Computes a hash code based on the composite key fields.
+     *
+     * @return the hash code derived from {@code userId}, {@code metricName}, and {@code metricWindow}
+     */
     @Override
     public int hashCode() {
         return Objects.hash(userId, metricName, metricWindow);

@@ -35,18 +35,41 @@ public class UserSummary {
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
+    /**
+     * Create a UserSummary associated with the given User.
+     *
+     * @param user the User to associate with this summary
+     * @throws NullPointerException if {@code user} is null
+     */
     private UserSummary(User user) {
         this.user = Objects.requireNonNull(user, "user must not be null");
     }
 
+    /**
+     * Create a new UserSummary associated with the given User.
+     *
+     * @param user the User to associate with the summary; must not be null
+     * @return a newly constructed UserSummary linked to the provided user
+     * @throws NullPointerException if {@code user} is null
+     */
     public static UserSummary initialize(User user) {
         return new UserSummary(user);
     }
 
+    /**
+     * Set the timestamp of the user's most recent purchase.
+     *
+     * @param occurredAt the Instant when the purchase occurred, or {@code null} to clear the value
+     */
     public void updateLastPurchaseAt(Instant occurredAt) {
         this.lastPurchaseAt = occurredAt;
     }
 
+    /**
+     * Update the stored timestamp of the user's last login.
+     *
+     * @param loggedInAt the timestamp of the login event; may be `null` to clear the stored last-login time
+     */
     public void updateLastLoginAt(Instant loggedInAt) {
         this.lastLoginAt = loggedInAt;
     }

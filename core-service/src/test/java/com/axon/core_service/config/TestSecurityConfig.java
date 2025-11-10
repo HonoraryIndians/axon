@@ -13,6 +13,11 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 @TestConfiguration
 public class TestSecurityConfig {
 
+    /**
+     * Provides an in-memory ClientRegistrationRepository preconfigured with a test OAuth2 client.
+     *
+     * @return a ClientRegistrationRepository containing a single ClientRegistration with registration ID "test" configured for the authorization code flow and test endpoints/credentials
+     */
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
         ClientRegistration registration = ClientRegistration.withRegistrationId("test")
@@ -31,6 +36,11 @@ public class TestSecurityConfig {
         return new InMemoryClientRegistrationRepository(registration);
     }
 
+    /**
+     * Provides a Mockito mock of JwtTokenProvider for test contexts.
+     *
+     * @return a Mockito mock implementing JwtTokenProvider
+     */
     @Bean
     public JwtTokenProvider jwtTokenProvider() {
         return Mockito.mock(JwtTokenProvider.class);

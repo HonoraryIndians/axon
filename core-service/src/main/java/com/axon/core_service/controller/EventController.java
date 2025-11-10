@@ -28,6 +28,12 @@ import java.util.List;
 public class EventController {
     private final EventService eventService;
 
+    /**
+     * Create a new event from the provided request.
+     *
+     * @param eventRequest the validated payload containing event details to create
+     * @return the created EventResponse representing the new event
+     */
     @PostMapping
     //생성
     public ResponseEntity<EventResponse> createEvent(@RequestBody @Valid EventRequest eventRequest) {
@@ -35,29 +41,55 @@ public class EventController {
         return ResponseEntity.ok(eventService.createEvent(eventRequest));
     }
 
-    //전체 조회
+    /**
+     * Retrieve all events.
+     *
+     * @return a list of EventResponse objects representing all events
+     */
     @GetMapping
     public ResponseEntity<List<EventResponse>> getEvents() {
         return ResponseEntity.ok(eventService.getEvents());
     }
 
+    /**
+     * Retrieve active event definitions, optionally filtered by trigger type.
+     *
+     * @param triggerType optional trigger type to filter active event definitions; if null, all active definitions are returned
+     * @return a list of active EventDefinitionResponse objects (filtered by the provided trigger type when present)
+     */
     @GetMapping("/active")
     public ResponseEntity<List<EventDefinitionResponse>> getActiveEvents(
             @RequestParam(value = "triggerType", required = false) TriggerType triggerType) {
         return ResponseEntity.ok(eventService.getActiveEventDefinitions(triggerType));
     }
-    //하나 조회
+    /**
+     * Retrieve a single event by its identifier.
+     *
+     * @param id the ID of the event to retrieve
+     * @return the EventResponse for the specified event
+     */
     @GetMapping("/{id}")
     public ResponseEntity<EventResponse> getEvent(@PathVariable Long id) {
         return ResponseEntity.ok(eventService.getEvent(id));
     }
-    //수정
+    /**
+     * Update an existing event identified by its ID.
+     *
+     * @param id           the ID of the event to update
+     * @param eventRequest the updated event data
+     * @return the updated EventResponse
+     */
     @PutMapping("/{id}")
     public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id,
                                                         @RequestBody @Valid EventRequest eventRequest) {
         return ResponseEntity.ok(eventService.updateEvent(id, eventRequest));
     }
-    //제거
+    /**
+     * Delete the event identified by the given id.
+     *
+     * @param id the identifier of the event to delete
+     * @return a ResponseEntity with HTTP status 204 No Content
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);

@@ -63,6 +63,18 @@ public class CampaignActivity extends BaseTimeEntity {
     @Column(name = "filters", columnDefinition = "JSON")
     private List<FilterDetail> filters;
 
+    /**
+     * Constructs a CampaignActivity with the specified association and attributes.
+     *
+     * @param campaign   the owning Campaign (may be null until associated)
+     * @param name       the activity's display name
+     * @param limitCount maximum allowed count for the activity, or {@code null} for no limit
+     * @param status     initial lifecycle status of the activity
+     * @param startDate  activity start date and time (inclusive)
+     * @param endDate    activity end date and time (inclusive)
+     * @param activityType type categorizing the activity
+     * @param filters    list of filter rules applied to the activity (may be null or empty)
+     */
     @Builder
     public CampaignActivity(Campaign campaign,
                             String name,
@@ -82,28 +94,60 @@ public class CampaignActivity extends BaseTimeEntity {
         this.filters = filters;
     }
 
+    /**
+     * Gets the id of the associated campaign.
+     *
+     * @return the campaign's id, or {@code null} if no campaign is associated
+     */
     public Long getCampaignId() {
         return campaign != null ? campaign.getId() : null;
     }
 
+    /**
+     * Updates the activity's display name and participant limit.
+     *
+     * @param name       the new name for the activity
+     * @param limitCount the maximum allowed count for the activity; may be null to indicate no limit
+     */
     public void updateInfo(String name, Integer limitCount) {
         this.name = name;
         this.limitCount = limitCount;
     }
 
+    /**
+     * Sets the activity's status to the specified value.
+     *
+     * @param nextStatus the new status to assign to this activity
+     */
     public void changeStatus(CampaignActivityStatus nextStatus) {
         this.status = nextStatus;
     }
 
+    /**
+     * Updates the activity's start and end date range.
+     *
+     * @param startDate the new start date and time for the activity
+     * @param endDate   the new end date and time for the activity
+     */
     public void changeDates(LocalDateTime startDate, LocalDateTime endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
     }
 
+    /**
+     * Replaces the activity's filters with the provided list.
+     *
+     * @param filters the new list of FilterDetail objects to assign to this activity; may be null to remove all filters
+     */
     public void setFilters(List<FilterDetail> filters) {
         this.filters = filters;
     }
 
+    /**
+     * Associates this activity with the given Campaign.
+     *
+     * @param campaign the Campaign to associate with this activity; may be {@code null} to remove the association
+     */
     void assignCampaign(Campaign campaign) {
         this.campaign = campaign;
     }
