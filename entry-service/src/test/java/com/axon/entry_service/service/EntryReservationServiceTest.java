@@ -34,7 +34,7 @@ class EntryReservationServiceTest {
 
     @BeforeEach
     void setUp() {
-        activeMeta = new CampaignActivityMeta(1L, 3, CampaignActivityStatus.ACTIVE, null, null, null, false, false);
+        activeMeta = new CampaignActivityMeta(1L, 3, CampaignActivityStatus.ACTIVE, null, null, null, false, false, 10L, com.axon.messaging.CampaignActivityType.FIRST_COME_FIRST_SERVE);
     }
 
     @Test
@@ -80,7 +80,7 @@ class EntryReservationServiceTest {
 
     @Test
     void reserveClosedWhenActivityInactive() {
-        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 3, CampaignActivityStatus.PAUSED, null, null, null, false, false);
+        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 3, CampaignActivityStatus.PAUSED, null, null, null, false, false, 10L, com.axon.messaging.CampaignActivityType.FIRST_COME_FIRST_SERVE);
 
         ReservationResult result = reservationService.reserve(1L, 100L, meta, Instant.now());
 
@@ -97,7 +97,9 @@ class EntryReservationServiceTest {
                 null,
                 null,
                 false,
-                false
+                false,
+                10L,
+                com.axon.messaging.CampaignActivityType.FIRST_COME_FIRST_SERVE
         );
 
         ReservationResult result = reservationService.reserve(1L, 100L, meta, Instant.now());

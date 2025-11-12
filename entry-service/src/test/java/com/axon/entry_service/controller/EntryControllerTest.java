@@ -57,7 +57,7 @@ class EntryControllerTest {
                 .roles("USER")
                 .build();
 
-        activeMeta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, null, false, false);
+        activeMeta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, null, false, false, 10L, com.axon.messaging.CampaignActivityType.FIRST_COME_FIRST_SERVE);
     }
 
     @Test

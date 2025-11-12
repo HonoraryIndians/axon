@@ -54,7 +54,7 @@ class FastValidationServiceTest {
         // given
         Map<String, Object> gradeRule = Map.of("type", "GRADE", "operator", "IN", "values", List.of("VIP", "GOLD", "BRONZE"), "phase", "FAST");
         Map<String, Object> ageRule = Map.of("type", "AGE", "operator", "GTE", "values", List.of("20"), "phase", "FAST");
-        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(gradeRule, ageRule), true, false);
+        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(gradeRule, ageRule), true, false, 10L, com.axon.messaging.CampaignActivityType.FIRST_COME_FIRST_SERVE);
         when(valueOperations.get("userCache:1")).thenReturn(eligibleUser);
 
         // when
@@ -68,7 +68,7 @@ class FastValidationServiceTest {
     @DisplayName("사용자 캐시가 없으면, FastValidationException을 발생시킨다")
     void validate_shouldThrowException_whenUserCacheNotFound() {
         // given
-        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(), false, false);
+        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(), false, false, 10L, com.axon.messaging.CampaignActivityType.FIRST_COME_FIRST_SERVE);
         when(valueOperations.get("userCache:1")).thenReturn(null);
 
         // when & then
@@ -82,7 +82,7 @@ class FastValidationServiceTest {
     void validate_shouldThrowException_whenGradeRuleFails() {
         // given
         Map<String, Object> gradeRule = Map.of("type", "GRADE", "operator", "IN", "values", List.of("GOLD"), "phase", "FAST");
-        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(gradeRule), true, false);
+        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(gradeRule), true, false, 10L, com.axon.messaging.CampaignActivityType.FIRST_COME_FIRST_SERVE);
         when(valueOperations.get("userCache:1")).thenReturn(eligibleUser); // 사용자는 VIP 등급
 
         // when & then
@@ -96,7 +96,7 @@ class FastValidationServiceTest {
     void validate_shouldThrowException_whenAgeRuleFails() {
         // given
         Map<String, Object> ageRule = Map.of("type", "AGE", "operator", "LTE", "values", List.of("24"), "phase", "FAST");
-        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(ageRule), true, false);
+        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(ageRule), true, false, 10L, com.axon.messaging.CampaignActivityType.FIRST_COME_FIRST_SERVE);
         when(valueOperations.get("userCache:1")).thenReturn(eligibleUser); // 사용자는 25세
 
         // when & then
@@ -110,7 +110,7 @@ class FastValidationServiceTest {
     void validate_shouldIgnoreNonFastPhaseRules() {
         // given
         Map<String, Object> heavyRule = Map.of("type", "RECENT_PURCHASE", "phase", "HEAVY");
-        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(heavyRule), false, true);
+        CampaignActivityMeta meta = new CampaignActivityMeta(1L, 100, CampaignActivityStatus.ACTIVE, null, null, List.of(heavyRule), false, true, 10L, com.axon.messaging.CampaignActivityType.FIRST_COME_FIRST_SERVE);
         when(valueOperations.get("userCache:1")).thenReturn(eligibleUser);
 
         // when
