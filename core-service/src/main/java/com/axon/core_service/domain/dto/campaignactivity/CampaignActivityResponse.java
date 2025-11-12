@@ -14,6 +14,7 @@ public class CampaignActivityResponse {
 
     private final Long id;
     private final Long campaignId;
+    private final Long productId;
     private final String name;
     private final Integer limitCount;
     private final CampaignActivityStatus status;
@@ -45,6 +46,7 @@ public class CampaignActivityResponse {
         return CampaignActivityResponse.builder()
                 .id(campaignActivity.getId())
                 .campaignId(campaignActivity.getCampaignId())
+                .productId(campaignActivity.getProductId())
                 .name(campaignActivity.getName())
                 .limitCount(campaignActivity.getLimitCount())
                 .status(campaignActivity.getStatus())

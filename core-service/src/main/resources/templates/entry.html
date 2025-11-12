@@ -35,6 +35,37 @@
             }
         });
 
+        function  confirmPayment(token, accessToken) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerText = '결제 요청 중...';
+
+            const tokenPayload = {
+                reservationToken: token
+            }
+            fetch('http://localhost:8081/api/v1/payments/confirm',{
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(tokenPayload)
+            })
+                .then(response => {
+                    if(!response.ok) {
+                        return response.json().then((err) => {throw new Error('결제 요청에 오류가 발생했습니다. error: ' + (err.reason || 'UNKNOWN_ERROR'));});
+                    }
+                    return response.json
+                })
+                .then(data => {
+                    resultDiv.innerText = "결제에 성공하셨습니다! 상품을 곧 받아 보실 수 있으십니다!";
+                })
+                .catch(error => {
+                    resultDiv.innerText = "결제 요청 중 오류가 발생했습니다.";
+                    console.log(error);
+                });
+        }
+
         document.getElementById('entryButton').addEventListener('click', function() {
             const resultDiv = document.getElementById('result');
             resultDiv.innerText = '응모 요청 중...';
@@ -48,6 +79,7 @@
 
             const eventData = {
                 campaignActivityId: parseInt(campaignActivityId),
+                campaignActivityType: "FIRST_COME_FIRST_SERVE",
                 productId: parseInt(campaignActivityId)
             };
 
@@ -61,20 +93,28 @@
                 body: JSON.stringify(eventData)
             })
             .then(response => {
-                if (response.status === 202) {
-                    return '응모 요청이 성공적으로 접수되었습니다! 선착순 결과는 잠시 후 확인됩니다.';
-                }
-                return response.text().then(text => { throw new Error('응모 요청 실패: ' + text); });
+                if(response.ok) {return response.json();}
+                return response.json().then(err => {
+                    const reason = err.reason || '알 수 없는 에러 발생';
+                    throw new Error(`응모 실패 : ${reason}`);
+                })
             })
-            .then(message => {
-                resultDiv.innerText = message;
-                document.getElementById('entryButton').disabled = true;
+            .then(data => {
+                 const token = data.reservationToken;
+                 if(token) {
+                     resultDiv.innerText = "결제 창으로 이동합니다...";
+                     document.getElementById('entryButton').disabled = true;
+                     // 결제 창 유도 관련 페이지 (가짜 페이지)
+                     setTimeout(()=>confirmPayment(token, accessToken), 4000)
+                 } else {throw new Error('결제 시간이 만료되었습니다.')}
             })
             .catch(error => {
                 resultDiv.innerText = '오류가 발생했습니다: ' + error.message;
                 console.error('Error:', error);
             });
+
         });
+
     </script>
 </section>
 </html>

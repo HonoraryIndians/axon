@@ -4,12 +4,13 @@ import com.axon.entry_service.domain.CampaignActivityMeta;
 import com.axon.entry_service.domain.ReservationResult;
 import com.axon.entry_service.domain.ReservationStatus;
 import com.axon.entry_service.dto.EntryRequestDto;
+import com.axon.entry_service.dto.Payment.PaymentConfirmationResponse;
+import com.axon.entry_service.dto.Payment.ReservationTokenPayload;
 import com.axon.entry_service.service.*;
+import com.axon.entry_service.service.Payment.ReservationTokenService;
 import com.axon.entry_service.service.exception.FastValidationException;
 import com.axon.messaging.CampaignActivityType;
-import com.axon.messaging.dto.CampaignActivityKafkaProducerDto;
 import com.axon.messaging.dto.validation.ValidationResponse;
-import com.axon.messaging.topic.KafkaTopics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,16 +27,16 @@ import java.time.Instant;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:8080")
 public class EntryController {
-    private final CampaignActivityProducerService producer;
     private final EntryReservationService reservationService;
     private final CampaignActivityMetaService campaignActivityMetaService;
     private final CoreValidationService coreValidationService;
     private final FastValidationService fastValidationService;
+    private final ReservationTokenService reservationTokenService;
 
     /**
      * Processes an entry creation request: validates eligibility, attempts an atomic reservation, and emits a campaign activity event.
      *
-     * @param requestDto the entry request containing campaignActivityId, productId, and optional campaignActivityType
+     * @param requestDto the entry request containing campaignActivityId, productId, and optional activityType
      * @param token the raw "Authorization" header value used for heavy eligibility validation
      * @param userDetails the authenticated principal whose username is parsed as the numeric userId
      * @return a ResponseEntity with status:
@@ -61,12 +62,27 @@ public class EntryController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
+        // 캠페인 활동 데이터 조작 방어용 검증
+        if(meta.productId() != null && !meta.productId().equals(requestDto.getProductId())) {
+            log.warn("요청 중에 상품 정보가 일치하지 않는 요청이 있습니다. Meta {} || Request {}", meta.productId(), requestDto.getProductId());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(PaymentConfirmationResponse.failure(ReservationResult.error(), "상품 정보가 일치하지 않습니다."));
+        }
+
+        CampaignActivityType requestedType = requestDto.getCampaignActivityType() != null
+                ? requestDto.getCampaignActivityType()
+                : CampaignActivityType.FIRST_COME_FIRST_SERVE; //TODO: Default값 바꾸기
+        if (meta.campaignActivityType() != null && !meta.campaignActivityType().equals(requestedType)) {
+            log.warn("요청 정보 중에 캠페인 타입이 다른 요청이 있습니다. Meta {} || Request {}", meta.campaignActivityType(), requestedType);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(PaymentConfirmationResponse.failure(ReservationResult.error(), "캠페인 타입이 일치하지 않습니다."));
+        }
+
+
         if(meta.hasFastValidation()) {
             try {
                 fastValidationService.fastValidation(userId, meta);
             } catch  (FastValidationException e) {
                 log.info("{}번 사용자가 [빠른검증]: {} 조건에서 실패!", userId, e.getType());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(PaymentConfirmationResponse.failure(ReservationResult.error(), e.getMessage()));
             }
         }
 
@@ -75,7 +91,7 @@ public class EntryController {
             ValidationResponse response = coreValidationService.isEligible(token, requestDto.getCampaignActivityId());
             if (!response.isEligible()) {
                 log.info("{} 사용자의 요청이 {}번 응모요청의 자격미달로 통과하지 못했습니다.",userDetails.getUsername(), requestDto.getCampaignActivityId());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getErrorMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(PaymentConfirmationResponse.failure(ReservationResult.error(), response.getErrorMessage()));
             }
         }
 
@@ -95,22 +111,13 @@ public class EntryController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-        long timestamp = now.toEpochMilli();
-
-        CampaignActivityType type = requestDto.getCampaignActivityType() != null
-                ? requestDto.getCampaignActivityType()
-                : CampaignActivityType.FIRST_COME_FIRST_SERVE; //TODO 프로덕션 단계에서는 수중
-
-        CampaignActivityKafkaProducerDto eventDto = new CampaignActivityKafkaProducerDto(
-                type,
-                requestDto.getCampaignActivityId(),
-                userId,
-                requestDto.getProductId(),
-                timestamp
-        );
-        log.info("요청 확인 {}", eventDto);
-        producer.send(KafkaTopics.CAMPAIGN_ACTIVITY_COMMAND, eventDto);
-
-        return ResponseEntity.accepted().build();
+        ReservationTokenPayload tokenPayload = ReservationTokenPayload.builder()
+                .userId(userId)
+                .campaignActivityId(meta.id())
+                .productId(meta.productId())
+                .campaignActivityType(meta.campaignActivityType())
+                .build();
+        String reservationToken = reservationTokenService.issueToken(tokenPayload);
+        return ResponseEntity.ok(PaymentConfirmationResponse.success(reservationToken));
     }
 }

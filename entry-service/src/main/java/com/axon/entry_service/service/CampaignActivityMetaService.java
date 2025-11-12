@@ -76,7 +76,9 @@ public class CampaignActivityMetaService {
                 response.endDate(),
                 response.filters(),
                 hasFastValidation,
-                hasHeavyValidation
+                hasHeavyValidation,
+                response.productId(),
+                response.activityType()
         );
 
         try {
