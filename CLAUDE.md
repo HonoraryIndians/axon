@@ -16,7 +16,7 @@ Axon CDP is a multi-module Spring Boot ecosystem implementing real-time campaign
 
 **Core-service (port 8080)**: Domain logic and persistence engine  
 - Consumes Kafka commands to process campaign activities
-- Manages MySQL persistence for campaigns, entries, users, products
+- Manages MySQL persistence for campaigns, entries, users, productse
 - Handles complex validation rules and user summary updates
 - Serves Thymeleaf UI with auto-injected behavior tracking
 
