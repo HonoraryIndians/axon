@@ -89,7 +89,7 @@ public class DashboardService {
                 case VISIT -> behaviorEventService.getVisitCount(activityId, start, end);
                 case CLICK -> behaviorEventService.getClickCount(activityId, start, end);
                 case APPROVED -> campaignMetricsService.getApprovedCount(activityId, start, end);
-                case PURCHASE -> campaignMetricsService.getPurchaseCount(activityId, start, end);
+                case PURCHASE -> behaviorEventService.getPurchaseCount(activityId, start, end);
             };
         } catch (IOException e) {
             log.error("Failed to get count for step: {} in activity: {}", step, activityId, e);

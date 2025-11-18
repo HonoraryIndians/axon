@@ -34,10 +34,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
+	// Elasticsearch Java API Client
+	implementation 'co.elastic.clients:elasticsearch-java:8.11.0'
+	implementation 'org.elasticsearch.client:elasticsearch-rest-client:8.11.0'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+
 	// JWT
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.13.0'
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
     // axon-module
     implementation 'com.axon:common-messaging:0.0.1-SNAPSHOT'

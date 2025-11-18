@@ -89,11 +89,9 @@ public class BehaviorEventService {
 
         return Query.of(q -> q
                 .range(r -> r
-                        .date(d -> d
-                                .field("occurredAt")
-                                .gte(startStr)
-                                .lte(endStr)
-                        )
+                        .field("occurredAt")
+                        .gte(JsonData.of(startStr))
+                        .lte(JsonData.of(endStr))
                 )
         );
     }

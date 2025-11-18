@@ -8,6 +8,7 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -18,6 +19,7 @@ public class ElasticsearchConfig {
     @Value("${elasticsearch.port:9200}")
     private int port;
 
+    @Bean
     public ElasticsearchClient elasticsearchClient() {
         //로우레벨 클라이언트
         RestClient restClient = RestClient.builder(new HttpHost(host, port))
