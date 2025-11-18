@@ -5,6 +5,7 @@ import com.axon.core_service.domain.common.BaseTimeEntity;
 import com.axon.core_service.domain.dto.campaignactivity.CampaignActivityStatus;
 import com.axon.core_service.domain.dto.campaignactivity.filter.FilterDetail;
 import com.axon.core_service.domain.dto.campaignactivity.filter.converter.FilterDetailConverter;
+import com.axon.core_service.domain.product.Product;
 import com.axon.messaging.CampaignActivityType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -38,6 +39,10 @@ public class CampaignActivity extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "campaign_id")
     private Campaign campaign;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="product_id")
+    private Product product;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -77,6 +82,7 @@ public class CampaignActivity extends BaseTimeEntity {
      */
     @Builder
     public CampaignActivity(Campaign campaign,
+                            Product product,
                             String name,
                             Integer limitCount,
                             CampaignActivityStatus status,
@@ -85,6 +91,7 @@ public class CampaignActivity extends BaseTimeEntity {
                             CampaignActivityType activityType,
                             List<FilterDetail> filters) {
         this.campaign = campaign;
+        this.product = product;
         this.name = name;
         this.limitCount = limitCount;
         this.status = status;
@@ -102,6 +109,8 @@ public class CampaignActivity extends BaseTimeEntity {
     public Long getCampaignId() {
         return campaign != null ? campaign.getId() : null;
     }
+
+    public Long getProductId() {return  product != null ? product.getId() : null;}
 
     /**
      * Updates the activity's display name and participant limit.

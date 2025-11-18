@@ -1,5 +1,7 @@
 package com.axon.entry_service.domain;
 
+import com.axon.messaging.CampaignActivityType;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -15,7 +17,9 @@ public record CampaignActivityMeta(
         LocalDateTime endDate,
         List<Map<String, Object>> filters,
         boolean hasFastValidation,
-        boolean hasHeavyValidation
+        boolean hasHeavyValidation,
+        Long productId,
+        CampaignActivityType campaignActivityType
 ) {
 
     public CampaignActivityMeta {

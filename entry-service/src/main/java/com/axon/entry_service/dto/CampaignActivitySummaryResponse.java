@@ -1,6 +1,7 @@
 package com.axon.entry_service.dto;
 
 import com.axon.entry_service.domain.CampaignActivityStatus;
+import com.axon.messaging.CampaignActivityType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,5 +14,7 @@ public record CampaignActivitySummaryResponse(
         CampaignActivityStatus status,
         LocalDateTime startDate,
         LocalDateTime endDate,
-        List<Map<String,Object>> filters
+        List<Map<String,Object>> filters,
+        Long productId,
+        CampaignActivityType activityType
 ) {}

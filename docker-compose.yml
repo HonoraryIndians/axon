@@ -88,24 +88,65 @@ services:
     restart: always
     networks:
       - kafka-net
-
-  fluentd:
-    build:
-      context: ./fluentd
-      dockerfile: config.dockerfile
-    container_name: fluentd
-    depends_on:
-      - broker
-    ports:
-      - "24224:24224" # TCP/UDP 입력 포트
-      - "9880:9880" # HTTP 입력용 포트
-    volumes:
-      - ./fluentd/conf:/fluentd/etc  # 설정 파일
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     environment:
-      FLUENTD_CONF: fluent.conf
+        - discovery.type=single-node
+        - ES_JAVA_OPTS=-Xms1g -Xmx1g
+        - xpack.security.enabled=false # 개발단계 보안 비활성화
+    ports:
+        - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
     networks:
       - kafka-net
-      - fluentd-net
+  kafka-connect:
+    build:
+      context: ./kafka-connect
+      dockerfile: Dockerfile
+    #image: confluentinc/cp-kafka-connect:7.6.1
+    container_name: kafka-connect
+    depends_on:
+      - broker
+      - elasticsearch
+    networks:
+      - kafka-net
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: broker_1:29092
+      CONNECT_REST_PORT: 8083
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_GROUP_ID: behavior-connect-cluster
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+
+#  fluentd:
+#    build:
+#      context: ./fluentd
+#      dockerfile: config.dockerfile
+#    container_name: fluentd
+#    depends_on:
+#      - broker
+#    ports:
+#      - "24224:24224" # TCP/UDP 입력 포트
+#      - "9880:9880" # HTTP 입력용 포트
+#    volumes:
+#      - ./fluentd/conf:/fluentd/etc  # 설정 파일
+#    environment:
+#      FLUENTD_CONF: fluent.conf
+#    networks:
+#      - kafka-net
+#      - fluentd-net
 
 networks:
   kafka-net:
@@ -118,3 +159,4 @@ volumes:
   broker_data:
   mysql_data:
   redis_data:
+  es_data:
