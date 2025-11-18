@@ -53,6 +53,9 @@ dependencies {
 		testImplementation 'org.springframework.security:spring-security-test'
         //testImplementation 'org.mockito:mockito-inline:5.14.2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Security (HMAC) for generation token
+    implementation 'commons-codec:commons-codec:1.15'
 }
 
 tasks.named('test') {

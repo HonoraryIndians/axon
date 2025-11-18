@@ -35,6 +35,48 @@
             }
         });
 
+        // 결제 준비 (1차 토큰 검증 → 2차 토큰 발급)
+        function preparePayment(reservationToken, accessToken) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerText = '결제 준비 중...';
+
+            const payload = {
+                reservationToken: reservationToken
+            }
+
+            fetch('http://localhost:8081/api/v1/payments/prepare', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ reservationToken: reservationToken })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then((err) => {
+                            throw new Error('결제 준비 실패: ' + (err.message || 'UNKNOWN_ERROR'));
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.approvalToken) {
+                        resultDiv.innerText = '결제 페이지로 이동합니다...';
+                        // 2초 후 실제 결제 진행 (Mock 결제)
+                        setTimeout(() => confirmPayment(data.approvalToken, accessToken), 3000);
+                    } else {
+                        throw new Error(data.message || '결제 준비에 실패했습니다.');
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerText = '결제 오류: ' + error.message;
+                    console.error('Prepare Error:', error);
+                });
+        }
+
+        // 결제 완료 후
         function  confirmPayment(token, accessToken) {
             const resultDiv = document.getElementById('result');
             resultDiv.innerText = '결제 요청 중...';
@@ -101,12 +143,13 @@
             })
             .then(data => {
                  const token = data.reservationToken;
+                 console.log(token);
                  if(token) {
                      resultDiv.innerText = "결제 창으로 이동합니다...";
                      document.getElementById('entryButton').disabled = true;
                      // 결제 창 유도 관련 페이지 (가짜 페이지)
-                     setTimeout(()=>confirmPayment(token, accessToken), 4000)
-                 } else {throw new Error('결제 시간이 만료되었습니다.')}
+                     setTimeout(()=>preparePayment(token, accessToken), 1000);
+                 } else {throw new Error('결제 권한이 없습니다.')}
             })
             .catch(error => {
                 resultDiv.innerText = '오류가 발생했습니다: ' + error.message;

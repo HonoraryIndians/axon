@@ -23,6 +23,12 @@ spring:
         spring.json.trusted.packages: "*"
 jwt:
   secret: YOUR_VERY_SECRET_RANDOM_STRING_THAT_IS_LONG_ENOUGH_axonskusw
+
+payment:
+  token:
+    secret: ${PAYMENT_TOKEN_SECRET:JQqYDAy12XkHVTBSBY4yXGnnT0R8GcHa}
+
 axon:
   core-service:
     base-url: http://localhost:8080
+

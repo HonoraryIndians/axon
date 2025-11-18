@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -56,7 +57,7 @@ public class EntryController {
         long userId = Long.parseLong(userDetails.getUsername());
         Instant now = Instant.now();
 
-        //redis 빠른 검증
+
         CampaignActivityMeta meta = campaignActivityMetaService.getMeta(campaignActivityId);
         if (meta == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -76,7 +77,20 @@ public class EntryController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(PaymentConfirmationResponse.failure(ReservationResult.error(), "캠페인 타입이 일치하지 않습니다."));
         }
 
+        // 재결제 용 1차 토큰 검증
+        String deterministicToken = reservationTokenService.generateDeterministicToken(userId, campaignActivityId);
+        Optional<ReservationTokenPayload> existingToken = reservationTokenService.getPayloadFromToken(deterministicToken);
 
+        if (existingToken.isPresent()) {
+            // 기존 1차 토큰 존재 → 재결제 시나리오
+            log.info("재결제 시나리오: 기존 1차 토큰 재사용, userId={}, campaignActivityId={}, token={}...", userId, campaignActivityId, deterministicToken.substring(0, Math.min(10, deterministicToken.length())));
+
+            // 검증 스킵, 기존 토큰 그대로 반환
+            return ResponseEntity.ok(PaymentConfirmationResponse.success(deterministicToken));
+        }
+
+
+        // 빠른 검증
         if(meta.hasFastValidation()) {
             try {
                 fastValidationService.fastValidation(userId, meta);
