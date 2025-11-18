@@ -1,12 +1,9 @@
 package com.axon.entry_service.controller;
 
 import com.axon.entry_service.domain.ReservationResult;
-import com.axon.entry_service.dto.Payment.PaymentConfirmationRequest;
-import com.axon.entry_service.dto.Payment.PaymentConfirmationResponse;
-import com.axon.entry_service.service.CampaignActivityProducerService;
+import com.axon.entry_service.dto.Payment.*;
+import com.axon.entry_service.service.Payment.PaymentService;
 import com.axon.entry_service.service.Payment.ReservationTokenService;
-import com.axon.messaging.dto.CampaignActivityKafkaProducerDto;
-import com.axon.messaging.topic.KafkaTopics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,7 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Instant;
+import java.util.Optional;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,40 +24,82 @@ import java.time.Instant;
 @RequestMapping("/api/v1/payments")
 public class PaymentController {
     private final ReservationTokenService reservationTokenService;
-    private final CampaignActivityProducerService campaignActivityProducerService;
+    private final PaymentService paymentService;
+
+
+    @PostMapping("/prepare")
+    public ResponseEntity<PaymentPrepareResponse> preparePayment(@AuthenticationPrincipal UserDetails userDetails, @RequestBody PaymentPrepareRequest request) {
+        long userId= Long.parseLong(userDetails.getUsername());
+        String reservationToken = request.getReservationToken();
+
+        // 1차 토큰
+        return reservationTokenService.getPayloadFromToken(reservationToken)
+                .filter(payload -> payload.getUserId() == userId)
+                .map(payload -> {
+                    // 2차 토큰 생성 (결제 중 데이터 백업용)
+                    PaymentApprovalPayload approvalPayload = PaymentApprovalPayload.builder()
+                            .userId(userId)
+                            .campaignActivityId(payload.getCampaignActivityId())
+                            .productId(payload.getProductId())
+                            .campaignActivityType(payload.getCampaignActivityType())
+                            .reservationToken(reservationToken)
+                            .build();
+
+                    // 2차 토큰 발급 및 갱신
+                    String result = reservationTokenService.CreateApprovalToken(approvalPayload);
+
+                    if (result != null) {
+                        return ResponseEntity.ok(PaymentPrepareResponse.success("결제를 진행해주세요.", result));
+                    } else {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(PaymentPrepareResponse.failure("시스템 오류가 발생했습니다."));
+                    }
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(PaymentPrepareResponse.failure("결제 시간이 만료되었습니다. 처음부터 다시 응모해주세요.")));
+        }
 
     @PostMapping("/confirm")
     public ResponseEntity<PaymentConfirmationResponse> confirmPayment(@AuthenticationPrincipal UserDetails userDetails, @RequestBody PaymentConfirmationRequest paymentConfirmationRequest) {
-        String reservationToken = paymentConfirmationRequest.getReservationToken();
         long currentUserId = Long.parseLong(userDetails.getUsername());
-        long timestamp = Instant.now().toEpochMilli();
+        String token = paymentConfirmationRequest.getReservationToken();
 
-        return reservationTokenService.getPayloadFromToken(reservationToken)
-                .map(payload -> {
+        // 2차 토큰 조회
+        Optional<PaymentApprovalPayload> payloadOpt = reservationTokenService.getApprovalPayload(token);
 
-                    if(!payload.getUserId().equals(currentUserId)) {
-                        log.warn("Token theft suspected! Token owner: {}, Requester: {}", payload.getUserId(), currentUserId);
-                        return new ResponseEntity<>(PaymentConfirmationResponse.failure(ReservationResult.error(), "응모자와 다른 요청입니다."), HttpStatus.FORBIDDEN);
-                    }
+        // 2차 토큰 없음 → 결제 중 만료
+        if (payloadOpt.isEmpty()) {
+            log.error("2차 토큰 만료(결제 중)");
+            return ResponseEntity.status(HttpStatus.GONE).body(PaymentConfirmationResponse.failure(ReservationResult.error(), "결제 시간이 만료되었습니다. 관리자에게 문의해주세요."));
+        }
 
-                    // Redis의 신뢰할 수 있는 payload로 Kafka DTO 생성 (데이터 위변조 방어)
-                    CampaignActivityKafkaProducerDto kafkaProducerDto = CampaignActivityKafkaProducerDto.builder()
-                            .campaignActivityType(payload.getCampaignActivityType())
-                            .campaignActivityId(payload.getCampaignActivityId())
-                            .userId(payload.getUserId())
-                            .productId(payload.getProductId())
-                            .timestamp(timestamp).build();
-                    log.info("요청 확인 {}", kafkaProducerDto);
-                    campaignActivityProducerService.send(KafkaTopics.CAMPAIGN_ACTIVITY_COMMAND, kafkaProducerDto);
+        PaymentApprovalPayload payload = payloadOpt.get();
+        if(payload.getUserId() != currentUserId){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(PaymentConfirmationResponse.failure(ReservationResult.error(), "응모자와 요청자가 다릅니다."));
+        }
 
-                    reservationTokenService.removeToken(reservationToken);
-                    log.info("결제 완료, 결제 토큰 삭제: {}", reservationToken);
-                    return new ResponseEntity<>(PaymentConfirmationResponse.success(reservationToken), HttpStatus.OK);
-                }).orElseGet(() -> {
-                    log.warn("결제 토큰이 유효하지 않거나 존재하지 않습니다. Token: {}", reservationToken);
-                    return new ResponseEntity<>(
-                            PaymentConfirmationResponse.failure(ReservationResult.error(), "결제 오류"), HttpStatus.BAD_REQUEST
-                    );
-                });
+        // Kafka 전송 (3회 재시도)
+        boolean success = paymentService.sendToKafkaWithRetry(payload, 3);
+
+        if (success) {
+            // 성공 시 모든 토큰 삭제
+            reservationTokenService.cleanup(payload);
+            return ResponseEntity.ok(PaymentConfirmationResponse.success(null));
+        } else {
+            // 실패 시 환불 처리
+            log.warn("[카프카 전송] 카프카 전송에 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(PaymentConfirmationResponse.failure(ReservationResult.error(), "일시적인 오류로 결제가 취소되었습니다. 처음부터 다시 응모해주세요."));
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
