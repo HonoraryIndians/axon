@@ -1,6 +1,7 @@
 # 마케팅 대시보드 개발계획
 
-> **팀 공유 문서** | 최종 수정일: 2024-11-12 | 담당자: @team-dashboard
+> **팀 공유 문서** | 최종 수정일: 2025-11-18 | 담당자: @team-dashboard
+> **현재 상태**: 기반 인프라 완료, **Dashboard API 구현 완료** (CampaignActivity 레벨)
 
 ---
 
@@ -26,12 +27,12 @@ Axon CDP 플랫폼에 **실시간 마케팅 대시보드**를 구축하여 캠�
 
 ### 현재 데이터 플로우
 ```
-Browser (JS tracker)
-        │ pageview/click events
-        ▼
-Entry-service (8081)
-        │ validation & FCFS
-        ├── Kafka: axon.event.raw (→ ES)
+Browser (JS tracker)                    Core-service (Backend)
+        │ pageview/click events                │ purchase completion
+        ▼                                      ▼
+Entry-service (8081)                    Kafka: axon.event.raw
+        │ validation & FCFS                    │ (통일된 이벤트 스키마)
+        ├── Kafka: axon.event.raw (→ ES) ──────┤
         └── Kafka: axon.campaign-activity.command
                          │
                          ▼
@@ -39,9 +40,11 @@ Entry-service (8081)
                          │ domain logic
                          ▼
             MySQL + Redis + Elasticsearch
+            (승인,구매)  (실시간)  (행동 분석)
                          │
                          ▼
               📊 Dashboard API
+         (DashboardService + BehaviorEventService)
 ```
 
 ### 대시보드 아키텍처
@@ -139,49 +142,54 @@ GET /api/v1/dashboard/campaign/{campaignId}
 
 ## 🗃️ 데이터 소스 매핑
 
-| 지표 | 데이터 소스 | 쿼리 유형 | 예상 응답시간 |
-|------|------------|-----------|---------------|
-| 방문 수 | Elasticsearch | DSL 집계 | < 200ms |
-| 참여 클릭 수 | Elasticsearch | DSL 집계 | < 200ms |
-| 승인 수 | MySQL | JPA Query | < 100ms |
-| 결제 수 | MySQL | JPA Query | < 100ms |
-| 잔여 재고 | Redis | GET | < 10ms |
-| 실시간 참여자 | Redis | SCARD | < 10ms |
+| 지표 | 데이터 소스 | 쿼리 유형 | 예상 응답시간 | 비고 |
+|------|------------|-----------|---------------|------|
+| 방문 수 | Elasticsearch | DSL 집계 | < 200ms | `triggerType=PAGE_VIEW` |
+| 참여 클릭 수 | Elasticsearch | DSL 집계 | < 200ms | `triggerType=CLICK` |
+| 승인 수 | MySQL | JPA Query | < 100ms | `campaign_activity_entries` |
+| **결제 수** | **Elasticsearch** | **DSL 집계** | **< 200ms** | **`triggerType=PURCHASE`** ✅ 2025-11-18 확정 |
+| 잔여 재고 | Redis | GET | < 10ms | `campaign:{id}:remaining` |
+| 실시간 참여자 | Redis | SCARD | < 10ms | `campaignActivity:{id}:participants` |
+
+> **아키텍처 결정사항 (2025-11-18)**:
+> - 구매 이벤트는 **Elasticsearch에서 조회**하여 분석 편의성과 확장성 확보
+> - MySQL `event_occurrences`는 필터링 전용으로 사용 (향후 `Purchase`로 리네이밍 예정)
+> - 백엔드 구매 완료 시 Kafka `axon.event.raw`로 통일된 스키마 이벤트 발행 (구현 예정)
 
 ---
 
 ## 🚀 구현 단계별 계획
 
-### Phase 1: 백엔드 인프라 구축
+### Phase 1: 백엔드 인프라 구축 ✅ 완료 (2025-11-18)
 **기간**: 1주차 | **담당자**: @backend-dev
 
 #### 서비스 레이어 구현
-- [ ] `DashboardService` 핵심 로직 구현
-- [ ] `CampaignMetricsService` - MySQL 집계 쿼리
-- [ ] `BehaviorEventService` - Elasticsearch DSL 쿼리  
-- [ ] `RealtimeMetricsService` - Redis 실시간 조회
-- [ ] `DashboardCacheService` - Redis 캐싱 로직
+- [x] `DashboardService` 핵심 로직 구현 ✅
+- [x] `CampaignMetricsService` - MySQL 집계 쿼리 ✅
+- [x] `BehaviorEventService` - Elasticsearch DSL 쿼리 ✅
+- [x] `RealtimeMetricsService` - Redis 실시간 조회 ✅
+- [ ] `DashboardCacheService` - Redis 캐싱 로직 (보류: 실데이터 테스트 후)
 
 #### 데이터 처리 로직
-- [ ] MySQL 복합 쿼리 작성 (JPA + @Query)
-- [ ] Elasticsearch 집계 쿼리 구현
-- [ ] Redis 카운터 조회 최적화
-- [ ] 병렬 처리 로직 (CompletableFuture)
+- [x] MySQL 복합 쿼리 작성 (JPA + @Query) ✅
+- [x] Elasticsearch 집계 쿼리 구현 ✅
+- [x] Redis 카운터 조회 최적화 ✅
+- [x] 병렬 처리 로직 (CompletableFuture) ✅
 
-### Phase 2: API 컨트롤러 및 DTO
+### Phase 2: API 컨트롤러 및 DTO ✅ 완료 (2025-11-18)
 **기간**: 1주차 | **담당자**: @api-dev
 
 #### 컨트롤러 구현
-- [ ] `DashboardController` REST 엔드포인트
-- [ ] 요청 파라미터 검증 (Validation)
-- [ ] 예외 처리 및 에러 응답
-- [ ] API 문서화 (Swagger)
+- [x] `DashboardController` REST 엔드포인트 ✅
+- [x] 요청 파라미터 검증 (Validation) ✅
+- [x] 예외 처리 및 에러 응답 ✅
+- [ ] API 문서화 (Swagger) (보류)
 
 #### DTO 및 응답 객체
-- [ ] `DashboardRequest` - 요청 DTO
-- [ ] `DashboardResponse` - 응답 DTO
-- [ ] `OverviewData`, `FunnelData`, `RealtimeData` 
-- [ ] JSON 직렬화 최적화
+- [x] `DashboardRequest` - 요청 DTO ✅
+- [x] `DashboardResponse` - 응답 DTO ✅
+- [x] `OverviewData`, `FunnelData`, `RealtimeData` ✅
+- [x] JSON 직렬화 최적화 ✅
 
 ### Phase 3: 프론트엔드 대시보드
 **기간**: 1.5주차 | **담당자**: @frontend-dev
@@ -280,16 +288,118 @@ main (운영)
 ### 진행상황 체크리스트
 
 #### 주차별 마일스톤
-- [ ] **1주차**: Phase 1 완료 - 백엔드 API 인프라
-- [ ] **2주차**: Phase 2 완료 - REST API 및 DTO
-- [ ] **3주차**: Phase 3 완료 - 프론트엔드 대시보드
+- [x] **1주차**: Phase 1 완료 - 백엔드 API 인프라 ✅ (2025-11-18)
+- [x] **2주차**: Phase 2 완료 - REST API 및 DTO ✅ (2025-11-18)
+- [ ] **3주차**: Phase 3 완료 - 프론트엔드 대시보드 (🔄 다음 단계)
 - [ ] **4주차**: Phase 4 완료 - 테스트 및 배포
 
-#### 의존성 관리
-- [ ] Docker 개발 환경 설정 완료
+#### 의존성 관리 (기반 인프라)
+- [x] Docker 개발 환경 설정 완료 ✅
+- [x] Kafka 파이프라인 구축 완료 ✅
+- [x] Elasticsearch 인덱스 구조 확정 ✅
 - [ ] 테스트 데이터 준비 (샘플 캠페인, 이벤트)
-- [ ] Elasticsearch 인덱스 구조 확정
 - [ ] Chart.js 라이선스 및 CDN 설정
+
+---
+
+## 🎯 아키텍처 결정사항 (ADR)
+
+### 1. 구매 이벤트 데이터 소싱 전략 (2025-11-18)
+
+**결정**: 대시보드에서 구매 수는 Elasticsearch로 조회
+
+**배경**:
+- MySQL `event_occurrences` vs Elasticsearch `behavior-events` 중 선택 필요
+- EventOccurrence 원래 목적: 필터링 (구매 이력 있는 유저만 참여 가능 등)
+- Elasticsearch에 이미 모든 행동 이벤트 적재 완료
+
+**장점**:
+- ✅ 방문/클릭/구매를 단일 데이터소스에서 조회 (쿼리 일관성)
+- ✅ ES aggregation 성능 우수 (대용량 집계 특화)
+- ✅ 시간대별/세그먼트별 분석 용이
+- ✅ 실시간성 확보 (Kafka → ES 파이프라인)
+
+**트레이드오프**:
+- ⚠️ 데이터 지연 가능 (Kafka Connect lag, 일반적으로 < 5초)
+- ⚠️ EventOccurrence와 데이터 불일치 가능성 (eventual consistency)
+
+**완화 방안**:
+- 대시보드는 분석용이므로 5초 지연 허용 가능
+- 필터링용 실시간 검증은 MySQL EventOccurrence 사용 유지
+
+---
+
+### 2. 백엔드 이벤트 정규화 전략 (2025-11-18)
+
+**결정**: 백엔드 구매 완료 시 Kafka `axon.event.raw`에 통일된 스키마로 이벤트 발행
+
+**스키마 설계**:
+```json
+{
+  "triggerType": "PURCHASE",
+  "userId": 123,
+  "pageUrl": "http://backend/campaign-activity/789/purchase",  // synthetic!
+  "sessionId": null,
+  "userAgent": "axon-backend/1.0",
+  "occurredAt": "2025-11-18T10:30:00Z",
+  "properties": {
+    "source": "backend",
+    "activityId": 789,
+    "productId": 456,
+    "amount": 50000,
+    "orderId": "ORD-20251118-123"
+  }
+}
+```
+
+**장점**:
+- ✅ 프론트엔드/백엔드 이벤트 통합 조회 가능
+- ✅ ES 쿼리 패턴 일관성 (pageUrl wildcard 동일 사용)
+- ✅ 이벤트 소스 추적 가능 (`properties.source`)
+- ✅ 확장성 (향후 다른 백엔드 이벤트 추가 용이)
+
+**구현 계획**:
+1. `BackendEventFactory` 컴포넌트 생성
+2. Payment 완료 후 Kafka 발행 로직 추가
+3. ES 쿼리에서 pageUrl wildcard 패턴 유지
+
+---
+
+### 3. Entry-service 비동기 전환 로드맵 (우선순위: 최상)
+
+**현재 문제**:
+- 2-tier validation에서 `.block()` 사용으로 Thread pool exhaustion 위험
+- 동시 요청 처리 능력 제한 (TPS 병목)
+
+**개선 계획 (3단계)**:
+
+**Phase 1**: WebFlux 전환 (예상 효과: TPS 5-10배 증가)
+- Spring MVC → Spring WebFlux 전환
+- `.block()` 제거, reactive chain 구성
+- Event loop 기반 비동기 처리
+
+**Phase 2**: Heavy validation 결과 캐싱 (예상 효과: HTTP 호출 90% 감소)
+- Redis에 validation 결과 캐싱 (TTL: 5분)
+- Cache key: `validation:{userId}:{activityId}`
+- Miss 시에만 Core-service 호출
+
+**Phase 3**: Redis cache warming (대규모 트래픽 대응)
+- 캠페인 시작 전 유저 프로필 pre-loading
+- Batch job으로 eligibility 사전 계산
+
+---
+
+### 4. 향후 확장 계획
+
+#### Campaign 레벨 대시보드
+- 현재: CampaignActivity 단위 API만 구현
+- 향후: Campaign 내 여러 Activity 집계 API
+- 엔드포인트: `GET /api/v1/dashboard/campaign/{campaignId}` (전체 캠페인)
+
+#### LLM 쿼리 시스템
+- 자연어 → ES/SQL 템플릿 변환
+- 기존 Dashboard 서비스 재사용
+- 콘셉트 문서: `docs/dev-log-2025-11-18-dashboard-architecture.md` 참고
 
 ---
 
@@ -300,6 +410,7 @@ main (운영)
 - [Behavior Tracker 스펙](./behavior-tracker.md)
 - [Kafka Connect 설정](./behavior-event-fluentd-plan.md)
 - [CLAUDE.md 개발 가이드](../CLAUDE.md)
+- [개발일지 2025-11-18: 대시보드 아키텍처 결정사항](./dev-log-2025-11-18-dashboard-architecture.md) ⭐ NEW
 
 ### 외부 라이브러리
 - [Chart.js 공식 문서](https://www.chartjs.org/docs/)
@@ -317,8 +428,12 @@ main (운영)
 | 날짜 | 변경사항 | 작성자 |
 |------|----------|--------|
 | 2024-11-12 | 초기 개발계획 작성 | @team-dashboard |
-| | | |
-| | | |
+| 2025-11-13 | 진행 상황 업데이트 (기반 인프라 완료 표시) | @team-dashboard |
+| 2025-11-18 | **Phase 1, 2 완료 표시 / 아키텍처 결정사항 반영** | @team-dashboard |
+| 2025-11-18 | - Dashboard API 구현 완료 (CampaignActivity 레벨) | |
+| 2025-11-18 | - 구매 이벤트 ES 조회 전략 확정 (MySQL → ES) | |
+| 2025-11-18 | - 백엔드 이벤트 정규화 전략 문서화 | |
+| 2025-11-18 | - 데이터 플로우 다이어그램 업데이트 | |
 
 ---
 
