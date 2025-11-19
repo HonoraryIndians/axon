@@ -406,11 +406,11 @@ main (운영)
 ## 📚 참고 자료
 
 ### 기술 문서
-- [Axon CDP 아키텍처 개요](./project-overview.md)
-- [Behavior Tracker 스펙](./behavior-tracker.md)
-- [Kafka Connect 설정](./behavior-event-fluentd-plan.md)
-- [CLAUDE.md 개발 가이드](../CLAUDE.md)
-- [개발일지 2025-11-18: 대시보드 아키텍처 결정사항](./dev-log-2025-11-18-dashboard-architecture.md) ⭐ NEW
+- [Axon CDP 아키텍처 개요](../project-overview.md)
+- [Behavior Tracker 스펙](../behavior-tracker.md)
+- [Kafka Connect 설정](../flow/behavior-event-fluentd-plan.md)
+- [CLAUDE.md 개발 가이드](../../CLAUDE.md)
+- [개발일지 2025-11-18: 대시보드 아키텍처 결정사항](../devlog/dev-log-2025-11-18-dashboard-architecture.md) ⭐ NEW
 
 ### 외부 라이브러리
 - [Chart.js 공식 문서](https://www.chartjs.org/docs/)

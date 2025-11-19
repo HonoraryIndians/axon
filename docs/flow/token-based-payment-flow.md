@@ -955,6 +955,6 @@ export PAYMENT_TOKEN_SECRET="$(openssl rand -base64 32)"
 
 ## 참고 문서
 
-- [purchase-event-flow.md](./purchase-event-flow.md) - 구매 이벤트 전체 플로우
-- [campaign-activity-limit-flow.md](./campaign-activity-limit-flow.md) - FCFS 선착순 플로우
-- [redis-fast-validation-plan.md](./redis-fast-validation-plan.md) - Redis 빠른 검증
+- [purchase-event-flow.md](purchase-event-flow.md) - 구매 이벤트 전체 플로우
+- [campaign-activity-limit-flow.md](campaign-activity-limit-flow.md) - FCFS 선착순 플로우
+- [redis-fast-validation-plan.md](../plan/redis-fast-validation-plan.md) - Redis 빠른 검증

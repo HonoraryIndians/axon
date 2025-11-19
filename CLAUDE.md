@@ -113,8 +113,40 @@ curl http://localhost:8083/connectors
 - Tests use `@SpringBootTest` with test-specific Redis/MySQL cleanup
 - Mock external dependencies in unit tests; use TestContainers for integration tests if needed
 
+## Performance Improvement Roadmap
+
+### Current Issues
+1. **FCFS Race Condition**: Over-booking possible under concurrent load (check-then-act problem)
+2. **No Distributed Locking**: Redis operations not atomic across multiple servers
+3. **I/O Blocking**: Entry-service limited by platform thread pool
+
+### Planned Improvements (3 Phases)
+
+#### Phase 1: Distributed Lock (P0 - Urgent)
+- **Redisson integration**: Add distributed locking for FCFS operations
+- **AOP-based locks**: `@DistributedLock` annotation for clean separation
+- **Target**: Zero over-booking, 100% inventory accuracy
+
+#### Phase 2: Virtual Thread Migration (P1 - Short-term)
+- **JDK 21 Virtual Threads**: Replace WebFlux plan with simpler Virtual Thread approach
+- **Benefits**: 8x throughput improvement with 99% code reuse (vs WebFlux rewrite)
+- **Configuration**: `spring.threads.virtual.enabled=true` + Tomcat customizer
+
+#### Phase 3: JVM Tuning (P2 - Medium-term)
+- **ZGC adoption**: Sub-millisecond GC pauses for consistent latency
+- **Monitoring**: Prometheus + Grafana dashboards for JVM metrics
+- **Target**: < 1ms GC pause, 8,000+ req/s throughput
+
+**Detailed Plan**: See `core-service/docs/performance-improvement-plan.md`
+
+**Key Decisions**:
+- ❌ **WebFlux**: Rejected due to high complexity and full rewrite requirement
+- ✅ **Virtual Threads**: Chosen for 80% performance gain with 20% effort
+- ✅ **Redisson**: Industry-standard distributed lock with Redis
+
 ## Documentation References
 
+- **Performance improvement**: `core-service/docs/performance-improvement-plan.md` ⭐ NEW
 - Architecture flows: `docs/purchase-event-flow.md`, `docs/campaign-activity-limit-flow.md`
 - Behavior tracking: `docs/behavior-tracker.md`, `docs/snippets/behavior-tracker.js`
 - Analytics pipeline: `docs/behavior-event-fluentd-plan.md`
