@@ -2,7 +2,7 @@ services:
   # kafka 환경을 zookeeper가 아닌 KRaft 환경으로 구축함 (최신 환경)
   # 대량 트래픽을 위해 컨트롤러와 브로커를 각각 분리하여 실행
   controller:
-    image: confluentinc/cp-kafka:7.6.1
+    image: confluentinc/cp-kafka:7.9.0
     container_name: kafka-controller
     networks:
       - kafka-net
@@ -19,7 +19,7 @@ services:
       - controller_data:/var/lib/kafka/data
 
   broker:
-    image: confluentinc/cp-kafka:7.6.1
+    image: confluentinc/cp-kafka:7.9.0
     container_name: broker_1
     depends_on:
       - controller
@@ -49,7 +49,7 @@ services:
       - broker_data:/var/lib/kafka/data
 
   kafka-init:
-    image: confluentinc/cp-kafka:7.6.1
+    image: confluentinc/cp-kafka:7.9.0
     container_name: kafka-init
     depends_on:
       broker:

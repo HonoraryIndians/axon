@@ -42,24 +42,23 @@ public class BehaviorEventService {
     private Long getEventCount(Long activityId, String triggerType, LocalDateTime start, LocalDateTime end) throws IOException {
         //ES 쿼리 실행 로직
         SearchResponse<Void> response = elasticsearchClient.search(s -> s
-                .index("behavior-events-*")
+                .index("behavior-events")  // Fixed: removed wildcard
                 .size(0)
                 .query(q -> q.bool(b -> b
                         .filter(buildPageUrlFilter(activityId))
                         .filter(buildTriggerTypeFilter(triggerType))
                         .filter(buildTimeRangeFilter(start, end))
-                ))
-                .aggregations("total_count", a -> a
-                        .valueCount(v -> v
-                                .field("_id")
-                        )
-                ),
+                )),
                 Void.class
         );
-        return (long) response.aggregations()
-                .get("total_count")
-                .valueCount()
-                .value();
+
+        // Use total hits count instead of aggregation
+        if (response.hits().total() == null) {
+            log.warn("No hits result for activityId={}, triggerType={}", activityId, triggerType);
+            return 0L;
+        }
+
+        return response.hits().total().value();
     }
 
     private Query buildPageUrlFilter(Long activityId) {
@@ -73,25 +72,25 @@ public class BehaviorEventService {
     }
 
     private Query buildTriggerTypeFilter(String triggerType) {
-        //triggerType 필터 쿼리 작성
+        //triggerType 필터 쿼리 작성 (use .keyword for exact match)
         return Query.of(q -> q
                 .term(t -> t
-                        .field("triggerType")
+                        .field("triggerType.keyword")  // Fixed: use keyword field
                         .value(triggerType)
                 )
         );
     }
 
     private Query buildTimeRangeFilter(LocalDateTime start, LocalDateTime end) {
-        //timestamp range 필터 쿼리 작성
-        String startStr = start.atZone(ZoneId.systemDefault()).toInstant().toString();
-        String endStr = end.atZone(ZoneId.systemDefault()).toInstant().toString();
+        //timestamp range 필터 쿼리 작성 (occurredAt is Unix epoch in seconds)
+        long startEpoch = start.atZone(ZoneId.systemDefault()).toEpochSecond();
+        long endEpoch = end.atZone(ZoneId.systemDefault()).toEpochSecond();
 
         return Query.of(q -> q
                 .range(r -> r
                         .field("occurredAt")
-                        .gte(JsonData.of(startStr))
-                        .lte(JsonData.of(endStr))
+                        .gte(JsonData.of(startEpoch))  // Fixed: use epoch seconds
+                        .lte(JsonData.of(endEpoch))
                 )
         );
     }

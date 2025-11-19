@@ -85,4 +85,15 @@ public class WebController {
         log.info("Serving shoppingmall.html");
         return "shoppingmall";
     }
+
+    /**
+     * Serves the real-time dashboard page for a specific campaign activity.
+     *
+     * @return the view name "dashboard"
+     */
+    @GetMapping("/dashboard/activity/{activityId}")
+    public String activityDashboard() {
+        log.info("Serving dashboard.html for activity-level monitoring");
+        return "dashboard";
+    }
 }
