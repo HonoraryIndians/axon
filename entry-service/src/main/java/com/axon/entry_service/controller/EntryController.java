@@ -48,6 +48,7 @@ public class EntryController {
      *         410 Gone when the activity is sold out;
      *         500 Internal Server Error for unexpected reservation failures.
      */
+    
     @PostMapping
     public ResponseEntity<?> createEntry(@RequestBody EntryRequestDto requestDto,
                                             @RequestHeader("Authorization") String token,

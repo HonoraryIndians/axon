@@ -25,6 +25,7 @@ public class BatchInitalTableConfig {
      * @param properties BatchProperties used to obtain JDBC settings (including table prefix)
      * @return a BatchDataSourceScriptDatabaseInitializer configured to skip initialization if metadata exists or to run schema initialization otherwise
      */
+
     @Bean
     BatchDataSourceScriptDatabaseInitializer batchInitializer(DataSource dataSource, BatchProperties properties) {
         DatabaseInitializationSettings settings = BatchDataSourceScriptDatabaseInitializer.getSettings(dataSource, properties.getJdbc());
@@ -57,4 +58,6 @@ public class BatchInitalTableConfig {
             return false;
         }
     }
+
+
 }

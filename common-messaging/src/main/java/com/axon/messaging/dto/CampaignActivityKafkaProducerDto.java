@@ -1,6 +1,8 @@
 package com.axon.messaging.dto;
 
 import com.axon.messaging.CampaignActivityType;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +19,8 @@ public class CampaignActivityKafkaProducerDto {
     private Long userId;
     private Long productId;
     private Long timestamp;
-
+    private Integer quantity;
+    private BigDecimal price;
     /**
      * Get the event time as an Instant.
      *
