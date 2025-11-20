@@ -34,6 +34,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
+
 	// Elasticsearch Java API Client
 	implementation 'co.elastic.clients:elasticsearch-java:8.11.0'
 	implementation 'org.elasticsearch.client:elasticsearch-rest-client:8.11.0'
@@ -46,6 +47,9 @@ dependencies {
 
     // axon-module
     implementation 'com.axon:common-messaging:0.0.1-SNAPSHOT'
+
+    // Java Fake Data Generator
+    implementation 'net.datafaker:datafaker:2.1.0'
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'

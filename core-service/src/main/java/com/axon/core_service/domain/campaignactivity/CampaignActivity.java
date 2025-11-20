@@ -19,6 +19,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
@@ -68,6 +71,12 @@ public class CampaignActivity extends BaseTimeEntity {
     @Column(name = "filters", columnDefinition = "JSON")
     private List<FilterDetail> filters;
 
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity;
+
     /**
      * Constructs a CampaignActivity with the specified association and attributes.
      *
@@ -89,7 +98,10 @@ public class CampaignActivity extends BaseTimeEntity {
                             LocalDateTime startDate,
                             LocalDateTime endDate,
                             CampaignActivityType activityType,
-                            List<FilterDetail> filters) {
+                            List<FilterDetail> filters,
+                            BigDecimal price,
+                            Integer quantity
+                            ) {
         this.campaign = campaign;
         this.product = product;
         this.name = name;
@@ -99,6 +111,8 @@ public class CampaignActivity extends BaseTimeEntity {
         this.endDate = endDate;
         this.activityType = activityType;
         this.filters = filters;
+        this.price = price;
+        this.quantity = quantity;
     }
 
     /**

@@ -61,10 +61,10 @@ public class BatchConfig {
         LocalDateTime startDateTime = LocalDateTime.parse(startDateTimeStr, formatter);
         LocalDateTime endDateTime = LocalDateTime.parse(endDateTimeStr, formatter);
 
-        String query = "SELECT new com.axon.core_service.domain.dto.Metric.UserPurchaseCountDto(e.userId, COUNT(e.userId)) "
-                + "FROM EventOccurrence e "
-                + "WHERE e.occurredAt BETWEEN :startDateTime AND :endDateTime "
-                + "GROUP BY e.userId";
+        String query = "SELECT new com.axon.core_service.domain.dto.Metric.UserPurchaseCountDto(p.userId, COUNT(p.userId)) "
+                + "FROM Purchase p "
+                + "WHERE p.purchasedAt BETWEEN :startDateTime AND :endDateTime "
+                + "GROUP BY p.userId";
 
         return new JpaPagingItemReaderBuilder<UserPurchaseCountDto>()
                 .name("UserPurchaseCountReader")

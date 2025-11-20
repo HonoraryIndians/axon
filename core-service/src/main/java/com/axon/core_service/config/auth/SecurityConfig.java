@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/h2-console/**", "/favicon.ico", "/welcomepage", "/welcomepage.html", "/test/**").permitAll()
                         .requestMatchers("/api/v1/**").permitAll()
+                        .requestMatchers("/fake/data/**").permitAll()  // TODO: 가짜 데이터 생성은 나중에 반드시 제거할 것
                         //.requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated()
                 )
