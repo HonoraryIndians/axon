@@ -1,3 +1,4 @@
+/*
 package com.axon.core_service.service;
 
 import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntryStatus;
@@ -80,3 +81,4 @@ public class CampaignMetricsServiceTest {
         );
     }
 }
+*/

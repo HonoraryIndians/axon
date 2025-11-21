@@ -1,0 +1,36 @@
+> Task :processResources UP-TO-DATE
+> Task :processTestResources UP-TO-DATE
+> Task :common-messaging:compileJava UP-TO-DATE
+> Task :common-messaging:processResources NO-SOURCE
+> Task :common-messaging:classes UP-TO-DATE
+> Task :common-messaging:jar UP-TO-DATE
+> Task :compileJava UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :testClasses UP-TO-DATE
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+
+> Task :test
+
+DistributedLockTest > Distributed Lock: 100 concurrent requests should result in safe execution FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException at AutowiredAnnotationBeanPostProcessor.java:896
+            Caused by: org.springframework.beans.factory.BeanCreationException at ConstructorResolver.java:657
+                Caused by: org.springframework.beans.BeanInstantiationException at SimpleInstantiationStrategy.java:200
+                    Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException at DefaultListableBeanFactory.java:395
+
+1 test completed, 1 failed
+
+> Task :test FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':test'.
+> There were failing tests. See the report at: file:///Users/yangnail/dev/projects/skusw/axon/core-service/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+BUILD FAILED in 5s
+7 actionable tasks: 1 executed, 6 up-to-date

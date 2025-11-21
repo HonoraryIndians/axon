@@ -1,5 +1,6 @@
 package com.axon.core_service.service;
 
+import com.axon.core_service.aop.DistributedLock;
 import com.axon.core_service.domain.campaignactivity.CampaignActivity;
 import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntry;
 import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntryStatus;
@@ -33,6 +34,12 @@ public class CampaignActivityEntryService {
      * @param processed if true, marks the entry as processed at the current time
      * @return the persisted CampaignActivityEntry
      */
+    @DistributedLock(
+        key = "'lock:entry:' + #campaignActivity.id + ':' + #dto.userId",
+        waitTime = 3,
+        leaseTime = 5
+    )
+    @Transactional
     public CampaignActivityEntry upsertEntry(CampaignActivity campaignActivity,
                                             CampaignActivityKafkaProducerDto dto,
                                             CampaignActivityEntryStatus nextStatus,
