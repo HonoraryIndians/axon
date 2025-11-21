@@ -1,4 +1,4 @@
-package com.axon.core_service.service.behavior;
+package com.axon.core_service.adapter;
 
 import com.axon.core_service.event.CampaignActivityApprovedEvent;
 import com.axon.core_service.event.UserLoginEvent;
@@ -9,24 +9,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Factory for creating UserBehaviorEventMessage instances from backend domain events.
- *
- * Generates synthetic URLs and metadata to align backend events with frontend tracking format.
+ * Adapter that converts core-service domain events to CDP standard format.
+ * Follows the Adapter pattern to keep domain events separate from CDP
+ * infrastructure.
  */
 @Component
-public class BackendEventFactory {
+public class BehaviorEventAdapter {
 
     private static final String BACKEND_USER_AGENT = "Axon-Backend/1.0";
     private static final String PURCHASE_TRIGGER_TYPE = "PURCHASE";
     private static final String VISIT_TRIGGER_TYPE = "VISIT";
 
     /**
-     * Create a UserBehaviorEventMessage from a CampaignActivityApprovedEvent.
+     * Convert CampaignActivityApprovedEvent to CDP standard
+     * UserBehaviorEventMessage.
      *
      * @param event the campaign activity approved domain event
-     * @return a behavior event message ready for Kafka publishing
+     * @return CDP standard behavior event message ready for Kafka publishing
      */
-    public UserBehaviorEventMessage createPurchaseEvent(CampaignActivityApprovedEvent event) {
+    public UserBehaviorEventMessage toPurchaseEvent(CampaignActivityApprovedEvent event) {
         String syntheticUrl = generatePurchaseUrl(event.campaignActivityId());
         Map<String, Object> properties = new HashMap<>();
         properties.put("activityId", event.campaignActivityId());
@@ -47,12 +48,13 @@ public class BackendEventFactory {
     }
 
     /**
-     * Create a UserBehaviorEventMessage from a UserLoginEvent.
+     * Convert UserLoginEvent to CDP standard UserBehaviorEventMessage.
      *
      * @param event the user login domain event
-     * @return a behavior event message representing the login as a VISIT event
+     * @return CDP standard behavior event message representing the login as a VISIT
+     *         event
      */
-    public UserBehaviorEventMessage createLoginEvent(UserLoginEvent event) {
+    public UserBehaviorEventMessage toLoginEvent(UserLoginEvent event) {
         Map<String, Object> properties = new HashMap<>();
         properties.put("source", "backend");
         properties.put("eventType", "login");
@@ -72,9 +74,6 @@ public class BackendEventFactory {
 
     /**
      * Generate a synthetic URL for a purchase event.
-     *
-     * This URL doesn't correspond to an actual page, but provides a consistent format
-     * for backend purchase events in the analytics pipeline.
      *
      * @param activityId the campaign activity ID
      * @return a synthetic URL like "/backend/purchase/123"

@@ -99,7 +99,7 @@ class CampaignActivityConsumerServiceTest {
         CampaignActivity saved = campaignActivityRepository.save(activity);
         this.campaignActivityId = saved.getId();
 
-        Product testProduct = new Product("테스트 상품", 100L);
+        Product testProduct = new Product("테스트 상품", 100L, java.math.BigDecimal.valueOf(10000));
         productRepository.save(testProduct);
 
         userIds = new ArrayList<>(NUMBER_OF_THREADS);
@@ -111,8 +111,8 @@ class CampaignActivityConsumerServiceTest {
                             .role(com.axon.core_service.domain.user.Role.USER)
                             .provider("test")
                             .providerId("provider-" + i)
-                            .build()
-            ).getId());
+                            .build())
+                    .getId());
         }
     }
 
@@ -149,7 +149,7 @@ class CampaignActivityConsumerServiceTest {
         userIds.forEach(id -> assertThat(
                 userSummaryRepository.findById(id)
                         .map(summary -> summary.getLastPurchaseAt())
-                        .orElse(null)
-        ).isNotNull());
+                        .orElse(null))
+                .isNotNull());
     }
 }

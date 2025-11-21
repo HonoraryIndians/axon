@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+    th:replace="fragments/layout :: layout('Axon - Marketing Dashboard', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section})">
+
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
+</head>
+<section>
+    <input type="hidden" id="campaignId" th:value="${campaignId}" />
+
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-[1600px] mx-auto px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="font-bold text-xl text-blue-600">Axon</div>
+                <div class="h-6 w-px bg-gray-300 mx-2"></div>
+                <h1 class="font-semibold text-gray-900" th:text="'Activity Dashboard: ' + ${campaignName}">Activity
+                    Dashboard</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
+                </div>
+                <span id="lastUpdated" class="text-sm text-gray-500">Last updated: --:--:--</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <!-- Section 1: KPI Cards Grid -->
+        <div class="kpi-grid">
+            <div
+                th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Visits', 'fa-solid fa-eye', 'blue', '0', '-', 'neutral')">
+            </div>
+            <div
+                th:replace="fragments/dashboard_widgets :: kpiCard('totalClicks', 'Total Clicks', 'fa-solid fa-hand-pointer', 'purple', '0', '-', 'neutral')">
+            </div>
+            <div
+                th:replace="fragments/dashboard_widgets :: kpiCard('approvedCount', 'Approved', 'fa-solid fa-check-circle', 'green', '0', '-', 'neutral')">
+            </div>
+            <div
+                th:replace="fragments/dashboard_widgets :: kpiCard('purchaseCount', 'Purchases', 'fa-solid fa-cart-shopping', 'orange', '0', '-', 'neutral')">
+            </div>
+        </div>
+
+        <!-- Section 2: Real-time Stock Status -->
+        <div
+            class="realtime-status-box mb-8 p-6 rounded-xl shadow-sm border border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-yellow-200 rounded-lg text-yellow-700">
+                        <i class="fa-solid fa-bolt text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Real-time Activity Status</h3>
+                        <p class="text-sm text-gray-600">Live monitoring of participants and stock</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button
+                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fa-solid fa-pause mr-2"></i>Pause
+                    </button>
+                    <button class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700">
+                        <i class="fa-solid fa-stop mr-2"></i>Stop
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-600">Current Participants</span>
+                        <span class="text-lg font-bold text-blue-600" id="realtimeParticipants">0</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 45%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-600">Remaining Stock</span>
+                        <span class="text-lg font-bold text-red-600" id="realtimeStock">0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="stockProgressBar" class="bg-red-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Conversion Funnel -->
+        <div class="charts-grid">
+            <div class="chart-container full-width">
+                <div class="chart-header">
+                    <h3 class="chart-title">Conversion Funnel</h3>
+                </div>
+                <div class="h-64">
+                    <canvas id="funnelChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Traffic Trend (Line Chart) -->
+        <div class="charts-grid">
+            <div class="chart-container full-width">
+                <div class="chart-header">
+                    <h3 class="chart-title">Hourly Traffic Trend (Last 24h)</h3>
+                </div>
+                <div class="h-64">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script th:src="@{/js/dashboard.js}"></script>
+</section>
+
+</html>

@@ -42,6 +42,8 @@ public class Campaign extends BaseTimeEntity {
     @Column(length = 2000)
     private String rewardPayload;
 
+    private java.math.BigDecimal budget; // 캠페인 예산
+
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<CampaignActivity> campaignActivities = new ArrayList<>();
 
@@ -55,34 +57,42 @@ public class Campaign extends BaseTimeEntity {
     }
 
     /**
-     * Creates a Campaign populated with the provided identifying, scheduling, targeting, and reward values.
+     * Creates a Campaign populated with the provided identifying, scheduling,
+     * targeting, reward values, and budget.
      *
      * @param name            the campaign name
      * @param startAt         the campaign start time, or null if unspecified
      * @param endAt           the campaign end time, or null if unspecified
-     * @param targetSegmentId the target segment identifier, or null if the campaign has no segment target
-     * @param rewardType      the reward type identifier or descriptor, or null if none
-     * @param rewardPayload   the reward payload or parameters (up to 2000 characters), or null if none
+     * @param targetSegmentId the target segment identifier, or null if the campaign
+     *                        has no segment target
+     * @param rewardType      the reward type identifier or descriptor, or null if
+     *                        none
+     * @param rewardPayload   the reward payload or parameters (up to 2000
+     *                        characters), or null if none
+     * @param budget          the campaign budget, or null if unspecified
      */
     @Builder
     public Campaign(String name,
-                    LocalDateTime startAt,
-                    LocalDateTime endAt,
-                    Long targetSegmentId,
-                    String rewardType,
-                    String rewardPayload) {
+            LocalDateTime startAt,
+            LocalDateTime endAt,
+            Long targetSegmentId,
+            String rewardType,
+            String rewardPayload,
+            java.math.BigDecimal budget) {
         this.name = name;
         this.startAt = startAt;
         this.endAt = endAt;
         this.targetSegmentId = targetSegmentId;
         this.rewardType = rewardType;
         this.rewardPayload = rewardPayload;
+        this.budget = budget;
     }
 
     /**
      * Update the campaign's start and end times.
      *
-     * @param startAt the new start time; may be {@code null} to clear the start time
+     * @param startAt the new start time; may be {@code null} to clear the start
+     *                time
      * @param endAt   the new end time; may be {@code null} to clear the end time
      */
     public void updateSchedule(LocalDateTime startAt, LocalDateTime endAt) {
@@ -105,7 +115,8 @@ public class Campaign extends BaseTimeEntity {
      * Updates the campaign's display name and associated target segment identifier.
      *
      * @param name            the new campaign name
-     * @param targetSegmentId the identifier of the target segment to associate with the campaign, or `null` to remove it
+     * @param targetSegmentId the identifier of the target segment to associate with
+     *                        the campaign, or `null` to remove it
      */
     public void updateBasicInfo(String name, Long targetSegmentId) {
         this.name = name;

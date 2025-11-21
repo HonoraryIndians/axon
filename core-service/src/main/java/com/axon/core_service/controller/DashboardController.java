@@ -27,6 +27,10 @@ public class DashboardController {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // View Controllers - Moved to DashboardViewController
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // REST Endpoints (one-time fetch)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -35,15 +39,21 @@ public class DashboardController {
             @PathVariable Long activityId,
             @RequestParam(defaultValue = "7d") String period,
             @RequestParam(required = false) LocalDateTime startDate,
-            @RequestParam(required = false) LocalDateTime endDate
-    ) {
+            @RequestParam(required = false) LocalDateTime endDate) {
         DashboardPeriod dashboardPeriod = DashboardPeriod.fromCode(period);
         DashboardResponse response = dashboardService.getDashboardByActivity(
                 activityId,
                 dashboardPeriod,
                 startDate,
-                endDate
-        );
+                endDate);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/campaign/{campaignId}")
+    public ResponseEntity<com.axon.core_service.domain.dto.dashboard.CampaignDashboardResponse> getDashboardByCampaign(
+            @PathVariable Long campaignId) {
+        com.axon.core_service.domain.dto.dashboard.CampaignDashboardResponse response = dashboardService
+                .getDashboardByCampaign(campaignId);
         return ResponseEntity.ok(response);
     }
 
@@ -58,16 +68,14 @@ public class DashboardController {
      * Marketers can monitor FCFS campaigns in real-time without manual refresh.
      *
      * @param activityId the campaign activity ID to monitor
-     * @param period the time period for analytics (default: 7d)
+     * @param period     the time period for analytics (default: 7d)
      * @return SseEmitter that streams dashboard updates
      */
-    @GetMapping(value = "/stream/activity/{activityId}",
-                produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/stream/activity/{activityId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamActivityDashboard(
             @PathVariable Long activityId,
-            @RequestParam(defaultValue = "7d") String period
-    ) {
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);  // No timeout
+            @RequestParam(defaultValue = "7d") String period) {
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE); // No timeout
         DashboardPeriod dashboardPeriod = DashboardPeriod.fromCode(period);
 
         log.info("SSE connection opened for activity: {}, period: {}", activityId, period);
@@ -77,16 +85,15 @@ public class DashboardController {
             try {
                 // Fetch latest dashboard data
                 DashboardResponse data = dashboardService.getDashboardByActivity(
-                    activityId,
-                    dashboardPeriod,
-                    null,
-                    null
-                );
+                        activityId,
+                        dashboardPeriod,
+                        null,
+                        null);
 
                 // Send data to client
                 emitter.send(SseEmitter.event()
-                    .name("dashboard-update")
-                    .data(data));
+                        .name("dashboard-update")
+                        .data(data));
 
                 log.debug("Sent dashboard update for activity: {}", activityId);
 
@@ -97,7 +104,7 @@ public class DashboardController {
                 log.error("Error streaming dashboard for activity: {}", activityId, e);
                 emitter.completeWithError(e);
             }
-        }, 0, 5, TimeUnit.SECONDS);  // Initial delay 0, then every 5 seconds
+        }, 0, 5, TimeUnit.SECONDS); // Initial delay 0, then every 5 seconds
 
         // Cleanup when connection closes
         emitter.onCompletion(() -> {

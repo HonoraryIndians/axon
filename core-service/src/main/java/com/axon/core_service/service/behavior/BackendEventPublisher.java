@@ -1,5 +1,6 @@
 package com.axon.core_service.service.behavior;
 
+import com.axon.core_service.adapter.BehaviorEventAdapter;
 import com.axon.core_service.event.CampaignActivityApprovedEvent;
 import com.axon.core_service.event.UserLoginEvent;
 import com.axon.messaging.dto.UserBehaviorEventMessage;
@@ -12,9 +13,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 /**
- * Listens to backend domain events and publishes them to Kafka as behavior events.
+ * Listens to backend domain events and publishes them to Kafka as behavior
+ * events.
  *
- * This allows backend state changes (like purchase completion, user login) to be tracked
+ * This allows backend state changes (like purchase completion, user login) to
+ * be tracked
  * in the same analytics pipeline as frontend user interactions.
  */
 @Slf4j
@@ -23,12 +26,14 @@ import org.springframework.stereotype.Component;
 public class BackendEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final BackendEventFactory eventFactory;
+    private final BehaviorEventAdapter adapter;
 
     /**
-     * Handle CampaignActivityApprovedEvent and publish it to Kafka as a purchase behavior event.
+     * Handle CampaignActivityApprovedEvent and publish it to Kafka as a purchase
+     * behavior event.
      *
-     * Executed asynchronously to avoid blocking the transaction that published the event.
+     * Executed asynchronously to avoid blocking the transaction that published the
+     * event.
      *
      * @param event the campaign activity approved domain event
      */
@@ -38,7 +43,7 @@ public class BackendEventPublisher {
         log.info("Publishing backend purchase event for userId={} activityId={} productId={}",
                 event.userId(), event.campaignActivityId(), event.productId());
 
-        UserBehaviorEventMessage message = eventFactory.createPurchaseEvent(event);
+        UserBehaviorEventMessage message = adapter.toPurchaseEvent(event);
 
         kafkaTemplate.send(KafkaTopics.EVENT_RAW, message).whenComplete((result, ex) -> {
             if (ex != null) {
@@ -64,7 +69,7 @@ public class BackendEventPublisher {
         log.info("Publishing backend login event for userId={} loggedAt={}",
                 event.userId(), event.loggedAt());
 
-        UserBehaviorEventMessage message = eventFactory.createLoginEvent(event);
+        UserBehaviorEventMessage message = adapter.toLoginEvent(event);
 
         kafkaTemplate.send(KafkaTopics.EVENT_RAW, message).whenComplete((result, ex) -> {
             if (ex != null) {
