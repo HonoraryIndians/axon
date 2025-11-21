@@ -26,24 +26,31 @@ public class CampaignActivityEntryService {
     private final ApplicationEventPublisher eventPublisher;
 
     /**
-     * Upserts a CampaignActivityEntry for the given campaign activity and DTO, persists it, and emits an approval event when the entry is approved for a purchase-related activity.
+     * Upserts a CampaignActivityEntry for the given campaign activity and DTO,
+     * persists it, and emits an approval event when the entry is approved for a
+     * purchase-related activity.
      *
      * @param campaignActivity the campaign activity associated with the entry
-     * @param dto source data containing the user ID, product ID, and an optional epoch-millisecond timestamp
-     * @param nextStatus the status to set on the entry
-     * @param processed if true, marks the entry as processed at the current time
+     * @param dto              source data containing the user ID, product ID, and
+     *                         an optional epoch-millisecond timestamp
+     * @param nextStatus       the status to set on the entry
+     * @param processed        if true, marks the entry as processed at the current
+     *                         time
      * @return the persisted CampaignActivityEntry
      */
-    @DistributedLock(
-        key = "'lock:entry:' + #campaignActivity.id + ':' + #dto.userId",
-        waitTime = 3,
-        leaseTime = 5
-    )
+    @DistributedLock(key = "'lock:entry:' + #campaignActivity.id + ':' + #dto.userId", waitTime = 3, leaseTime = 5)
     @Transactional
     public CampaignActivityEntry upsertEntry(CampaignActivity campaignActivity,
-                                            CampaignActivityKafkaProducerDto dto,
-                                            CampaignActivityEntryStatus nextStatus,
-                                            boolean processed) {
+            CampaignActivityKafkaProducerDto dto,
+            CampaignActivityEntryStatus nextStatus,
+            boolean processed) {
+        return upsertEntryInternal(campaignActivity, dto, nextStatus, processed);
+    }
+
+    private CampaignActivityEntry upsertEntryInternal(CampaignActivity campaignActivity,
+            CampaignActivityKafkaProducerDto dto,
+            CampaignActivityEntryStatus nextStatus,
+            boolean processed) {
         Instant requestedAt = Optional.ofNullable(dto.getTimestamp())
                 .map(Instant::ofEpochMilli)
                 .orElseGet(Instant::now);
@@ -54,8 +61,7 @@ public class CampaignActivityEntryService {
                         campaignActivity,
                         dto.getUserId(),
                         dto.getProductId(),
-                        requestedAt
-                ));
+                        requestedAt));
 
         entry.updateProduct(dto.getProductId());
         entry.updateStatus(nextStatus);
@@ -64,7 +70,6 @@ public class CampaignActivityEntryService {
         }
 
         CampaignActivityEntry saved = campaignActivityEntryRepository.save(entry);
-
 
         if (nextStatus == CampaignActivityEntryStatus.APPROVED
                 && campaignActivity.getActivityType().isPurchaseRelated()) {
@@ -76,8 +81,7 @@ public class CampaignActivityEntryService {
                     PurchaseType.CAMPAIGNACTIVITY,
                     campaignActivity.getPrice(),
                     campaignActivity.getQuantity(),
-                    requestedAt
-            ));
+                    requestedAt));
         }
 
         return saved;
