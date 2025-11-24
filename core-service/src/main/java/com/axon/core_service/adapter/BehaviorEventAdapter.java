@@ -76,9 +76,10 @@ public class BehaviorEventAdapter {
      * Generate a synthetic URL for a purchase event.
      *
      * @param activityId the campaign activity ID
-     * @return a synthetic URL like "/backend/purchase/123"
+     * @return a synthetic URL like "/backend/campaign-activity/123/purchase"
      */
     private String generatePurchaseUrl(Long activityId) {
-        return "/backend/purchase/" + activityId;
+        // Matches pattern */campaign-activity/{id}/* used in Dashboard queries
+        return "/backend/campaign-activity/" + activityId + "/purchase";
     }
 }

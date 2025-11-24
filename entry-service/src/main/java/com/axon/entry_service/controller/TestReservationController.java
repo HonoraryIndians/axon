@@ -33,14 +33,19 @@ import java.util.Collections;
 public class TestReservationController {
 
         private final EntryReservationService reservationService;
+        private final com.axon.entry_service.service.CampaignActivityProducerService producerService;
 
         /**
-         * Test-only reservation endpoint that bypasses authentication and uses mock metadata.
-         * This endpoint is completely independent from core-service and uses hardcoded test data.
-         * Triggers the complete event flow: ReservationApprovedEvent → BackendEventPublisher → Kafka → ES
+         * Test-only reservation endpoint that bypasses authentication and uses mock
+         * metadata.
+         * This endpoint is completely independent from core-service and uses hardcoded
+         * test data.
+         * Triggers the complete event flow: ReservationApprovedEvent →
+         * BackendEventPublisher → Kafka → ES
          *
          * @param userId  user ID for the reservation
-         * @param request reservation request containing campaignActivityId and productId
+         * @param request reservation request containing campaignActivityId and
+         *                productId
          * @return reservation result with success/failure status
          */
         @PostMapping("/reserve/{userId}")
@@ -71,6 +76,25 @@ public class TestReservationController {
                                 Instant.now());
 
                 log.info("Test reservation result: {}", result);
+
+                if (result.isSuccess()) {
+                        // For testing purposes, immediately trigger purchase creation in Core Service
+                        // This simulates the "Payment -> Purchase" flow without actual payment
+                        com.axon.messaging.dto.CampaignActivityKafkaProducerDto command = com.axon.messaging.dto.CampaignActivityKafkaProducerDto
+                                        .builder()
+                                        .campaignActivityId(request.getCampaignActivityId())
+                                        .userId(userId)
+                                        .productId(request.getProductId())
+                                        .campaignActivityType(CampaignActivityType.FIRST_COME_FIRST_SERVE)
+                                        .timestamp(Instant.now().toEpochMilli())
+                                        .quantity(1)
+                                        .build();
+
+                        producerService.send(com.axon.messaging.topic.KafkaTopics.CAMPAIGN_ACTIVITY_COMMAND, command);
+                        log.info("Test: Triggered purchase creation for userId={} activityId={}", userId,
+                                        request.getCampaignActivityId());
+                }
+
                 return ResponseEntity.ok(result);
         }
 }

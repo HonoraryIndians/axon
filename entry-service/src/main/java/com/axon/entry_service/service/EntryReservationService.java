@@ -69,7 +69,9 @@ public class EntryReservationService {
                 campaignActivityId,
                 userId,
                 order,
-                requestedAt));
+                requestedAt,
+                meta.productId(),
+                meta.campaignActivityType()));
 
         return ReservationResult.success(order);
     }

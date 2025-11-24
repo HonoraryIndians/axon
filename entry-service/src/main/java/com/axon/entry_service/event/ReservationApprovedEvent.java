@@ -1,5 +1,7 @@
 package com.axon.entry_service.event;
 
+import com.axon.messaging.CampaignActivityType;
+
 import java.time.Instant;
 
 /**
@@ -10,8 +12,10 @@ import java.time.Instant;
  * by BehaviorEventAdapter before publishing to Kafka.
  */
 public record ReservationApprovedEvent(
-        Long campaignActivityId,
-        Long userId,
-        Long order,
-        Instant occurredAt) {
+                Long campaignActivityId,
+                Long userId,
+                Long order,
+                Instant occurredAt,
+                Long productId,
+                CampaignActivityType activityType) {
 }
