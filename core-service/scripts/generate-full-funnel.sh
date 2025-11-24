@@ -4,10 +4,10 @@
 # 🎯 Complete Conversion Funnel Generator
 #
 # 하나의 스크립트로 완전한 conversion funnel 데이터를 생성합니다:
-#   1. PAGE_VIEW (Elasticsearch)
-#   2. CLICK (Elasticsearch)
-#   3. APPROVED (MySQL)
-#   4. PURCHASE (MySQL - optional via APPROVED trigger)
+#   1. PAGE_VIEW events → Elasticsearch
+#   2. CLICK events → Elasticsearch
+#   3. APPROVED reservations → MySQL + Elasticsearch
+#      └─> PURCHASE automatically created by backend → MySQL + Elasticsearch
 #
 # Usage: ./generate-full-funnel.sh [activityId] [numVisitors]
 ##############################################################################
@@ -29,13 +29,11 @@ DB_PASS="${DB_PASS:-}"
 # Conversion rates (realistic funnel)
 CLICK_RATE=0.4        # 40% of visitors click
 APPROVED_RATE=0.3     # 30% of clickers get approved
-PURCHASE_RATE=0.7     # 70% of approved complete purchase
 
 # Calculate funnel counts
 VISITORS=$NUM_VISITORS
 CLICKERS=$(echo "$VISITORS * $CLICK_RATE" | bc | awk '{print int($1)}')
 APPROVED=$(echo "$CLICKERS * $APPROVED_RATE" | bc | awk '{print int($1)}')
-PURCHASES=$(echo "$APPROVED * $PURCHASE_RATE" | bc | awk '{print int($1)}')
 
 # Build MySQL command
 if [ -n "$DB_PASS" ]; then
@@ -55,7 +53,7 @@ echo "Expected Funnel:"
 echo "  👁️  Visitors:  $VISITORS (100%)"
 echo "  👆 Clicks:    $CLICKERS (${CLICK_RATE}% → $(echo "$CLICKERS * 100 / $VISITORS" | bc)%)"
 echo "  ✅ Approved:  $APPROVED (${APPROVED_RATE}% → $(echo "$APPROVED * 100 / $VISITORS" | bc)%)"
-echo "  💰 Purchases: $PURCHASES (${PURCHASE_RATE}% → $(echo "$PURCHASES * 100 / $VISITORS" | bc)%)"
+echo "  💰 Purchases: Auto-generated (= APPROVED count)"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
@@ -91,7 +89,7 @@ EOF
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo "📊 Step 1/3: Generating $VISITORS PAGE_VIEW events..."
 for i in $(seq 1 $VISITORS); do
-    USER_ID=$((5000 + i))
+    USER_ID=$((1000 + i))
     SESSION_ID="funnel-session-${USER_ID}"
     send_event "PAGE_VIEW" $USER_ID $SESSION_ID
     echo -n "."
@@ -108,7 +106,7 @@ sleep 1
 echo ""
 echo "📊 Step 2/3: Generating $CLICKERS CLICK events..."
 for i in $(seq 1 $CLICKERS); do
-    USER_ID=$((5000 + i))
+    USER_ID=$((1000 + i))
     SESSION_ID="funnel-session-${USER_ID}"
     send_event "CLICK" $USER_ID $SESSION_ID
     echo -n "."
@@ -122,13 +120,14 @@ sleep 1
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 3: Generate APPROVED via entry-service test API
+#         (This will auto-trigger Purchase creation + PURCHASE event publishing)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo ""
-echo "📊 Step 3/4: Generating $APPROVED reservations (APPROVED events)..."
+echo "📊 Step 3/3: Generating $APPROVED reservations (APPROVED → PURCHASE auto-trigger)..."
 
 SUCCESS_COUNT=0
 for i in $(seq 1 $APPROVED); do
-    USER_ID=$((5000 + i))
+    USER_ID=$((1000 + i))
     
     # Call entry-service TEST endpoint (no auth required, !prod only)
     RESPONSE=$(curl -s -X POST "${ENTRY_SERVICE_URL}/api/v1/test/reserve/${USER_ID}" \
@@ -147,6 +146,7 @@ EOF
         echo -n "✓"
     else
         echo -n "✗"
+        echo "Response: $RESPONSE"
     fi
     
     if [ $((i % 50)) -eq 0 ]; then
@@ -157,25 +157,10 @@ done
 
 echo ""
 echo "✅ Done ($SUCCESS_COUNT/$APPROVED reservations succeeded)"
-echo "   → ReservationApprovedEvent → BackendEventPublisher → Kafka → Elasticsearch"
+echo "   → APPROVED entries saved to MySQL"
+echo "   → Purchase records auto-created (PurchaseHandler)"
+echo "   → PURCHASE events published to Elasticsearch (BackendEventPublisher)"
 
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 4: Generate PURCHASE events (Elasticsearch)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo ""
-echo "📊 Step 4/4: Generating $PURCHASES PURCHASE events..."
-for i in $(seq 1 $PURCHASES); do
-    USER_ID=$((5000 + i))
-    SESSION_ID="funnel-session-${USER_ID}"
-    send_event "PURCHASE" $USER_ID $SESSION_ID
-    echo -n "."
-    if [ $((i % 50)) -eq 0 ]; then
-        echo " [$i/$PURCHASES]"
-    fi
-    sleep 0.05
-done
-echo " ✅ Done ($PURCHASES purchases)"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Summary & Verification
@@ -188,8 +173,11 @@ echo ""
 echo "📊 Generated Data:"
 echo "  👁️  PAGE_VIEW:  $VISITORS events → Elasticsearch"
 echo "  👆 CLICK:      $CLICKERS events → Elasticsearch"
-echo "  ✅ APPROVED:   $SUCCESS_COUNT reservations → Elasticsearch (via entry-service)"
-echo "  💰 PURCHASE:   $PURCHASES events → Elasticsearch"
+echo "  ✅ APPROVED:   $SUCCESS_COUNT reservations → MySQL + Elasticsearch"
+echo "  💰 PURCHASE:   Auto-generated by backend → MySQL + Elasticsearch"
+echo ""
+echo "💡 Note: PURCHASE events are automatically created by the backend when"
+echo "   APPROVED entries trigger Purchase creation (PurchaseHandler)."
 echo ""
 echo "🔍 Verification Commands:"
 echo ""

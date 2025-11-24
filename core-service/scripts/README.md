@@ -1,189 +1,315 @@
-# 📊 Dashboard Test Event Generation Scripts
+# 📊 Dashboard Test Scripts
 
-대시보드 Conversion Funnel 테스트를 위한 자동화 스크립트 모음입니다.
+대시보드 테스트를 위한 자동화 스크립트 모음입니다.
 
-## 🌟 **추천: 통합 스크립트로 한 번에 실행!**
+## 🚀 Quick Start (권장)
 
-### `generate-full-funnel.sh` - 완전한 Conversion Funnel 자동 생성 🚀
+### ⭐ `run-dashboard-test.sh` - 완전 자동화 테스트
 
-**가장 간단하고 강력한 방법!** 한 줄로 전체 퍼널 데이터를 생성합니다.
+**한 줄로 모든 것을 자동화!**
+
+```bash
+./run-dashboard-test.sh [activityId] [numVisitors]
+
+# 예시: Activity 1번에 100명 방문자
+./run-dashboard-test.sh 1 100
+```
+
+**자동으로 수행:**
+1. ✅ Activity 존재 확인 (없으면 자동 생성)
+2. ✅ 이전 테스트 데이터 정리 (Kafka offset 리셋 포함)
+3. ✅ 퍼널 데이터 생성 (PAGE_VIEW → CLICK → APPROVED → PURCHASE)
+4. ✅ 데이터 검증
+5. ✅ 대시보드 URL 출력
+
+**결과:**
+- 📊 실시간 대시보드: http://localhost:8080/admin/dashboard/1
+- 📈 코호트 대시보드: http://localhost:8080/admin/dashboard/cohort/1
+
+**반복 실행:**
+```bash
+# 계속 반복 가능 (Activity 재사용, 데이터만 새로 생성)
+./run-dashboard-test.sh 1 100
+./run-dashboard-test.sh 1 200  # 다른 방문자 수로 테스트
+./run-dashboard-test.sh 1 50
+```
+
+---
+
+## 📖 개별 스크립트 사용법
+
+### 1. `generate-full-funnel.sh` - Conversion Funnel 생성
+
+전체 퍼널 데이터를 생성합니다.
 
 ```bash
 ./generate-full-funnel.sh [activityId] [numVisitors]
 
-# 예시: Activity 1번에 100명의 방문자로 완전한 퍼널 생성
+# 예시
 ./generate-full-funnel.sh 1 100
-```
-
-**자동 생성되는 데이터:**
-- 👁️ **PAGE_VIEW**: 100 events (100%)
-- 👆 **CLICK**: 40 events (40% conversion)
-- ✅ **APPROVED**: 12 entries (30% of clicks)
-- 💰 **PURCHASE**: 자동 트리거 (70% of approved)
-
-**필수 환경변수** (MySQL 사용 시):
-```bash
-export DB_USER=root
-export DB_PASS=your_password
-./generate-full-funnel.sh 1 100
-```
-
----
-
-## 🔧 개별 스크립트 (고급 사용자용)
-
-필요시 퍼널의 특정 단계만 별도로 실행할 수 있습니다.
-
-### 1️⃣ `generate-test-events.sh` - 프론트엔드 이벤트
-PAGE_VIEW와 CLICK만 생성합니다.
-
-```bash
-./generate-test-events.sh [activityId] [numUsers]
-```
-
----
-
-### 2️⃣ `generate-db-events.sh` - APPROVED 이벤트 (추천! 🌟)
-**가장 간단하고 안정적인 방법**. MySQL 데이터베이스에 직접 INSERT합니다.
-
-```bash
-./generate-db-events.sh [activityId] [numApproved]
-
-# 예시: Activity 1번에 20개의 APPROVED 엔트리 생성
-./generate-db-events.sh 1 20
-```
-
-**필수 조건:**
-- MySQL 클라이언트 설치 (`mysql` 명령어)
-- 데이터베이스 접속 권한
-
-**환경변수 설정:**
-```bash
-export DB_HOST=localhost
-export DB_PORT=3306
-export DB_USER=root
-export DB_PASS=your_password
-export DB_NAME=axon
 ```
 
 **생성되는 데이터:**
-- ✅ APPROVED 상태의 `campaign_activity_entries` 레코드
+- 👁️ **PAGE_VIEW**: 100 events → Elasticsearch
+- 👆 **CLICK**: 40 events (40% conversion) → Elasticsearch
+- ✅ **APPROVED**: 12 entries (30% of clicks) → MySQL + Elasticsearch
+- 💰 **PURCHASE**: 자동 생성 (= APPROVED 수) → MySQL + Elasticsearch
 
----
+**참고:**
+- PURCHASE는 백엔드에서 자동 생성됩니다 (PurchaseHandler)
+- Activity가 미리 존재해야 합니다
 
-### 3️⃣ `generate-backend-events.sh` - Kafka 기반 (고급)
-Kafka 메시지를 직접 발행하여 백엔드 이벤트를 생성합니다.
+### 2. `cleanup-test-data.sh` - 테스트 데이터 정리
+
+테스트 데이터를 삭제합니다 (Activity는 유지).
 
 ```bash
-./generate-backend-events.sh [activityId] [numApproved] [numPurchases]
+./cleanup-test-data.sh [activityId]
 
 # 예시
-./generate-backend-events.sh 1 15 10
+./cleanup-test-data.sh 1
 ```
 
-**필수 조건:**
-- `kcat` 또는 `kafkacat` 설치
-  ```bash
-  brew install kcat  # macOS
-  apt-get install kafkacat  # Linux
-  ```
+**삭제 항목:**
+- ✅ Elasticsearch: behavior-events 삭제
+- ✅ MySQL: campaign_activity_entries 삭제
+- ✅ MySQL: purchases 삭제
+- ✅ Redis: FCFS keys 삭제
+- ✅ **Kafka: Consumer group offset 리셋**
 
-**생성되는 이벤트:**
-- Kafka 토픽: `campaign-activity-approval`
-- Core-service가 consume하여 APPROVED/PURCHASE 처리
+**유지 항목:**
+- ✅ Activity (campaign_activities) - 재사용 가능!
 
----
+### 3. `verify-ltv-workflow.sh` - 데이터 검증
 
-### 4️⃣ `generate-approved-purchases.sh` - REST API 기반
-REST API를 호출하여 백엔드 이벤트를 생성합니다.
+전체 워크플로우의 데이터 무결성을 검증합니다.
 
 ```bash
-./generate-approved-purchases.sh [activityId] [numEvents]
+./verify-ltv-workflow.sh [activityId]
 
 # 예시
-./generate-approved-purchases.sh 1 15
+./verify-ltv-workflow.sh 1
 ```
 
-**참고:** 이 스크립트는 테스트 엔드포인트가 구현되어 있어야 작동합니다.
+**검증 항목:**
+- ✅ Activity 존재 확인
+- ✅ Entries vs Purchases 일치 여부
+- ✅ Repurchase 데이터 통계
+- ✅ Elasticsearch 이벤트 집계
+- ✅ Cohort API 응답 검증
 
 ---
 
-## 🚀 완전한 퍼널 테스트 시나리오
+## 🔮 LTV 시뮬레이션 테스트
 
-전체 conversion funnel을 테스트하려면 다음 순서로 실행하세요:
+### 시나리오: 고객 재구매 패턴 분석
 
 ```bash
-# 1. 프론트엔드 이벤트 생성 (Visit, Click)
-./generate-test-events.sh 1 100
+# 1. 기본 퍼널 데이터 생성
+./run-dashboard-test.sh 1 100
 
-# 2. APPROVED 엔트리 생성 (30개)
-./generate-db-events.sh 1 30
+# 2. 데이터를 30일 전으로 이동 (Time Travel)
+./time-travel-activity.sh 1 30
 
-# 3. 대시보드 확인
-open http://localhost:8080/admin/dashboard/1
+# 3. 재구매 데이터 생성
+./generate-ltv-simulation.sh 1
+
+# 4. 코호트 대시보드 확인
+open http://localhost:8080/admin/dashboard/cohort/1
 ```
 
 **예상 결과:**
-- 👁️ **Total Visits**: 100
-- 👆 **Total Clicks**: 40 (40% conversion)
-- ✅ **Approved**: 30
-- 💰 **Purchases**: 0 (별도 생성 안 함)
+- 👥 Cohort Size: 12 customers
+- 💰 LTV 30d: ₩1,800,000
+- 📈 LTV 90d: ₩2,500,000
+- 🔄 Repeat Purchase Rate: ~70%
 
 ---
 
-## 🔍 검증 방법
+## 🔍 검증 및 디버깅
 
 ### Elasticsearch 확인
+
 ```bash
+# 전체 이벤트 수
 curl http://localhost:9200/behavior-events/_count
-curl "http://localhost:9200/behavior-events/_search?q=properties.activityId:1&size=10&pretty"
+
+# Activity별 이벤트 타입
+curl -s 'http://localhost:9200/behavior-events/_search' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "size": 0,
+    "query": {"term": {"properties.activityId": 1}},
+    "aggs": {"by_type": {"terms": {"field": "triggerType.keyword"}}}
+  }' | jq '.aggregations.by_type.buckets'
 ```
 
 ### MySQL 확인
+
 ```bash
-mysql -u root -p axon -e "
-  SELECT status, COUNT(*) as count
-  FROM campaign_activity_entries
-  WHERE campaign_activity_id = 1
-  GROUP BY status;
+# Entries 상태별 카운트
+mysql -u axon_user -paxon_password axon_db -e "
+  SELECT status, COUNT(*) FROM campaign_activity_entries
+  WHERE campaign_activity_id = 1 GROUP BY status;
+"
+
+# Purchases 확인
+mysql -u axon_user -paxon_password axon_db -e "
+  SELECT COUNT(*) as total, COUNT(DISTINCT user_id) as unique_users
+  FROM purchases WHERE campaign_activity_id = 1;
 "
 ```
 
-### Dashboard API 확인
+### Kafka Consumer Group 확인
+
 ```bash
-curl "http://localhost:8080/api/v1/dashboard/activity/1?period=7d" | jq '.'
+# Offset 상태 확인
+docker exec broker_1 kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --group axon-group \
+  --describe
+
+# Offset 수동 리셋 (문제 발생 시)
+docker exec broker_1 kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --group axon-group \
+  --topic axon.campaign-activity.command \
+  --reset-offsets --to-latest \
+  --execute
 ```
 
 ---
 
-## 💡 팁
+## 💡 트러블슈팅
 
-1. **실시간 업데이트 확인**: 대시보드는 5초마다 자동 갱신됩니다.
-2. **브라우저 캐시**: 차트가 안 바뀌면 `Cmd+Shift+R` (하드 리프레시)
-3. **데이터 초기화**: 테스트 데이터를 삭제하려면:
+### Q1: "존재하지 않는 캠페인 활동입니다" 에러
+
+**원인:** Kafka topic에 이전 메시지가 남아있지만 Activity가 삭제됨
+
+**해결:**
+```bash
+# Option 1: 올인원 스크립트 사용 (자동 해결)
+./run-dashboard-test.sh 1 100
+
+# Option 2: Kafka offset 수동 리셋
+docker exec broker_1 kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --group axon-group \
+  --reset-offsets --to-latest \
+  --topic axon.campaign-activity.command \
+  --execute
+```
+
+### Q2: Purchase 데이터가 생성 안 됨
+
+**원인:** BackendEventPublisher 미구현 또는 Kafka 메시지 처리 실패
+
+**확인:**
+```bash
+# Core-service 로그 확인
+tail -f core-service/logs/application.log | grep -i purchase
+
+# Kafka consumer group lag 확인
+docker exec broker_1 kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --group axon-group \
+  --describe
+```
+
+### Q3: MySQL과 Elasticsearch 데이터 불일치
+
+**원인:** Kafka 파이프라인 지연 또는 에러
+
+**해결:**
+```bash
+# 1. Cleanup 후 재생성
+./cleanup-test-data.sh 1
+./generate-full-funnel.sh 1 100
+
+# 2. Kafka Connect 상태 확인
+curl http://localhost:8083/connectors
+curl http://localhost:8083/connectors/elasticsearch-sink-behavior-events/status
+```
+
+---
+
+## 📋 스크립트 목록
+
+| 스크립트 | 용도 | 사용 빈도 |
+|---------|------|----------|
+| `run-dashboard-test.sh` | ⭐ 완전 자동화 테스트 | 매일 |
+| `generate-full-funnel.sh` | 퍼널 데이터 생성 | 수동 실행 시 |
+| `cleanup-test-data.sh` | 테스트 데이터 정리 | 수동 실행 시 |
+| `verify-ltv-workflow.sh` | 데이터 검증 | 디버깅 시 |
+| `generate-ltv-simulation.sh` | LTV 재구매 시뮬레이션 | LTV 테스트 시 |
+| `time-travel-activity.sh` | 데이터 과거 이동 | LTV 테스트 시 |
+
+---
+
+## ⚙️ 환경 설정
+
+### 필수 환경변수
+
+```bash
+export DB_HOST=127.0.0.1
+export DB_PORT=3306
+export DB_USER=axon_user
+export DB_PASS=axon_password
+export DB_NAME=axon_db
+export ES_URL=http://localhost:9200
+export ENTRY_SERVICE_URL=http://localhost:8081
+```
+
+### 필수 서비스
+
+테스트 전에 다음 서비스가 실행 중이어야 합니다:
+
+- ✅ **Core-service** (port 8080)
+- ✅ **Entry-service** (port 8081)
+- ✅ **MySQL** (port 3306)
+- ✅ **Redis** (port 6379)
+- ✅ **Kafka** (port 9092)
+- ✅ **Elasticsearch** (port 9200)
+- ✅ **Kafka Connect** (port 8083)
+
+```bash
+# 모든 서비스 시작
+docker-compose up -d
+
+# 서비스 상태 확인
+docker-compose ps
+```
+
+---
+
+## 🎯 Best Practices
+
+1. **항상 올인원 스크립트 사용**
    ```bash
-   # Elasticsearch
-   curl -X DELETE http://localhost:9200/behavior-events/_doc/_query?q=properties.activityId:1
-   
-   # MySQL
-   mysql -u root -p axon -e "DELETE FROM campaign_activity_entries WHERE campaign_activity_id = 1;"
+   ./run-dashboard-test.sh 1 100
+   ```
+
+2. **Activity는 한 번만 생성하고 재사용**
+   - Cleanup 시 Activity 삭제 안 됨
+   - 설정(가격, 수량, 예산) 유지
+
+3. **문제 발생 시 Kafka offset 리셋**
+   - Cleanup 스크립트가 자동으로 리셋
+   - 수동 리셋도 가능
+
+4. **LTV 테스트는 별도 프로세스**
+   - Time travel → Simulation → Dashboard 확인
+
+5. **검증 스크립트로 데이터 확인**
+   ```bash
+   ./verify-ltv-workflow.sh 1
    ```
 
 ---
 
-## 📊 Dashboard 주소
+## 📚 참고 문서
 
-- **Activity Dashboard**: http://localhost:8080/admin/dashboard/1
-- **API Endpoint**: http://localhost:8080/api/v1/dashboard/activity/1
-
----
-
-## ⚠️ 주의사항
-
-- PURCHASE 이벤트는 `CampaignActivityEntry`가 APPROVED 상태이고, Activity 타입이 purchase-related일 때 자동 생성됩니다.
-- 스크립트 실행 전 서비스들이 정상 동작하는지 확인하세요:
-  - ✅ Core-service (port 8080)
-  - ✅ Entry-service (port 8081)
-  - ✅ Kafka (port 9092)
-  - ✅ Elasticsearch (port 9200)
-  - ✅ MySQL (port 3306)
+- **Architecture**: `docs/purchase-event-flow.md`
+- **Marketing Dashboard**: `docs/marketing-dashboard-spec.md`
+- **LTV Analysis**: `docs/plan/marketing-dashboard-development-plan.md`
+- **Performance**: `docs/performance-improvement-plan.md`
