@@ -21,6 +21,10 @@
                     Dashboard</h1>
             </div>
             <div class="flex items-center gap-4">
+                <a th:href="@{/admin/dashboard/cohort/{id}(id=${campaignId})}"
+                   class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
+                    <i class="fa-solid fa-users mr-2"></i>고객 LTV 분석 보기
+                </a>
                 <div class="live-indicator">
                     <div class="live-dot"></div>
                     <span>LIVE</span>
@@ -31,19 +35,35 @@
     </header>
 
     <main class="dashboard-container">
-        <!-- Section 1: KPI Cards Grid -->
+        <!-- Section 1: KPI Cards Grid (Funnel Metrics) -->
         <div class="kpi-grid">
             <div
                 th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Visits', 'fa-solid fa-eye', 'blue', '0', '-', 'neutral')">
             </div>
             <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('totalClicks', 'Total Clicks', 'fa-solid fa-hand-pointer', 'purple', '0', '-', 'neutral')">
+                th:replace="fragments/dashboard_widgets :: kpiCard('totalEngages', 'Total Engages', 'fa-solid fa-hand-pointer', 'purple', '0', '-', 'neutral')">
             </div>
             <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('approvedCount', 'Approved', 'fa-solid fa-check-circle', 'green', '0', '-', 'neutral')">
+                th:replace="fragments/dashboard_widgets :: kpiCard('totalQualifies', 'Qualified', 'fa-solid fa-check-circle', 'green', '0', '-', 'neutral')">
             </div>
             <div
                 th:replace="fragments/dashboard_widgets :: kpiCard('purchaseCount', 'Purchases', 'fa-solid fa-cart-shopping', 'orange', '0', '-', 'neutral')">
+            </div>
+        </div>
+
+        <!-- Section 1.5: Marketing Metrics -->
+        <div class="kpi-grid mb-8">
+            <div
+                th:replace="fragments/dashboard_widgets :: kpiCard('gmv', 'GMV (총 거래액)', 'fa-solid fa-sack-dollar', 'emerald', '₩0', '-', 'neutral')">
+            </div>
+            <div
+                th:replace="fragments/dashboard_widgets :: kpiCard('conversionRate', 'Conversion Rate', 'fa-solid fa-bullseye', 'indigo', '0%', '-', 'neutral')">
+            </div>
+            <div
+                th:replace="fragments/dashboard_widgets :: kpiCard('aov', 'Avg Order Value', 'fa-solid fa-receipt', 'amber', '₩0', '-', 'neutral')">
+            </div>
+            <div
+                th:replace="fragments/dashboard_widgets :: kpiCard('roas', 'ROAS', 'fa-solid fa-chart-line', 'rose', '0%', '-', 'neutral')">
             </div>
         </div>
 
@@ -117,6 +137,55 @@
             </div>
         </div>
     </main>
+
+    <!-- Chat Interface -->
+    <div id="chat-widget" class="fixed bottom-6 right-6 z-50">
+        <!-- Chat Button -->
+        <button id="chat-toggle-btn"
+            class="w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-700 transition-all duration-300 focus:outline-none">
+            <i class="fa-solid fa-comment-dots text-2xl"></i>
+        </button>
+
+        <!-- Chat Window -->
+        <div id="chat-window"
+            class="hidden absolute bottom-16 right-0 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col transition-all duration-300 origin-bottom-right transform scale-95 opacity-0">
+
+            <!-- Header -->
+            <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-robot"></i>
+                    <span class="font-semibold">Axon AI Assistant</span>
+                </div>
+                <button id="chat-close-btn" class="text-blue-100 hover:text-white">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto h-80 bg-gray-50 space-y-4">
+                <!-- Welcome Message -->
+                <div class="flex justify-start">
+                    <div
+                        class="bg-white border border-gray-200 rounded-lg py-2 px-4 max-w-[80%] shadow-sm text-sm text-gray-800">
+                        Hello! I can help you analyze your campaign data. Ask me about visits, purchases, GMV, or ROAS.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 bg-white border-t border-gray-200">
+                <div class="flex gap-2">
+                    <input type="text" id="chat-input"
+                        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                        placeholder="Ask a question..." />
+                    <button id="chat-send-btn"
+                        class="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm hover:bg-blue-700 transition-colors">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script th:src="@{/js/dashboard.js}"></script>
 </section>

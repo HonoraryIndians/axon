@@ -77,6 +77,9 @@ public class CampaignActivity extends BaseTimeEntity {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
+    @Column(name = "budget", precision = 12, scale = 2)
+    private BigDecimal budget;  // Activity-specific marketing budget for ROAS calculation
+
     /**
      * Constructs a CampaignActivity with the specified association and attributes.
      *
@@ -88,6 +91,9 @@ public class CampaignActivity extends BaseTimeEntity {
      * @param endDate    activity end date and time (inclusive)
      * @param activityType type categorizing the activity
      * @param filters    list of filter rules applied to the activity (may be null or empty)
+     * @param price      product price for this activity
+     * @param quantity   available quantity
+     * @param budget     marketing budget allocated for this activity
      */
     @Builder
     public CampaignActivity(Campaign campaign,
@@ -100,7 +106,8 @@ public class CampaignActivity extends BaseTimeEntity {
                             CampaignActivityType activityType,
                             List<FilterDetail> filters,
                             BigDecimal price,
-                            Integer quantity
+                            Integer quantity,
+                            BigDecimal budget
                             ) {
         this.campaign = campaign;
         this.product = product;
@@ -113,6 +120,7 @@ public class CampaignActivity extends BaseTimeEntity {
         this.filters = filters;
         this.price = price;
         this.quantity = quantity;
+        this.budget = budget;
     }
 
     /**

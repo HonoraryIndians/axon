@@ -17,4 +17,11 @@ public class DashboardViewController {
         model.addAttribute("campaignName", "Activity #" + activityId);
         return "dashboard";
     }
+
+    @GetMapping("/admin/dashboard/cohort/{activityId}")
+    public String cohortDashboardView(@PathVariable Long activityId, Model model) {
+        model.addAttribute("activityId", activityId);
+        model.addAttribute("activityName", "Activity #" + activityId);
+        return "cohort-dashboard";
+    }
 }

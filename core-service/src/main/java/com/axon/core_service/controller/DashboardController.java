@@ -1,7 +1,9 @@
 package com.axon.core_service.controller;
 
 import com.axon.core_service.domain.dashboard.DashboardPeriod;
+import com.axon.core_service.domain.dto.dashboard.CohortAnalysisResponse;
 import com.axon.core_service.domain.dto.dashboard.DashboardResponse;
+import com.axon.core_service.service.CohortAnalysisService;
 import com.axon.core_service.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class DashboardController {
 
     private final DashboardService dashboardService;
+    private final CohortAnalysisService cohortAnalysisService;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -54,6 +57,33 @@ public class DashboardController {
             @PathVariable Long campaignId) {
         com.axon.core_service.domain.dto.dashboard.CampaignDashboardResponse response = dashboardService
                 .getDashboardByCampaign(campaignId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get Cohort Analysis for an Activity
+     *
+     * 특정 Activity에서 획득한 고객들의 LTV, CAC, 재구매율 분석
+     *
+     * @param activityId Activity ID
+     * @param startDate Cohort 시작일 (optional, 기본값: Activity 시작일)
+     * @param endDate Cohort 종료일 (optional, 기본값: 현재)
+     * @return Cohort 분석 결과
+     */
+    @GetMapping("/cohort/activity/{activityId}")
+    public ResponseEntity<CohortAnalysisResponse> getCohortAnalysisByActivity(
+            @PathVariable Long activityId,
+            @RequestParam(required = false) LocalDateTime startDate,
+            @RequestParam(required = false) LocalDateTime endDate) {
+
+        log.info("Cohort analysis request - activityId: {}, startDate: {}, endDate: {}",
+                activityId, startDate, endDate);
+
+        CohortAnalysisResponse response = cohortAnalysisService.analyzeCohortByActivity(
+                activityId,
+                startDate,
+                endDate
+        );
         return ResponseEntity.ok(response);
     }
 

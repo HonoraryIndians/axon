@@ -44,11 +44,11 @@ public class DashboardService {
         LocalDateTime previousEnd = end.minusDays(period.getDays());
         OverviewData previousOverview = buildOverviewDataByActivity(activityId, previousStart, previousEnd);
 
-        // FunnelStepData 집계
+        // FunnelStepData 집계 (Universal 4-stage funnel)
         List<FunnelStep> funnelSteps = List.of(
                 FunnelStep.VISIT,
-                FunnelStep.CLICK,
-                FunnelStep.APPROVED,
+                FunnelStep.ENGAGE,
+                FunnelStep.QUALIFY,
                 FunnelStep.PURCHASE);
         List<FunnelStepData> funnel = buildFunnelByActivity(activityId, funnelSteps, start, end);
 
@@ -71,12 +71,50 @@ public class DashboardService {
     }
 
     private OverviewData buildOverviewDataByActivity(Long activityId, LocalDateTime start, LocalDateTime end) {
-        // 각 서비스에서 데이터 수집 후 조합 (helper 사용으로 중복 제거)
+        // Funnel counts
+        Long visits = getStepCount(activityId, FunnelStep.VISIT, start, end);
+        Long engages = getStepCount(activityId, FunnelStep.ENGAGE, start, end);
+        Long qualifies = getStepCount(activityId, FunnelStep.QUALIFY, start, end);
+        Long purchases = getStepCount(activityId, FunnelStep.PURCHASE, start, end);
+
+        // Fetch activity for price and budget
+        com.axon.core_service.domain.campaignactivity.CampaignActivity activity =
+                campaignActivityRepository.findById(activityId).orElse(null);
+
+        java.math.BigDecimal price = activity != null ? activity.getPrice() : java.math.BigDecimal.valueOf(10000);
+        java.math.BigDecimal budget = activity != null && activity.getBudget() != null
+                ? activity.getBudget()
+                : java.math.BigDecimal.ZERO;
+
+        // Marketing metrics calculations
+        java.math.BigDecimal gmv = price.multiply(java.math.BigDecimal.valueOf(purchases));
+        java.math.BigDecimal aov = purchases > 0
+                ? gmv.divide(java.math.BigDecimal.valueOf(purchases), 2, java.math.RoundingMode.HALF_UP)
+                : java.math.BigDecimal.ZERO;
+
+        // Conversion rates (각 단계별 전환율)
+        double conversionRate = visits > 0 ? (purchases * 100.0) / visits : 0.0;
+        double engagementRate = visits > 0 ? (engages * 100.0) / visits : 0.0;
+        double qualificationRate = engages > 0 ? (qualifies * 100.0) / engages : 0.0;
+        double purchaseRate = qualifies > 0 ? (purchases * 100.0) / qualifies : 0.0;
+
+        // ROAS (Return on Ad Spend)
+        double roas = calculateROAS(gmv, budget);
+
         return new OverviewData(
-                getStepCount(activityId, FunnelStep.VISIT, start, end),
-                getStepCount(activityId, FunnelStep.CLICK, start, end),
-                getStepCount(activityId, FunnelStep.APPROVED, start, end),
-                getStepCount(activityId, FunnelStep.PURCHASE, start, end));
+                visits,
+                engages,
+                qualifies,
+                purchases,
+                gmv,
+                conversionRate,
+                engagementRate,
+                qualificationRate,
+                purchaseRate,
+                aov,
+                budget,
+                roas
+        );
     }
 
     private List<FunnelStepData> buildFunnelByActivity(Long activityId,
@@ -142,13 +180,17 @@ public class DashboardService {
     }
 
     // == Helper method to reduce duplication and centralize exception handling
+    /**
+     * Gets event count for a specific funnel step.
+     * Maps universal funnel steps to activity-specific events.
+     */
     private Long getStepCount(Long activityId, FunnelStep step,
             LocalDateTime start, LocalDateTime end) {
         try {
             return switch (step) {
                 case VISIT -> behaviorEventService.getVisitCount(activityId, start, end);
-                case CLICK -> behaviorEventService.getClickCount(activityId, start, end);
-                case APPROVED -> behaviorEventService.getApprovedCount(activityId, start, end);
+                case ENGAGE -> behaviorEventService.getEngageCount(activityId, start, end);
+                case QUALIFY -> behaviorEventService.getQualifyCount(activityId, start, end);
                 case PURCHASE -> behaviorEventService.getPurchaseCount(activityId, start, end);
             };
         } catch (IOException e) {
@@ -170,8 +212,8 @@ public class DashboardService {
 
         // 2. Aggregate Overview & Build Comparison Table
         long totalVisits = 0;
-        long totalClicks = 0;
-        long totalApproved = 0;
+        long totalEngages = 0;
+        long totalQualifies = 0;
         long totalPurchases = 0;
         java.math.BigDecimal totalGMV = java.math.BigDecimal.ZERO;
 
@@ -184,8 +226,8 @@ public class DashboardService {
             activityIds.add(activity.getId());
 
             Long visits = getStepCount(activity.getId(), FunnelStep.VISIT, start, end);
-            Long clicks = getStepCount(activity.getId(), FunnelStep.CLICK, start, end);
-            Long approved = getStepCount(activity.getId(), FunnelStep.APPROVED, start, end);
+            Long engages = getStepCount(activity.getId(), FunnelStep.ENGAGE, start, end);
+            Long qualifies = getStepCount(activity.getId(), FunnelStep.QUALIFY, start, end);
             Long purchases = getStepCount(activity.getId(), FunnelStep.PURCHASE, start, end);
 
             // Calculate GMV
@@ -195,8 +237,8 @@ public class DashboardService {
             double conversionRate = visits > 0 ? (double) purchases / visits * 100 : 0.0;
 
             totalVisits += visits;
-            totalClicks += clicks;
-            totalApproved += approved;
+            totalEngages += engages;
+            totalQualifies += qualifies;
             totalPurchases += purchases;
             totalGMV = totalGMV.add(gmv);
 
@@ -212,12 +254,36 @@ public class DashboardService {
 
         // Calculate Total Conversion Rate
         double totalConversionRate = totalVisits > 0 ? (double) totalPurchases / totalVisits * 100 : 0.0;
+        double totalEngagementRate = totalVisits > 0 ? (double) totalEngages / totalVisits * 100 : 0.0;
+        double totalQualificationRate = totalEngages > 0 ? (double) totalQualifies / totalEngages * 100 : 0.0;
+        double totalPurchaseRate = totalQualifies > 0 ? (double) totalPurchases / totalQualifies * 100 : 0.0;
+
+        // Calculate Total AOV
+        java.math.BigDecimal totalAOV = totalPurchases > 0
+            ? totalGMV.divide(java.math.BigDecimal.valueOf(totalPurchases), 2, java.math.RoundingMode.HALF_UP)
+            : java.math.BigDecimal.ZERO;
+
+        // For campaign level, budget is sum of all activity budgets (or campaign.budget if exists)
+        java.math.BigDecimal totalBudget = campaign.getBudget() != null
+            ? campaign.getBudget()
+            : java.math.BigDecimal.ZERO;
+
+        // Calculate Total ROAS
+        double totalROAS = calculateROAS(totalGMV, totalBudget);
 
         OverviewData totalOverview = new OverviewData(
                 totalVisits,
-                totalClicks,
-                totalApproved,
-                totalPurchases);
+                totalEngages,
+                totalQualifies,
+                totalPurchases,
+                totalGMV,
+                totalConversionRate,
+                totalEngagementRate,
+                totalQualificationRate,
+                totalPurchaseRate,
+                totalAOV,
+                totalBudget,
+                totalROAS);
 
         // 3. Build Heatmap
         HeatmapData heatmap = null;

@@ -54,18 +54,45 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         };
 
-        // Update KPI values
+        // Update Funnel KPIs
         animateValue('totalVisits', overview.totalVisits);
         updateTrend('totalVisits', calcChange(overview.totalVisits, previous?.totalVisits));
 
-        animateValue('totalClicks', overview.totalClicks);
-        updateTrend('totalClicks', calcChange(overview.totalClicks, previous?.totalClicks));
+        animateValue('totalEngages', overview.totalEngages);
+        updateTrend('totalEngages', calcChange(overview.totalEngages, previous?.totalEngages));
 
-        animateValue('approvedCount', overview.approvedCount);
-        updateTrend('approvedCount', calcChange(overview.approvedCount, previous?.approvedCount));
+        animateValue('totalQualifies', overview.totalQualifies);
+        updateTrend('totalQualifies', calcChange(overview.totalQualifies, previous?.totalQualifies));
 
         animateValue('purchaseCount', overview.purchaseCount);
         updateTrend('purchaseCount', calcChange(overview.purchaseCount, previous?.purchaseCount));
+
+        // Update Marketing KPIs
+        updateCurrencyValue('gmv', overview.gmv);
+        updateTrend('gmv', calcChange(overview.gmv, previous?.gmv));
+
+        updatePercentageValue('conversionRate', overview.conversionRate);
+        updateTrend('conversionRate', calcChange(overview.conversionRate, previous?.conversionRate));
+
+        updateCurrencyValue('aov', overview.averageOrderValue);
+        updateTrend('aov', calcChange(overview.averageOrderValue, previous?.averageOrderValue));
+
+        updatePercentageValue('roas', overview.roas);
+        updateTrend('roas', calcChange(overview.roas, previous?.roas));
+    }
+
+    function updateCurrencyValue(id, value) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const formatted = '₩' + Math.round(value || 0).toLocaleString();
+        el.textContent = formatted;
+    }
+
+    function updatePercentageValue(id, value) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const formatted = (value || 0).toFixed(1) + '%';
+        el.textContent = formatted;
     }
 
     function updateTrend(id, change) {
@@ -243,5 +270,117 @@ document.addEventListener('DOMContentLoaded', function () {
         const timeString = now.toLocaleTimeString();
         const el = document.getElementById('lastUpdated');
         if (el) el.textContent = `Last updated: ${timeString}`;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Chat Interface Logic
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const chatToggleBtn = document.getElementById('chat-toggle-btn');
+    const chatWindow = document.getElementById('chat-window');
+    const chatCloseBtn = document.getElementById('chat-close-btn');
+    const chatInput = document.getElementById('chat-input');
+    const chatSendBtn = document.getElementById('chat-send-btn');
+    const chatMessages = document.getElementById('chat-messages');
+
+    let isChatOpen = false;
+
+    function toggleChat() {
+        isChatOpen = !isChatOpen;
+        if (isChatOpen) {
+            chatWindow.classList.remove('hidden');
+            // Small delay to allow display:block to apply before opacity transition
+            setTimeout(() => {
+                chatWindow.classList.remove('scale-95', 'opacity-0');
+                chatWindow.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            chatInput.focus();
+        } else {
+            chatWindow.classList.remove('scale-100', 'opacity-100');
+            chatWindow.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                chatWindow.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    chatToggleBtn.addEventListener('click', toggleChat);
+    chatCloseBtn.addEventListener('click', toggleChat);
+
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        // Add User Message
+        addMessage(message, 'user');
+        chatInput.value = '';
+
+        // Show Loading
+        const loadingId = addLoadingMessage();
+
+        try {
+            const response = await fetch(`/api/v1/dashboard/campaign/${campaignId}/query`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: message,
+                    language: 'en'
+                })
+            });
+
+            const data = await response.json();
+
+            // Remove Loading
+            removeMessage(loadingId);
+
+            // Add Bot Response
+            addMessage(data.answer, 'bot');
+
+        } catch (error) {
+            console.error('Chat Error:', error);
+            removeMessage(loadingId);
+            addMessage('Sorry, something went wrong. Please try again.', 'bot');
+        }
+    }
+
+    chatSendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    function addMessage(text, sender) {
+        const div = document.createElement('div');
+        div.className = `flex justify-${sender === 'user' ? 'end' : 'start'}`;
+
+        const bubble = document.createElement('div');
+        bubble.className = sender === 'user'
+            ? 'bg-blue-600 text-white rounded-lg py-2 px-4 max-w-[80%] shadow-sm text-sm'
+            : 'bg-white border border-gray-200 rounded-lg py-2 px-4 max-w-[80%] shadow-sm text-sm text-gray-800';
+
+        bubble.textContent = text;
+        div.appendChild(bubble);
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addLoadingMessage() {
+        const id = 'msg-' + Date.now();
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'flex justify-start';
+        div.innerHTML = `
+            <div class="bg-white border border-gray-200 rounded-lg py-2 px-4 shadow-sm text-sm text-gray-500">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Thinking...
+            </div>
+        `;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return id;
+    }
+
+    function removeMessage(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
     }
 });

@@ -28,20 +28,101 @@ public class BehaviorEventService {
         return getEventCount(activityId, "PAGE_VIEW", start, end);
     }
 
-    public Long getClickCount(Long activityId, LocalDateTime start, LocalDateTime end) throws IOException {
-        // TODO: ES query 작성
-        // - pageUrl wildcard /campaigns/{activityId}/*
-        // - triggerType = CLICK
-        // - timestamp range
-        return getEventCount(activityId, "CLICK", start, end);
+    public Long getEngageCount(Long activityId, LocalDateTime start, LocalDateTime end) throws IOException {
+        // Maps to ENGAGE funnel step
+        // Currently: CLICK (FCFS)
+        // Future: APPLY (RAFFLE), CLAIM (COUPON)
+        return getEventCountByTriggerTypes(activityId, getEngageTriggerTypes(), start, end);
+    }
+
+    public Long getQualifyCount(Long activityId, LocalDateTime start, LocalDateTime end) throws IOException {
+        // Maps to QUALIFY funnel step
+        // Currently: APPROVED (FCFS)
+        // Future: WON (RAFFLE), ISSUED (COUPON)
+        return getEventCountByTriggerTypes(activityId, getQualifyTriggerTypes(), start, end);
     }
 
     public Long getPurchaseCount(Long activityId, LocalDateTime start, LocalDateTime end) throws IOException {
         return getEventCount(activityId, "PURCHASE", start, end);
     }
 
+    // == Trigger Type Mapping (extensible for future activity types)
+
+    /**
+     * Returns trigger types that map to ENGAGE funnel step.
+     * Extend this list when adding new activity types (RAFFLE, COUPON).
+     */
+    private java.util.List<String> getEngageTriggerTypes() {
+        return java.util.List.of(
+                "CLICK"     // FCFS
+                // Future: "APPLY", "CLAIM"
+        );
+    }
+
+    /**
+     * Returns trigger types that map to QUALIFY funnel step.
+     * Extend this list when adding new activity types (RAFFLE, COUPON).
+     */
+    private java.util.List<String> getQualifyTriggerTypes() {
+        return java.util.List.of(
+                "APPROVED"  // FCFS
+                // Future: "WON", "ISSUED"
+        );
+    }
+
+    /**
+     * Counts events matching any of the given trigger types.
+     * Used for mapping multiple event types to a single funnel step.
+     */
+    private Long getEventCountByTriggerTypes(Long activityId, java.util.List<String> triggerTypes,
+            LocalDateTime start, LocalDateTime end) throws IOException {
+        if (triggerTypes.isEmpty()) {
+            return 0L;
+        }
+
+        // For single trigger type, use existing optimized query
+        if (triggerTypes.size() == 1) {
+            return getEventCount(activityId, triggerTypes.get(0), start, end);
+        }
+
+        // For multiple trigger types, query with OR condition
+        SearchResponse<Void> response = elasticsearchClient.search(s -> s
+                .index("behavior-events")
+                .size(0)
+                .query(q -> q.bool(b -> b
+                        .filter(buildPageUrlFilter(activityId))
+                        .filter(buildMultiTriggerTypeFilter(triggerTypes))
+                        .filter(buildTimeRangeFilter(start, end)))),
+                Void.class);
+
+        if (response.hits().total() == null) {
+            log.warn("No hits result for activityId={}, triggerTypes={}", activityId, triggerTypes);
+            return 0L;
+        }
+
+        return response.hits().total().value();
+    }
+
+    private Query buildMultiTriggerTypeFilter(java.util.List<String> triggerTypes) {
+        return Query.of(q -> q
+                .bool(b -> {
+                    for (String triggerType : triggerTypes) {
+                        b.should(s -> s.term(t -> t.field("triggerType.keyword").value(triggerType)));
+                    }
+                    b.minimumShouldMatch("1");
+                    return b;
+                }));
+    }
+
+    // Deprecated: kept for backward compatibility
+    @Deprecated
+    public Long getClickCount(Long activityId, LocalDateTime start, LocalDateTime end) throws IOException {
+        return getEngageCount(activityId, start, end);
+    }
+
+    @Deprecated
     public Long getApprovedCount(Long activityId, LocalDateTime start, LocalDateTime end) throws IOException {
-        return getEventCount(activityId, "APPROVED", start, end);
+        return getQualifyCount(activityId, start, end);
     }
 
     public java.util.Map<Integer, Long> getHourlyTraffic(Long campaignId, LocalDateTime start, LocalDateTime end)
