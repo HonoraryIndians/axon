@@ -37,20 +37,19 @@ public class PaymentService {
             } catch (Exception e) {
                 log.error("Kafka 전송 실패 (attempt {}/{}): userId={}, error={}",attempt, maxRetries, payload.getUserId(), e.getMessage());
 
-                // 마지막 시도가 아니면 대기 후 재시도
-                if (attempt < maxRetries) {
-                    try {
-
-                        // 지수 백오프: 1초, 2초, 3초
-                        Thread.sleep(1000L * attempt);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        log.error("재시도 대기 중 인터럽트 발생", ie);
-                        return false;
-                    }
-                }
+        // 마지막 시도가 아니면 대기 후 재시도
+        if (attempt < maxRetries) {
+            try {
+                // 지수 백오프: 1초, 2초, 3초
+                Thread.sleep(1000L * attempt);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                log.error("재시도 대기 중 인터럽트 발생", ie);
+                return false;
             }
         }
+    }
+}
 
         // 3회 모두 실패
         log.error("Kafka 전송 최종 실패: userId={}, campaignActivityId={}", payload.getUserId(), payload.getCampaignActivityId());

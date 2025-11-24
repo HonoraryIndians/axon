@@ -21,55 +21,62 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtTokenProvider jwtTokenProvider;
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+        private final JwtTokenProvider jwtTokenProvider;
+        private final CustomOAuth2UserService customOAuth2UserService;
+        private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+        private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
-    /**
-     * Creates a JwtAuthenticationFilter initialized with the configured JwtTokenProvider.
-     *
-     * @return a JwtAuthenticationFilter that validates JWTs using the application's JwtTokenProvider
-     */
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtTokenProvider);
-    }
+        /**
+         * Creates a JwtAuthenticationFilter initialized with the configured
+         * JwtTokenProvider.
+         *
+         * @return a JwtAuthenticationFilter that validates JWTs using the application's
+         *         JwtTokenProvider
+         */
+        @Bean
+        public JwtAuthenticationFilter jwtAuthenticationFilter() {
+                return new JwtAuthenticationFilter(jwtTokenProvider);
+        }
 
-    /**
-     * Configure and build the application's HTTP security chain, including session, CSRF,
-     * authorization rules, OAuth2 login, exception handling, logout, and JWT filter placement.
-     *
-     * @param jwtAuthenticationFilter the JWT authentication filter to add after OAuth2 login processing
-     * @return the configured SecurityFilterChain
-     */
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
-        http
-                .httpBasic(httpBasic -> httpBasic.disable())
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/h2-console/**", "/favicon.ico", "/welcomepage", "/welcomepage.html", "/test/**").permitAll()
-                        .requestMatchers("/api/v1/**").permitAll()
-                        .requestMatchers("/fake/data/**").permitAll()  // TODO: 가짜 데이터 생성은 나중에 반드시 제거할 것
-                        //.requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
-                        .anyRequest().authenticated()
-                )
-                .exceptionHandling(exceptions -> exceptions
-                        
-                        .defaultAuthenticationEntryPointFor(
-                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                antMatcher("/api/**")
-                        )
-                )
-                .logout(logout -> logout.logoutSuccessUrl("/"))
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                        .successHandler(oAuth2AuthenticationSuccessHandler)
-                )
-                .addFilterAfter(jwtAuthenticationFilter, OAuth2LoginAuthenticationFilter.class);
-        return http.build();
-    }
+        /**
+         * Configure and build the application's HTTP security chain, including session,
+         * CSRF,
+         * authorization rules, OAuth2 login, exception handling, logout, and JWT filter
+         * placement.
+         *
+         * @param jwtAuthenticationFilter the JWT authentication filter to add after
+         *                                OAuth2 login processing
+         * @return the configured SecurityFilterChain
+         */
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
+                        throws Exception {
+                http
+                                .httpBasic(httpBasic -> httpBasic.disable())
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
+                                .authorizeHttpRequests(authz -> authz
+                                                .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/uploads/**",
+                                                                "/h2-console/**", "/favicon.ico", "/welcomepage",
+                                                                "/welcomepage.html", "/test/**")
+                                                .permitAll()
+                                                .requestMatchers("/api/v1/**").permitAll()
+                                                .requestMatchers("/fake/data/**").permitAll() // TODO: 가짜 데이터 생성은 나중에
+                                                                                              // 반드시 제거할 것
+                                                // .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
+                                                .anyRequest().authenticated())
+                                .exceptionHandling(exceptions -> exceptions
+
+                                                .defaultAuthenticationEntryPointFor(
+                                                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                                                antMatcher("/api/**")))
+                                .logout(logout -> logout.logoutSuccessUrl("/"))
+                                .oauth2Login(oauth2 -> oauth2
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .userService(customOAuth2UserService))
+                                                .successHandler(oAuth2AuthenticationSuccessHandler))
+                                .addFilterAfter(jwtAuthenticationFilter, OAuth2LoginAuthenticationFilter.class);
+                return http.build();
+        }
 }

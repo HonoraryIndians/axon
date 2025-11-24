@@ -8,6 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,8 +53,8 @@ public class RecentPurchaseLimit implements ValidationLimitStrategy {
 
         if(values==null || values.isEmpty()) {return valueErrMsg();}
         log.info("oper {} || values: {}", operator, values);
-        Instant startDateTime = Instant.parse(values.getFirst());
-        Instant endDateTime = values.size() == 2 ? Instant.parse(values.get(1)) : null;
+        Instant startDateTime = parseToInstant(values.getFirst());
+        Instant endDateTime = values.size() == 2 ? parseToInstant(values.get(1)) : null;
 
         switch(operator) {
             case "BETWEEN":
@@ -93,5 +96,24 @@ public class RecentPurchaseLimit implements ValidationLimitStrategy {
     private ValidationResponse resultReturn(boolean day, String msg) {
         if(day) {return ValidationResponse.builder().eligible(true).build();}
         else {return ValidationResponse.builder().eligible(false).errorMessage(msg).build();}
+    }
+
+    /**
+     * Parses a date-time string to Instant, supporting both ISO-8601 with timezone and LocalDateTime formats.
+     *
+     * @param dateTimeStr the date-time string to parse
+     * @return an Instant representing the parsed date-time
+     * @throws DateTimeParseException if the string cannot be parsed in either format
+     */
+    private Instant parseToInstant(String dateTimeStr) {
+        try {
+            // 1. Try Instant format (with timezone): "2025-12-05T13:43:00Z" or "2025-12-05T13:43:00+09:00"
+            return Instant.parse(dateTimeStr);
+        } catch (DateTimeParseException e) {
+            // 2. Try LocalDateTime format (without timezone): "2025-12-05T13:43:00"
+            LocalDateTime localDateTime = LocalDateTime.parse(dateTimeStr);
+            // Convert to Instant using system default timezone (KST)
+            return localDateTime.atZone(ZoneId.systemDefault()).toInstant();
+        }
     }
 }

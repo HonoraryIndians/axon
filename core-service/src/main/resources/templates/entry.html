@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="fragments/layout :: layout('이벤트 응모', null, ~{::head/content()}, ~{::section})">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/default}">
+
 <head>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        button { font-size: 1.2em; padding: 10px 15px; }
-        #result { margin-top: 20px; font-weight: bold; }
-    </style>
+    <title>SKU STORE - Event Detail</title>
     <script th:inline="javascript">
         window.__AXON_TRACKER_OVERRIDES__ = {
             apiBaseUrl: 'http://localhost:8080',
@@ -16,148 +13,612 @@
         };
     </script>
 </head>
-<section>
-    <h1 id="event-title">이벤트 정보 로딩 중...</h1>
-    <p>아래 버튼을 눌러 이벤트에 응모하세요.</p>
-    <button id="entryButton">응모하기</button>
-    <div id="result"></div>
 
-    <script th:inline="javascript">
-        const params = new URLSearchParams(window.location.search);
-        const campaignActivityId = params.get('campaignActivityId');
+<body>
+    <div layout:fragment="content" class="w-full">
 
-        document.addEventListener('DOMContentLoaded', function() {
-            if (campaignActivityId) {
-                document.getElementById('event-title').innerText = `선착순 캠페인 활동 #${campaignActivityId}`;
-            } else {
-                document.getElementById('event-title').innerText = '잘못된 이벤트입니다.';
-                document.getElementById('entryButton').disabled = true;
-            }
-        });
+        <!-- Event Hero -->
+        <div class="bg-black text-white py-20 text-center relative overflow-hidden">
+            <div class="relative z-10 max-w-[800px] mx-auto px-4">
+                <span class="inline-block px-3 py-1 border border-white/30 text-xs font-bold mb-4 rounded-full">FCFS
+                    EVENT</span>
+                <h1 class="text-4xl md:text-5xl font-black mb-6 leading-tight" th:utext="${campaignActivity.title}">
+                    Event Title
+                </h1>
+                <p class="text-lg text-gray-400 mb-8" th:text="${campaignActivity.description}">Event Description</p>
 
-        // 결제 준비 (1차 토큰 검증 → 2차 토큰 발급)
-        function preparePayment(reservationToken, accessToken) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerText = '결제 준비 중...';
+                <!-- Dynamic Countdown -->
+                <div id="countdown-timer" class="inline-flex gap-4 text-center mb-8"
+                    th:data-start-date="${campaignActivity.startDate}" th:data-end-date="${campaignActivity.endDate}">
 
-            const payload = {
-                reservationToken: reservationToken
-            }
+                    <!-- Pre-start Message -->
+                    <div id="pre-start-message" class="hidden">
+                        <div class="text-2xl font-bold text-yellow-400 mb-2">COMING SOON</div>
+                        <div class="text-sm text-gray-400">이벤트 시작까지</div>
+                    </div>
 
-            fetch('http://localhost:8081/api/v1/payments/prepare', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ reservationToken: reservationToken })
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then((err) => {
-                            throw new Error('결제 준비 실패: ' + (err.message || 'UNKNOWN_ERROR'));
+                    <!-- Timer Display -->
+                    <div id="timer-display" class="flex gap-4">
+                        <div>
+                            <div class="text-3xl font-black font-mono" id="timer-days">00</div>
+                            <div class="text-xs text-gray-500">DAYS</div>
+                        </div>
+                        <div class="text-3xl font-black">:</div>
+                        <div>
+                            <div class="text-3xl font-black font-mono" id="timer-hours">00</div>
+                            <div class="text-xs text-gray-500">HOURS</div>
+                        </div>
+                        <div class="text-3xl font-black">:</div>
+                        <div>
+                            <div class="text-3xl font-black font-mono" id="timer-minutes">00</div>
+                            <div class="text-xs text-gray-500">MINUTES</div>
+                        </div>
+                        <div class="text-3xl font-black">:</div>
+                        <div>
+                            <div class="text-3xl font-black font-mono" id="timer-seconds">00</div>
+                            <div class="text-xs text-gray-500">SECONDS</div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const timerContainer = document.getElementById('countdown-timer');
+                        const startDateStr = timerContainer.getAttribute('data-start-date');
+                        const endDateStr = timerContainer.getAttribute('data-end-date');
+                        const preStartMessage = document.getElementById('pre-start-message');
+                        const timerDisplay = document.getElementById('timer-display');
+                        const entryButton = document.getElementById('entryButton');
+
+                        if (!endDateStr) return;
+
+                        const startDate = startDateStr ? new Date(startDateStr) : new Date();
+                        const endDate = new Date(endDateStr);
+
+                        function updateTimer() {
+                            const now = new Date();
+
+                            // Check if event has started
+                            if (now < startDate) {
+                                // Not started yet
+                                const diff = startDate - now;
+
+                                // Show countdown to START
+                                preStartMessage.classList.remove('hidden');
+                                // timerDisplay.classList.add('hidden'); // Optional: hide timer or show countdown to start
+
+                                // Update timer to show time remaining until START
+                                updateTimeDisplay(diff);
+
+                                // Disable button
+                                if (entryButton) {
+                                    entryButton.disabled = true;
+                                    entryButton.innerText = "오픈 예정";
+                                    entryButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+                                    entryButton.classList.remove('bg-accent', 'hover:bg-blue-600');
+                                }
+                                return;
+                            } else {
+                                // Started
+                                preStartMessage.classList.add('hidden');
+                                timerDisplay.classList.remove('hidden');
+
+                                if (entryButton && entryButton.innerText === "오픈 예정") {
+                                    entryButton.disabled = false;
+                                    entryButton.innerText = "응모하기";
+                                    entryButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                                    entryButton.classList.add('bg-accent', 'hover:bg-blue-600');
+                                }
+                            }
+
+                            const diff = endDate - now;
+
+                            if (diff <= 0) {
+                                updateTimeDisplay(0);
+                                if (entryButton) {
+                                    entryButton.disabled = true;
+                                    entryButton.innerText = "마감됨";
+                                }
+                                return;
+                            }
+
+                            updateTimeDisplay(diff);
+                        }
+
+                        function updateTimeDisplay(diff) {
+                            if (diff < 0) diff = 0;
+                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                            document.getElementById('timer-days').innerText = String(days).padStart(2, '0');
+                            document.getElementById('timer-hours').innerText = String(hours).padStart(2, '0');
+                            document.getElementById('timer-minutes').innerText = String(minutes).padStart(2, '0');
+                            document.getElementById('timer-seconds').innerText = String(seconds).padStart(2, '0');
+                        }
+
+                        updateTimer(); // Initial call
+                        setInterval(updateTimer, 1000);
+                    });
+                </script>
+            </div>
+            <!-- Background Decoration -->
+            <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                <div class="absolute top-[-10%] right-[-5%] w-[300px] h-[300px] bg-accent blur-[100px] rounded-full">
+                </div>
+                <div class="absolute bottom-[-10%] left-[-5%] w-[300px] h-[300px] bg-danger blur-[100px] rounded-full">
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Content -->
+        <div class="max-w-[800px] mx-auto px-4 py-16">
+
+            <!-- Product Image & Info -->
+            <div class="bg-[#f8f8f8] rounded-sm p-8 mb-12 flex flex-col md:flex-row items-center gap-8">
+                <!-- Image Area -->
+                <div
+                    class="w-full aspect-video bg-white rounded-sm flex items-center justify-center shadow-sm overflow-hidden relative">
+                    <img th:if="${campaignActivity.imageUrl != null and campaignActivity.imageUrl != ''}"
+                        th:src="@{${campaignActivity.imageUrl}}" class="w-full h-full object-cover absolute inset-0"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <i class="ph ph-gift text-5xl text-dark-gray"
+                        th:style="${campaignActivity.imageUrl != null and campaignActivity.imageUrl != ''} ? 'display: none;' : ''"></i>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <h3 class="text-xl font-bold mb-2">이벤트 상품 정보</h3>
+                    <div class="space-y-2 text-sm text-gray-600 mb-6">
+                        <p>상품명: <span class="text-black font-medium" th:utext="${campaignActivity.title}">Product
+                                Name</span></p>
+                        <p>정상가: <span class="line-through"
+                                th:text="${campaignActivity.originalPrice} + ' 원'">100,000원</span>
+                        </p>
+                        <p>할인가: <span class="text-danger font-bold text-lg"
+                                th:text="${campaignActivity.price} + ' 원'">10,000원</span></p>
+                        <p>제한수량: <span class="text-black font-medium"
+                                th:text="${campaignActivity.limitCount} + '개'">100개</span>
+                        </p>
+                    </div>
+                    <div class="p-4 bg-white border border-[#eee] rounded-sm text-xs text-gray-500">
+                        <p class="mb-1">· 1인 1회 응모 가능합니다.</p>
+                        <p class="mb-1">· 당첨 시 구매 가능 기간 내에 결제해야 합니다.</p>
+                        <p>· 부정한 방법으로 응모 시 당첨이 취소될 수 있습니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="sticky bottom-4 z-50">
+                <div id="result-container"
+                    class="hidden mb-4 p-4 rounded-sm shadow-lg transform transition-all duration-300 ease-in-out translate-y-2 opacity-0">
+                    <div class="flex items-center gap-3">
+                        <i id="result-icon" class="ph-fill text-2xl"></i>
+                        <div>
+                            <h4 id="result-title" class="font-bold text-sm"></h4>
+                            <p id="result-message" class="text-xs opacity-90"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="entryButton"
+                    class="w-full h-16 bg-accent text-white font-black text-xl rounded-sm shadow-xl hover:bg-blue-600 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none">
+                    <span>응모하기</span>
+                    <i class="ph-bold ph-arrow-right"></i>
+                </button>
+            </div>
+
+
+
+            <!-- Participation Conditions (Filters) -->
+            <div class="mt-12 bg-white border border-[#eee] rounded-sm p-6" id="condition-container"
+                style="display: none;">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i class="ph-fill ph-check-circle text-accent"></i>
+                    참여 조건 안내
+                </h3>
+                <ul class="space-y-2" id="condition-list">
+                    <!-- JS will populate this -->
+                </ul>
+            </div>
+
+
+            <!-- Detail Description -->
+            <div class="mt-16 text-center border-t border-[#eee] pt-16">
+                <h3 class="text-2xl font-bold mb-8">상세 안내</h3>
+                <div class="space-y-4 text-gray-600 leading-relaxed">
+                    <p>본 이벤트는 SKU Store 회원 전용 이벤트입니다.</p>
+                    <p>이벤트 기간 내에 응모하기 버튼을 눌러 참여할 수 있습니다.</p>
+                    <p>당첨자 발표는 이벤트 종료 후 공지사항을 통해 안내됩니다.</p>
+                    <p>당사 사정에 의해 이벤트 내용이 변경되거나 조기 종료될 수 있습니다.</p>
+                </div>
+            </div>
+
+            <!-- Payment Modal (Moved to end of content for better stacking) -->
+            <div id="payment-modal" class="fixed inset-0 z-[9999] hidden" aria-labelledby="modal-title" role="dialog"
+                aria-modal="true">
+                <!-- Backdrop -->
+                <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm"></div>
+
+                <div class="fixed inset-0 z-[10000] overflow-y-auto">
+                    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div
+                            class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                            <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                <div class="sm:flex sm:items-start">
+                                    <div
+                                        class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                        <i class="ph-fill ph-credit-card text-green-600 text-xl"></i>
+                                    </div>
+                                    <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                        <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">결제
+                                            확인</h3>
+                                        <div class="mt-2">
+                                            <p class="text-sm text-gray-500 mb-4">
+                                                이벤트 당첨을 축하드립니다!<br>
+                                                아래 결제 정보를 확인하고 결제를 진행해주세요.
+                                            </p>
+
+                                            <div class="bg-gray-50 p-4 rounded-md mb-4">
+                                                <div class="flex justify-between mb-2">
+                                                    <span class="text-sm text-gray-600">상품명</span>
+                                                    <span class="text-sm font-medium text-gray-900"
+                                                        th:text="${campaignActivity.title}">Product</span>
+                                                </div>
+                                                <div class="flex justify-between mb-2">
+                                                    <span class="text-sm text-gray-600">결제 금액</span>
+                                                    <span class="text-sm font-bold text-danger"
+                                                        th:text="${campaignActivity.price}">10,000원</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Mock Payment Methods -->
+                                            <div class="space-y-2">
+                                                <label
+                                                    class="flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                                                    <input type="radio" name="payment-method"
+                                                        class="h-4 w-4 text-accent focus:ring-accent" checked>
+                                                    <span class="ml-3 text-sm font-medium text-gray-900">신용카드 /
+                                                        체크카드</span>
+                                                </label>
+                                                <label
+                                                    class="flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                                                    <input type="radio" name="payment-method"
+                                                        class="h-4 w-4 text-accent focus:ring-accent">
+                                                    <span class="ml-3 text-sm font-medium text-gray-900">간편 결제
+                                                        (Pay)</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                <button type="button" id="confirm-payment-btn"
+                                    class="inline-flex w-full justify-center rounded-md bg-accent px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 sm:ml-3 sm:w-auto gap-2 items-center">
+                                    <span>결제하기</span>
+                                    <i class="ph-bold ph-check"></i>
+                                </button>
+                                <button type="button" onclick="closePaymentModal()"
+                                    class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">취소</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Legacy Script Integration -->
+    <th:block layout:fragment="script">
+        <script src="/js/common.js"></script>
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function () {
+                const campaignActivityId = [[${ campaignActivity.id }]];
+                const filters = [[${ campaignActivity.filters }]];
+
+                // Global variables for payment flow
+                let currentReservationToken = null;
+                let currentAccessToken = null;
+
+                // 참여 조건 렌더링
+                function renderParticipationConditions() {
+                    if (!filters || filters.length === 0) return;
+
+                    const container = document.getElementById('condition-container');
+                    const list = document.getElementById('condition-list');
+                    if (container && list) {
+                        container.style.display = 'block';
+
+                        filters.forEach(filter => {
+                            const li = document.createElement('li');
+                            li.className = 'flex items-start gap-2 text-sm text-gray-600';
+
+                            const icon = document.createElement('i');
+                            icon.className = 'ph-bold ph-dot text-gray-400 mt-1';
+
+                            const text = document.createElement('span');
+                            text.innerHTML = common.formatCondition(filter);
+
+                            li.appendChild(icon);
+                            li.appendChild(text);
+                            list.appendChild(li);
                         });
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success && data.approvalToken) {
-                        resultDiv.innerText = '결제 페이지로 이동합니다...';
-                        // 2초 후 실제 결제 진행 (Mock 결제)
-                        setTimeout(() => confirmPayment(data.approvalToken, accessToken), 3000);
+                }
+
+
+
+                // 초기화 실행
+                renderParticipationConditions();
+
+                function showResult(type, title, message) {
+                    const container = document.getElementById('result-container');
+                    const icon = document.getElementById('result-icon');
+                    const titleEl = document.getElementById('result-title');
+                    const msgEl = document.getElementById('result-message');
+
+                    if (!container) return;
+
+                    container.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800', 'bg-yellow-100', 'text-yellow-800');
+                    icon.className = 'ph-fill text-2xl';
+
+                    if (type === 'success') {
+                        container.classList.add('bg-green-100', 'text-green-800');
+                        icon.classList.add('ph-check-circle');
+                    } else if (type === 'error') {
+                        container.classList.add('bg-red-100', 'text-red-800');
+                        icon.classList.add('ph-warning-circle');
+                    } else if (type === 'info') {
+                        container.classList.add('bg-blue-100', 'text-blue-800');
+                        icon.classList.add('ph-info');
+                    } else if (type === 'warning') {
+                        container.classList.add('bg-yellow-100', 'text-yellow-800');
+                        icon.classList.add('ph-warning');
+                    }
+
+                    titleEl.innerText = title;
+                    msgEl.innerText = message;
+
+                    container.classList.remove('hidden');
+                    // Trigger reflow
+                    void container.offsetWidth;
+                    container.classList.remove('translate-y-2', 'opacity-0');
+                }
+
+                // Modal Functions
+                window.openPaymentModal = function () {
+                    console.log('Opening payment modal...');
+                    const modal = document.getElementById('payment-modal');
+                    if (modal) {
+                        console.log('Modal element found, removing hidden class');
+                        modal.classList.remove('hidden');
+                        document.body.style.overflow = 'hidden'; // Prevent scrolling
                     } else {
-                        throw new Error(data.message || '결제 준비에 실패했습니다.');
+                        console.error('Payment modal element not found!');
                     }
-                })
-                .catch(error => {
-                    resultDiv.innerText = '결제 오류: ' + error.message;
-                    console.error('Prepare Error:', error);
-                });
-        }
+                }
 
-        // 결제 완료 후
-        function  confirmPayment(token, accessToken) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerText = '결제 요청 중...';
-
-            const tokenPayload = {
-                reservationToken: token
-            }
-            fetch('http://localhost:8081/api/v1/payments/confirm',{
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(tokenPayload)
-            })
-                .then(response => {
-                    if(!response.ok) {
-                        return response.json().then((err) => {throw new Error('결제 요청에 오류가 발생했습니다. error: ' + (err.reason || 'UNKNOWN_ERROR'));});
+                window.closePaymentModal = function () {
+                    const modal = document.getElementById('payment-modal');
+                    if (modal) {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = ''; // Restore scrolling
                     }
-                    return response.json
-                })
-                .then(data => {
-                    resultDiv.innerText = "결제에 성공하셨습니다! 상품을 곧 받아 보실 수 있으십니다!";
-                })
-                .catch(error => {
-                    resultDiv.innerText = "결제 요청 중 오류가 발생했습니다.";
-                    console.log(error);
-                });
-        }
 
-        document.getElementById('entryButton').addEventListener('click', function() {
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerText = '응모 요청 중...';
+                    // If closed without payment, reset button
+                    const applyButton = document.getElementById('entryButton');
+                    if (applyButton && applyButton.innerText !== '응모 완료') {
+                        applyButton.disabled = false;
+                        applyButton.innerText = '응모하기';
+                        showResult('info', '결제 취소', '결제가 취소되었습니다.');
+                    }
+                }
 
-            const accessToken = common.getCookie('accessToken');
+                // Bind Modal Button
+                const confirmBtn = document.getElementById('confirm-payment-btn');
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', function () {
+                        if (currentReservationToken && currentAccessToken) {
+                            // Disable button to prevent double click
+                            this.disabled = true;
+                            this.innerText = '결제 처리 중...';
+                            confirmPayment(currentReservationToken, currentAccessToken);
+                        }
+                    });
+                }
 
-            if (!accessToken) {
-                resultDiv.innerText = '오류: 로그인 정보가 없습니다.';
-                return;
-            }
+                // 결제 준비 (1차 토큰 검증 → 2차 토큰 발급)
+                function preparePayment(reservationToken, accessToken) {
+                    showResult('info', '결제 준비 완료', '결제 창이 열립니다.');
+                    const applyButton = document.getElementById('entryButton');
+                    if (applyButton) applyButton.innerText = '결제 진행 중...';
 
-            const eventData = {
-                campaignActivityId: parseInt(campaignActivityId),
-                campaignActivityType: "FIRST_COME_FIRST_SERVE",
-                productId: parseInt(campaignActivityId)
-            };
+                    const payload = {
+                        reservationToken: reservationToken
+                    }
 
-            fetch('http://localhost:8081/api/v1/entries', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(eventData)
-            })
-            .then(response => {
-                if(response.ok) {return response.json();}
-                return response.json().then(err => {
-                    const reason = err.reason || '알 수 없는 에러 발생';
-                    throw new Error(`응모 실패 : ${reason}`);
-                })
-            })
-            .then(data => {
-                 const token = data.reservationToken;
-                 console.log(token);
-                 if(token) {
-                     resultDiv.innerText = "결제 창으로 이동합니다...";
-                     document.getElementById('entryButton').disabled = true;
-                     // 결제 창 유도 관련 페이지 (가짜 페이지)
-                     setTimeout(()=>preparePayment(token, accessToken), 1000);
-                 } else {throw new Error('결제 권한이 없습니다.')}
-            })
-            .catch(error => {
-                resultDiv.innerText = '오류가 발생했습니다: ' + error.message;
-                console.error('Error:', error);
+                    fetch('http://localhost:8081/api/v1/payments/prepare', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Authorization': 'Bearer ' + accessToken,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ reservationToken: reservationToken })
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then((err) => {
+                                    throw new Error(err.message || '결제 준비 실패');
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success && data.approvalToken) {
+                                // Store tokens for the modal action
+                                currentReservationToken = data.approvalToken;
+                                currentAccessToken = accessToken;
+
+                                // Open Modal instead of auto-confirm
+                                openPaymentModal();
+                            } else {
+                                throw new Error(data.message || '결제 준비에 실패했습니다.');
+                            }
+                        })
+                        .catch(error => {
+                            showResult('error', '결제 준비 오류', error.message);
+                            console.error('Prepare Error:', error);
+                            if (applyButton) {
+                                applyButton.disabled = false;
+                                applyButton.innerText = '응모하기';
+                            }
+                        });
+                }
+
+                // 결제 완료 후
+                function confirmPayment(token, accessToken) {
+                    // showResult('info', '결제 요청 중', '최종 결제를 진행하고 있습니다...');
+                    const applyButton = document.getElementById('entryButton');
+                    const modalButton = document.getElementById('confirm-payment-btn');
+
+                    const tokenPayload = {
+                        reservationToken: token
+                    }
+                    fetch('http://localhost:8081/api/v1/payments/confirm', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Authorization': 'Bearer ' + accessToken,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(tokenPayload)
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then((err) => { throw new Error(err.reason || '결제 요청 실패'); });
+                            }
+                            return response.json
+                        })
+                        .then(data => {
+                            // Success
+                            closePaymentModal();
+                            showResult('success', '응모 완료!', '결제가 성공적으로 완료되었습니다. 상품을 곧 받아보실 수 있습니다.');
+                            if (applyButton) {
+                                applyButton.innerText = "응모 완료";
+                                applyButton.classList.remove('bg-accent', 'hover:bg-blue-600');
+                                applyButton.classList.add('bg-green-600', 'cursor-default');
+                            }
+                        })
+                        .catch(error => {
+                            closePaymentModal();
+                            showResult('error', '결제 실패', error.message);
+                            console.log(error);
+                            if (applyButton) {
+                                applyButton.disabled = false;
+                                applyButton.innerText = '응모하기';
+                            }
+
+                            // Reset modal button
+                            if (modalButton) {
+                                modalButton.disabled = false;
+                                modalButton.innerHTML = '<span>결제하기</span><i class="ph-bold ph-check"></i>';
+                            }
+                        });
+                }
+
+                const entryBtn = document.getElementById('entryButton');
+                if (entryBtn) {
+                    entryBtn.addEventListener('click', function () {
+                        const applyButton = document.getElementById('entryButton');
+
+                        showResult('info', '처리 중', '응모 요청을 처리하고 있습니다...');
+                        applyButton.disabled = true;
+                        applyButton.innerText = '처리 중...';
+
+                        const accessToken = common.getCookie('accessToken');
+
+                        if (!accessToken) {
+                            alert('로그인이 필요합니다.');
+                            window.location.href = '/oauth2/authorization/naver';
+                            return;
+                        }
+
+                        const eventData = {
+                            campaignActivityId: parseInt(campaignActivityId),
+                            campaignActivityType: [[${ campaignActivity.activityType }]],
+                            productId: [[${ campaignActivity.productId }]]
+                        };
+
+                        fetch('http://localhost:8081/api/v1/entries', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: {
+                                'Authorization': 'Bearer ' + accessToken,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(eventData)
+                        })
+                            .then(response => {
+                                if (response.ok) { return response.json(); }
+
+                                // Handle specific error codes
+                                if (response.status === 409) {
+                                    throw new Error('ALREADY_ENTERED');
+                                } else if (response.status === 410) {
+                                    throw new Error('SOLD_OUT');
+                                } else if (response.status === 400) {
+                                    return response.json().then(err => {
+                                        throw new Error(err.reason || 'BAD_REQUEST');
+                                    });
+                                }
+
+                                return response.json().then(err => {
+                                    const reason = err.reason || '알 수 없는 에러 발생';
+                                    throw new Error(reason);
+                                })
+                            })
+                            .then(data => {
+                                const token = data.reservationToken;
+                                if (token) {
+                                    // showResult('success', '응모 성공!', '결제 창으로 이동합니다...');
+                                    // Go to prepare payment immediately
+                                    preparePayment(token, accessToken);
+                                } else { throw new Error('결제 권한이 없습니다.') }
+                            })
+                            .catch(error => {
+                                let title = '응모 실패';
+                                let message = error.message;
+                                let type = 'error';
+
+                                if (error.message === 'ALREADY_ENTERED') {
+                                    title = '이미 응모하셨습니다';
+                                    message = '회원님은 이미 이 이벤트에 응모하셨습니다.';
+                                    type = 'warning';
+                                } else if (error.message === 'SOLD_OUT') {
+                                    title = '선착순 마감';
+                                    message = '아쉽게도 준비된 수량이 모두 소진되었습니다.';
+                                    type = 'warning';
+                                }
+
+                                showResult(type, title, message);
+                                console.error('Error:', error);
+
+                                if (error.message !== 'ALREADY_ENTERED' && error.message !== 'SOLD_OUT') {
+                                    applyButton.disabled = false;
+                                    applyButton.innerText = '응모하기';
+                                } else {
+                                    applyButton.innerText = error.message === 'SOLD_OUT' ? '마감됨' : '응모 완료';
+                                }
+                            });
+
+                    });
+                }
             });
+        </script>
+    </th:block>
+</body>
 
-        });
-
-    </script>
-</section>
 </html>
