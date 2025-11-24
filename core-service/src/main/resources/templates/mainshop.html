@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/default}">
+
+<head>
+    <title>SKU STORE - Home</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="w-full">
+
+        <!-- Hero Banner -->
+        <div
+            class="h-[400px] bg-black text-white flex flex-col items-center justify-center text-center mx-[3%] mt-[1%] mb-16 rounded-[15px] relative overflow-hidden">
+            <h2 class="text-[56px] font-black leading-[1.1] mb-5 tracking-tighter">WINTER<br>COLLECTION</h2>
+            <p class="text-xl font-medium opacity-80 tracking-widest">최대 80% 시즌 오프 · SKU STORE EXCLUSIVE</p>
+        </div>
+
+        <!-- Ranking Section -->
+        <div class="flex justify-between items-end mb-8 pb-4 border-b-2 border-black mx-[3%]">
+            <h3 class="text-2xl font-extrabold text-black tracking-tight">실시간 랭킹</h3>
+            <a href="#" class="text-sm text-gray font-semibold hover:text-black transition-colors">전체보기 ></a>
+        </div>
+
+        <div class="grid grid-cols-5 gap-x-5 gap-y-8 mb-24 mx-[3%]">
+            <div th:each="item, stat : ${rankings}" class="group cursor-pointer"
+                th:onclick="'location.href=\'/product/' + ${item.id} + '\''">
+                <div class="w-full aspect-[3/4] bg-[#f4f4f4] mb-4 overflow-hidden relative rounded-sm">
+                    <div class="absolute top-0 left-0 bg-black text-white w-9 h-9 flex items-center justify-center font-extrabold text-lg z-10"
+                        th:text="${stat.count}">1</div>
+                    <img th:src="${item.imageUrl}"
+                        class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        alt="product">
+                </div>
+                <div class="pr-2">
+                    <span class="block text-[13px] font-bold text-black mb-1 underline underline-offset-2"
+                        th:text="${item.brand}">Brand</span>
+                    <div class="text-sm text-dark-gray mb-2 leading-snug h-10 overflow-hidden line-clamp-2"
+                        th:text="${item.name}">Product Name</div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-base font-extrabold text-black" th:text="${item.price} + '원'">10,000원</span>
+                        <span class="text-base font-extrabold text-danger" th:if="${item.discountRate > 0}"
+                            th:text="${item.discountRate} + '%'">10%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tech Section -->
+        <div class="flex justify-between items-end mb-8 pb-4 border-b-2 border-black mx-[3%]">
+            <h3 class="text-2xl font-extrabold text-black tracking-tight">테크 특가</h3>
+            <a href="#" class="text-sm text-gray font-semibold hover:text-black transition-colors">더보기 ></a>
+        </div>
+        <div class="grid grid-cols-4 gap-x-5 gap-y-8 mb-24 mx-[3%]">
+            <div th:each="item : ${techDeals}" class="group cursor-pointer"
+                th:onclick="'location.href=\'/product/' + ${item.id} + '\''">
+                <div class="w-full aspect-square bg-[#f4f4f4] mb-4 overflow-hidden relative rounded-sm">
+                    <img th:src="${item.imageUrl}"
+                        class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        alt="product">
+                </div>
+                <div class="pr-2">
+                    <span class="block text-[13px] font-bold text-black mb-1 underline underline-offset-2"
+                        th:text="${item.brand}">Brand</span>
+                    <div class="text-sm text-dark-gray mb-2 leading-snug" th:text="${item.name}">Product Name</div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-base font-extrabold text-black" th:text="${item.price} + '원'">10,000원</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

@@ -77,7 +77,7 @@ public class FastValidationService {
             case "BETWEEN":
                 if(values.size() != 2) {return false;}
                 int secondFilterAge = Integer.parseInt(values.get(1));
-                return secondFilterAge <= age && age <= firstFilterAge;
+                return firstFilterAge <= age && age <= secondFilterAge;
             case "NOT_GTE":
                 return !(age >= firstFilterAge);
             case "NOT_LTE":
@@ -85,7 +85,7 @@ public class FastValidationService {
             case "NOT_BETWEEN":
                 if(values.size() != 2) {return false;}
                 int thirdFilterAge = Integer.parseInt(values.get(1));
-                return !(thirdFilterAge <= age && age <= firstFilterAge);
+                return !(firstFilterAge <= age && age <= thirdFilterAge);
             default:
                 return false;
         }

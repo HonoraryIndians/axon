@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/default}">
+
+<head>
+    <title>SKU STORE - Product Detail</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="w-full max-w-[1200px] mx-auto px-4 py-10">
+
+        <div class="flex gap-10 items-start">
+            <!-- Left: Image -->
+            <div class="w-[55%] bg-[#f4f4f4] aspect-[3/4] relative overflow-hidden rounded-sm">
+                <img th:src="${product.imageUrl}" class="w-full h-full object-cover" alt="product image">
+            </div>
+
+            <!-- Right: Info -->
+            <div class="w-[45%] sticky top-24">
+                <div class="mb-6">
+                    <a href="#" class="text-sm font-bold text-black underline underline-offset-4 mb-2 inline-block"
+                        th:text="${product.brand}">Brand Name</a>
+                    <h1 class="text-2xl font-medium text-dark-gray leading-snug mb-4" th:text="${product.name}">Product
+                        Name</h1>
+
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="flex text-black text-sm">
+                            <i class="ph-fill ph-star"></i>
+                            <i class="ph-fill ph-star"></i>
+                            <i class="ph-fill ph-star"></i>
+                            <i class="ph-fill ph-star"></i>
+                            <i class="ph-fill ph-star-half"></i>
+                        </div>
+                        <a href="#" class="text-sm text-gray underline"
+                            th:text="${product.reviewCount} + ' Reviews'">100 Reviews</a>
+                    </div>
+
+                    <div class="flex items-center gap-3 mb-8">
+                        <span class="text-3xl font-black text-black" th:text="${product.price} + '원'">45,000원</span>
+                        <span class="text-3xl font-black text-danger" th:if="${product.discountRate > 0}"
+                            th:text="${product.discountRate} + '%'">10%</span>
+                        <span class="text-lg text-gray line-through" th:if="${product.discountRate > 0}"
+                            th:text="${product.originalPrice} + '원'">50,000원</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-b border-[#eee] py-6 mb-8">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-sm font-bold text-dark-gray">배송정보</span>
+                        <span class="text-sm text-black">무료배송 (CJ대한통운)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-bold text-dark-gray">도착예정</span>
+                        <span class="text-sm text-black">모레(금) 도착 예정</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button
+                        class="flex-1 h-14 border border-black bg-white text-black font-bold text-base hover:bg-gray-50 transition-colors">장바구니</button>
+                    <button
+                        class="flex-1 h-14 bg-black text-white font-bold text-base hover:opacity-90 transition-opacity"
+                        th:onclick="'location.href=\'/checkout?productId=' + ${product.id} + '\''">바로구매</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Content Placeholder -->
+        <div class="mt-24 pt-10 border-t border-[#eee] text-center">
+            <h3 class="text-xl font-bold mb-8">상품 상세 정보</h3>
+            <div class="bg-[#f8f8f8] h-[800px] flex items-center justify-center text-gray">
+                <div class="text-center">
+                    <i class="ph ph-image text-4xl mb-2"></i>
+                    <p>상세 이미지가 위치하는 영역입니다.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

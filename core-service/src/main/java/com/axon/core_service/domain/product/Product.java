@@ -21,16 +21,15 @@ public class Product {
     @Column(nullable = false)
     private Long stock; // 재고 수량
 
-    @Column(nullable = false)
-    private java.math.BigDecimal price; // 상품 가격
+    @Column(name = "price", nullable = false)
+    private java.math.BigDecimal price; // 정상가
 
     // @Version
     /**
-     * Creates a Product with the given name, initial stock quantity, and price.
+     * Creates a Product with the given name and initial stock quantity.
      *
      * @param productName the product's name
      * @param stock       the initial stock quantity (number of items)
-     * @param price       the product's price
      */
 
     public Product(String productName, Long stock, java.math.BigDecimal price) {

@@ -3,6 +3,7 @@ package com.axon.core_service.service;
 import com.axon.core_service.domain.campaign.Campaign;
 import com.axon.core_service.domain.dto.campaign.CampaignRequest;
 import com.axon.core_service.domain.dto.campaign.CampaignResponse;
+import com.axon.core_service.domain.dto.campaignactivity.CampaignActivityResponse;
 import com.axon.core_service.repository.CampaignRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -15,17 +16,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class CampaignService {
 
     private final CampaignRepository campaignRepository;
+    private final CampaignActivityService campaignActivityService;
 
     /**
-     * Creates a new Campaign from the provided request, persists it, and returns a CampaignResponse.
+     * Creates a new Campaign from the provided request, persists it, and returns a
+     * CampaignResponse.
      *
-     * @param request the data used to initialize and configure the new campaign (name, schedule, reward, etc.)
+     * @param request the data used to initialize and configure the new campaign
+     *                (name, schedule, reward, etc.)
      * @return a CampaignResponse representing the persisted campaign
      */
     public CampaignResponse createCampaign(CampaignRequest request) {
         Campaign campaign = new Campaign(request.getName());
         applyCampaignPolicies(campaign, request);
-        return CampaignResponse.from(campaignRepository.save(campaign));
+        return CampaignResponse.from(campaignRepository.save(campaign), List.of());
     }
 
     /**
@@ -33,23 +37,29 @@ public class CampaignService {
      *
      * @param id      the identifier of the campaign to update
      * @param request the new campaign data to apply
-     * @return        the updated campaign represented as a CampaignResponse
+     * @return the updated campaign represented as a CampaignResponse
      * @throws IllegalArgumentException if no campaign exists with the given id
      */
     public CampaignResponse updateCampaign(Long id, CampaignRequest request) {
         Campaign campaign = findCampaign(id);
         applyCampaignPolicies(campaign, request);
-        return CampaignResponse.from(campaign);
+        List<CampaignActivityResponse> activities = campaignActivityService.getCampaignActivities(id);
+        return CampaignResponse.from(campaign, activities);
     }
 
     /**
      * Retrieves all stored campaigns and maps each to a CampaignResponse DTO.
      *
-     * @return a list of CampaignResponse objects representing every campaign in the repository
+     * @return a list of CampaignResponse objects representing every campaign in the
+     *         repository
      */
     public List<CampaignResponse> getCampaigns() {
         return campaignRepository.findAll().stream()
-                .map(CampaignResponse::from)
+                .map(campaign -> {
+                    List<CampaignActivityResponse> activities = campaignActivityService
+                            .getCampaignActivities(campaign.getId());
+                    return CampaignResponse.from(campaign, activities);
+                })
                 .toList();
     }
 
@@ -60,7 +70,9 @@ public class CampaignService {
      * @return the campaign represented as a CampaignResponse
      */
     public CampaignResponse getCampaign(Long id) {
-        return CampaignResponse.from(findCampaign(id));
+        Campaign campaign = findCampaign(id);
+        List<CampaignActivityResponse> activities = campaignActivityService.getCampaignActivities(id);
+        return CampaignResponse.from(campaign, activities);
     }
 
     /**
@@ -76,17 +88,20 @@ public class CampaignService {
      * Checks whether a campaign with the given name already exists.
      *
      * @param name the campaign name to check
-     * @return `true` if a campaign with the specified name exists, `false` otherwise
+     * @return `true` if a campaign with the specified name exists, `false`
+     *         otherwise
      */
     public boolean isCampaignNameTaken(String name) {
         return campaignRepository.findByName(name).isPresent();
     }
 
     /**
-     * Apply name, target segment, schedule, and reward values from the request to the given campaign.
+     * Apply name, target segment, schedule, and reward values from the request to
+     * the given campaign.
      *
      * @param campaign the Campaign to update
-     * @param request  the source of new name, target segment, schedule, and reward values
+     * @param request  the source of new name, target segment, schedule, and reward
+     *                 values
      */
     private void applyCampaignPolicies(Campaign campaign, CampaignRequest request) {
         campaign.updateBasicInfo(request.getName(), request.getTargetSegmentId());

@@ -34,6 +34,7 @@ dependencies {
     implementation 'org.redisson:redisson-spring-boot-starter:3.27.0'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
 
 
 	// Elasticsearch Java API Client

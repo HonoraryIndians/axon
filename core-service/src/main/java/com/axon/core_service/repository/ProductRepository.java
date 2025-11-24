@@ -11,12 +11,16 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     /**
-     * Retrieve a Product by its id while applying a pessimistic write lock to the selected row.
+     * Retrieve a Product by its id while applying a pessimistic write lock to the
+     * selected row.
      *
      * @param id the product id to look up
-     * @return an Optional containing the Product if found, or {@code Optional.empty()} if not found
+     * @return an Optional containing the Product if found, or
+     *         {@code Optional.empty()} if not found
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :id")
     Optional<Product> findByIdWithPessimisticLock(Long id);
+
+    java.util.List<Product> findByProductNameContaining(String productName);
 }

@@ -126,8 +126,8 @@
         <td class="px-4 py-4 text-sm text-neutral-600">${formatDate(event.updatedAt)}</td>
         <td class="px-4 py-4 text-right">
           <div class="flex items-center justify-end space-x-2">
-            <button class="text-sm text-neutral-500 hover:text-primary-600" data-event-edit="${event.id}">수정</button>
-            <button class="text-sm text-neutral-500 hover:text-red-500" data-event-delete="${event.id}">삭제</button>
+            <button class="text-sm text-neutral-500 hover:text-primary-600" data-event-edit="${event.id}"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button class="text-sm text-neutral-500 hover:text-red-500" data-event-delete="${event.id}"><i class="fa-regular fa-trash-can"></i></button>
           </div>
         </td>
       `;

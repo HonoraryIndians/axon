@@ -1,258 +1,526 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="fragments/layout :: layout('새 캠페인 활동 만들기', 'h-full text-base-content', ~{::head/content()}, ~{::section})">
+    th:replace="fragments/layout :: layout('새 캠페인 활동 만들기', 'bg-gray-50', ~{::head/content()}, ~{::section})">
+
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" th:href="@{/css/admin_create_event.css}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+        crossorigin="anonymous"></script>
+    <style type="text/tailwindcss">
+        /* Custom Styles for Selectable Cards */
+        .campaign-type-card {
+            @apply border border-gray-200 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-black hover:shadow-md flex flex-col items-center text-center bg-white;
+        }
+
+        .campaign-type-card.selected {
+            @apply border-black bg-gray-900 text-white ring-2 ring-offset-2 ring-black;
+        }
+
+        .campaign-type-card.selected .type-desc {
+            @apply text-gray-300;
+        }
+
+        .campaign-type-card .type-icon {
+            @apply text-2xl mb-2;
+        }
+
+        .campaign-type-card .type-desc {
+            @apply text-xs text-gray-500 mt-1;
+        }
+
+        /* Form Input Styles */
+        .form-label {
+            @apply block text-sm font-medium text-gray-700 mb-1.5;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            @apply w-full rounded-lg border border-black shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 px-4;
+        }
+
+        .section-card {
+            @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6;
+        }
+
+        .section-title {
+            @apply text-lg font-bold text-gray-900 mb-4 flex items-center;
+        }
+    </style>
 </head>
 
-<section>
-    <header class="bg-white border-b border-neutral-200 fixed top-0 left-0 right-0 z-50">
-    <div class="flex items-center justify-between px-6 py-4">
-        <div class="flex items-center space-x-4">
-            <a href="/admin_board"
-                    class="flex items-center space-x-2 text-neutral-600 hover:text-neutral-800">
-                <i class="fa-solid fa-arrow-left"></i>
-                <span>캠페인 활동 목록</span>
-            </a>
+<section class="flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center">
+                <a href="/admin_board" class="mr-4 text-gray-500 hover:text-black transition-colors">
+                    <i class="fa-solid fa-arrow-left text-lg"></i>
+                </a>
+                <h1 class="text-xl font-bold text-gray-900">새 캠페인 활동 만들기</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="history.back()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    취소
+                </button>
+                <button id="submit"
+                    class="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 shadow-sm">
+                    등록 완료
+                </button>
+            </div>
         </div>
-        <h1 class="text-xl text-neutral-900">새 캠페인 활동 만들기</h1>
-        <div class="flex items-center space-x-3">
-            <button id="submit" class="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800">
-                등록 완료
-            </button>
-        </div>
-    </div>
-</header>
+    </header>
 
-    <main class="pt-20 pb-8 px-6 max-w-6xl mx-auto">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        <!-- 좌측 폼 -->
-        <div class="lg:col-span-2 space-y-8">
+            <!-- Left Column: Form (8 cols) -->
+            <div class="lg:col-span-8 space-y-6">
 
-            <!-- 기본 정보 -->
-            <section class="section-card">
-                <h2 class="section-title">캠페인 활동 기본 정보</h2>
-                <div class="space-y-6">
-                    <div>
-                        <label class="form-label">캠페인 활동 이름 *</label>
-                        <label for="activityName"></label><input id="activityName" type="text" class="form-input" placeholder="캠페인 활동명을 입력하세요">
-                    </div>
-                    <div>
-                        <label class="form-label">캠페인 활동 설명</label>
-                        <label>
-                            <textarea class="form-textarea" placeholder="캠페인 활동 목적 및 요약을 입력하세요"></textarea>
-                        </label>
-                    </div>
-                    <div>
-                        <label class="form-label">캠페인 유형 *</label>
-                        <label>
-                            <select id="campaignId" class="form-input">
+                <!-- 1. Basic Info -->
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <span
+                            class="bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">1</span>
+                        기본 정보
+                    </h2>
+                    <div class="space-y-5">
+                        <div>
+                            <label for="campaignId" class="form-label">캠페인 선택 <span
+                                    class="text-red-500">*</span></label>
+                            <select id="campaignId" class="form-select">
                                 <option id="cam_default" value="">캠페인을 선택하세요</option>
                             </select>
-                        </label>
-                    </div>
-
-                    <input type="hidden" id="activityTypeInput" name="campaignType" />
-                    <div id="campaignActivityTypeGroup" class="grid grid-cols-3 gap-4">
-                        <button type="button" class="campaign-type selectable" data-type=FIRST_COME_FIRST_SERVE>
-                            <i class="fa-solid fa-clock type-icon"></i>
-                            <div>선착순</div>
-                            <div class="type-desc">먼저 참여한 순서대로</div>
-                        </button>
-                        <button type="button" class="campaign-type selectable" data-type=COUPON>
-                            <i class="fa-solid fa-check-circle type-icon"></i>
-                            <div>조건부</div>
-                            <div class="type-desc">특정 조건 달성 시</div>
-                        </button>
-                        <button type="button" class="campaign-type selectable" data-type=GIVEAWAY>
-                            <i class="fa-solid fa-gift type-icon"></i>
-                            <div>응모/추첨</div>
-                            <div class="type-desc">추첨을 통한 당첨</div>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 조건 -->
-            <section class="section-card">
-                <h2 class="section-title">캠페인 활동 조건 설정</h2>
-                <div class="space-y-6">
-                    <div>
-                        <label class="form-label">참여 인원 수</label>
-                        <label for="limitCountInput"></label><input id="limitCountInput" type="number" class="form-input" placeholder="최대 참여 인원을 입력하세요">
-                    </div>
-                    <div>
-                        <label class="form-label">참여 제한 옵션</label>
-                        <div class="space-y-3">
-                            <label class="flex items-center"><input type="checkbox" class="form-checkbox"><span class="ml-2">미구현 섹터</span></label>
+                            <p class="mt-1 text-xs text-gray-500">활동을 추가할 상위 캠페인을 선택해주세요.</p>
                         </div>
-                    </div>
-                    <div>
-                        <label class="form-label">필터 제한</label>
-                        <div id="filter-container" class="space-y-4">
-                            <!-- 나이 필터 -->
-                            <div class="filter-group">
-                                <label class="flex items-center">
-                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="AGE">
-                                    <span class="ml-2 font-medium">나이 제한</span>
-                                </label>
-                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="AGE">
-                                    <div id="age-filter-inputs">
-                                        <!-- 나이 범위 입력란이 동적으로 추가될 영역 -->
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <input type="number" placeholder="20" class="form-input age-range-start w-20"> ~ <input type="number" placeholder="29" class="form-input age-range-end w-20">
-                                        </div>
+
+                        <div>
+                            <label for="activityName" class="form-label">활동 이름 <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" id="activityName" class="form-input" placeholder="예: 선착순 100명 커피 쿠폰 증정">
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div>
+                            <label class="form-label">대표 이미지</label>
+                            <div class="flex flex-col gap-4">
+                                <div
+                                    class="w-full aspect-video bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 relative group max-w-md">
+                                    <img id="imagePreview" src="" alt="Preview"
+                                        class="w-full h-full object-cover hidden">
+                                    <div id="imagePlaceholder" class="flex items-center justify-center w-full h-full">
+                                        <i class="fa-regular fa-image text-gray-400 text-4xl"></i>
                                     </div>
-                                    <button type="button" id="add-age-range-btn" class="btn-secondary text-sm py-1 px-2">+ 범위 추가</button>
-                                </div>
-                            </div>
-                            <!-- 지역 필터 -->
-                            <div class="filter-group">
-                                <label class="flex items-center">
-                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="REGION">
-                                    <span class="ml-2 font-medium">지역 제한</span>
-                                </label>
-                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="REGION">
-                                    <div class="flex items-center gap-2">
-                                        <select id="region-sido-select" class="form-input flex-grow">
-                                            <option value="">시/도 선택</option>
-                                        </select>
-                                        <select id="region-sigungu-select" class="form-input flex-grow">
-                                            <option value="">시/군/구 선택</option>
-                                        </select>
+                                    <div id="imageOverlay"
+                                        class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                        <i class="fa-solid fa-pen text-white text-2xl"></i>
                                     </div>
-                                    <div id="selected-regions-container" class="mt-2"></div>
+                                </div>
+                                <div>
+                                    <input type="file" id="activityImage" class="hidden" accept="image/*">
+                                    <button type="button" id="uploadBtn"
+                                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                        이미지 업로드
+                                    </button>
+                                    <p class="mt-1 text-xs text-gray-500">권장 사이즈: 1200x630px (JPG, PNG)</p>
                                 </div>
                             </div>
-                            <!-- VIP 등급 필터 (예시) -->
-                            <div class="filter-group">
-                                <label class="flex items-center">
-                                    <input type="checkbox" class="form-checkbox filter-type-checkbox" data-filter-type="VIP_TIER">
-                                    <span class="ml-2 font-medium">VIP 등급 제한</span>
-                                </label>
+                        </div>
 
-                                <div class="filter-details hidden ml-6 mt-2 space-y-2" data-filter-details="VIP_TIER">
-                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="BRONZE"><span class="ml-2">브론즈</span></label>
-                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="SILVER"><span class="ml-2">실버</span></label>
-                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="GOLD"><span class="ml-2">골드</span></label>
-                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="PLATINUM"><span class="ml-2">플레티</span></label>
-                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="DIAMOND"><span class="ml-2">다이아몬드</span></label>
-                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="VIP"><span class="ml-2">VIP</span></label>
-                                    <label class="flex items-center"><input type="checkbox" class="form-checkbox filter-value-checkbox" data-type="VIP_TIER" value="VVIP"><span class="ml-2">VVIP</span></label>
+                        <div>
+                            <label class="form-label mb-3">활동 유형 <span class="text-red-500">*</span></label>
+                            <input type="hidden" id="activityTypeInput" name="campaignType" />
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="campaign-type-card selectable" data-type="FIRST_COME_FIRST_SERVE">
+                                    <i class="fa-solid fa-stopwatch type-icon"></i>
+                                    <div class="font-medium">선착순</div>
+                                    <div class="type-desc">빠른 참여 순서</div>
+                                </div>
+                                <div class="campaign-type-card selectable" data-type="COUPON">
+                                    <i class="fa-solid fa-ticket type-icon"></i>
+                                    <div class="font-medium">쿠폰</div>
+                                    <div class="type-desc">미션 달성 시</div>
+                                </div>
+                                <div class="campaign-type-card selectable" data-type="GIVEAWAY">
+                                    <i class="fa-solid fa-gift type-icon"></i>
+                                    <div class="font-medium">응모/추첨</div>
+                                    <div class="type-desc">랜덤 당첨</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- 보상 -->
-            <!--
-            <section class="section-card">
-                <h2 class="section-title">보상 설정 (구현예정)</h2>
-                <div class="space-y-6">
-                    <div>
-                        <label class="form-label">보상 유형 *</label>
-                        <label>
-                            <select class="form-input">
-                                <option>보상 유형을 선택하세요</option>
-                                <option>쿠폰</option>
-                                <option>포인트</option>
-                                <option>경품</option>
-                                <option>기타</option>
-                            </select>
-                        </label>
-                    </div>
-                    <div>
-                        <label class="form-label">보상 이름 *</label>
-                        <label>
-                            <input type="text" class="form-input" placeholder="예: 5% 할인 쿠폰">
-                        </label>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="form-label">보상 수량</label>
-                            <label>
-                                <input type="number" class="form-input" placeholder="지급 가능 수량">
-                            </label>
-                        </div>
-                        <div>
-                            <label class="form-label">보상 조건</label>
-                            <label>
-                                <select class="form-input">
-                                    <option>참여 완료 시</option>
-                                    <option>당첨 시</option>
-                                </select>
-                            </label>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="form-label">보상 유효기간</label>
-                        <label>
-                            <input type="date" class="form-input">
-                        </label>
-                    </div>
-                </div>
-            </section>
-            -->
-
-            <!-- 일정 -->
-            <section class="section-card">
-                <h2 class="section-title">일정 설정</h2>
-                <div class="space-y-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="form-label">시작일 *</label>
-                            <label>
+                <!-- 2. Schedule & Limits -->
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <span
+                            class="bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">2</span>
+                        일정 및 제한
+                    </h2>
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label for="startDate" class="form-label">시작 일시 <span
+                                        class="text-red-500">*</span></label>
                                 <input type="datetime-local" id="startDate" class="form-input">
-                            </label>
-                        </div>
-                        <div>
-                            <label class="form-label">종료일 *</label>
-                            <label>
+                            </div>
+                            <div>
+                                <label for="endDate" class="form-label">종료 일시 <span
+                                        class="text-red-500">*</span></label>
                                 <input type="datetime-local" id="endDate" class="form-input">
-                            </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="limitCountInput" class="form-label">최대 참여 인원 <span
+                                    class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="number" id="limitCountInput" class="form-input pl-3 pr-12" placeholder="0">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">명</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <label class="flex items-center"><input type="checkbox" class="form-checkbox"><span class="ml-2">예약 상태로 등록 (자동 시작)</span></label>
                 </div>
-            </section>
+
+                <!-- 3. Targeting Filters -->
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <span
+                            class="bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">3</span>
+                        타겟팅 필터
+                    </h2>
+                    <div class="space-y-4" id="filter-container">
+                        <!-- Age Filter -->
+                        <div class="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox"
+                                    class="w-5 h-5 text-black border-gray-300 rounded focus:ring-black filter-type-checkbox"
+                                    data-filter-type="AGE">
+                                <span class="ml-3 font-medium text-gray-900">나이 제한</span>
+                                <span class="ml-auto text-xs text-gray-500">특정 연령대만 참여 가능</span>
+                            </label>
+                            <div class="filter-details hidden mt-4 pl-8 border-t border-gray-100 pt-4"
+                                data-filter-details="AGE">
+                                <div id="age-filter-rows" class="space-y-3">
+                                    <!-- Dynamic Rows will be added here -->
+                                </div>
+                                <button type="button" id="add-age-condition-btn"
+                                    class="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                                    <i class="fa-solid fa-plus-circle mr-1"></i> 조건 추가
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Region Filter -->
+                        <div class="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox"
+                                    class="w-5 h-5 text-black border-gray-300 rounded focus:ring-black filter-type-checkbox"
+                                    data-filter-type="REGION">
+                                <span class="ml-3 font-medium text-gray-900">지역 제한</span>
+                                <span class="ml-auto text-xs text-gray-500">특정 거주 지역만 참여 가능</span>
+                            </label>
+                            <div class="filter-details hidden mt-4 pl-8 border-t border-gray-100 pt-4"
+                                data-filter-details="REGION">
+                                <div class="flex gap-2 mb-3">
+                                    <select id="region-sido-select" class="form-select">
+                                        <option value="">시/도 선택</option>
+                                    </select>
+                                    <select id="region-sigungu-select" class="form-select">
+                                        <option value="">시/군/구 선택</option>
+                                    </select>
+                                </div>
+                                <div id="selected-regions-container" class="flex flex-wrap gap-2"></div>
+                            </div>
+                        </div>
+
+                        <!-- VIP Tier Filter -->
+                        <div class="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox"
+                                    class="w-5 h-5 text-black border-gray-300 rounded focus:ring-black filter-type-checkbox"
+                                    data-filter-type="GRADE">
+                                <div>
+                                    <span class="font-medium text-gray-900">회원 등급</span>
+                                    <p class="text-sm text-gray-500">특정 등급의 회원만 참여 가능</p>
+                                </div>
+                            </div>
+                            <div class="filter-details hidden mt-4 pl-8 border-t border-gray-100 pt-4"
+                                data-filter-details="GRADE">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">포함 조건</label>
+                                    <div class="flex gap-4">
+                                        <label class="flex items-center gap-2">
+                                            <input type="radio" name="vip-operator" value="IN" checked
+                                                class="text-black focus:ring-black">
+                                            <span class="text-sm text-gray-600">포함 (IN)</span>
+                                        </label>
+                                        <label class="flex items-center gap-2">
+                                            <input type="radio" name="vip-operator" value="NOT_IN"
+                                                class="text-black focus:ring-black">
+                                            <span class="text-sm text-gray-600">미포함 (NOT IN)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <label
+                                        class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox"
+                                            class="text-black border-gray-300 rounded focus:ring-black filter-value-checkbox"
+                                            data-type="GRADE" value="BRONZE">
+                                        <span class="text-sm">BRONZE</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox"
+                                            class="text-black border-gray-300 rounded focus:ring-black filter-value-checkbox"
+                                            data-type="GRADE" value="SILVER">
+                                        <span class="text-sm">SILVER</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox"
+                                            class="text-black border-gray-300 rounded focus:ring-black filter-value-checkbox"
+                                            data-type="GRADE" value="GOLD">
+                                        <span class="text-sm">GOLD</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox"
+                                            class="text-black border-gray-300 rounded focus:ring-black filter-value-checkbox"
+                                            data-type="GRADE" value="PLATINUM">
+                                        <span class="text-sm">PLATINUM</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox"
+                                            class="text-black border-gray-300 rounded focus:ring-black filter-value-checkbox"
+                                            data-type="GRADE" value="DIAMOND">
+                                        <span class="text-sm">DIAMOND</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox"
+                                            class="text-black border-gray-300 rounded focus:ring-black filter-value-checkbox"
+                                            data-type="GRADE" value="VIP">
+                                        <span class="text-sm">VIP</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox"
+                                            class="text-black border-gray-300 rounded focus:ring-black filter-value-checkbox"
+                                            data-type="GRADE" value="VVIP">
+                                        <span class="text-sm">VVIP</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Filters Container -->
+                        <div id="dynamic-filter-container" class="space-y-4"></div>
+
+                        <!-- Add Filter Button -->
+                        <div class="relative">
+                            <button type="button" id="add-filter-btn"
+                                class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fa-solid fa-plus"></i> 필터 추가
+                            </button>
+                            <!-- Filter Menu (Hidden by default) -->
+                            <div id="add-filter-menu"
+                                class="hidden absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-10 py-1">
+                                <button type="button"
+                                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                    data-add-filter="RECENT_PURCHASE">
+                                    <i class="fa-solid fa-cart-shopping text-gray-400"></i> 최근 구매 이력
+                                </button>
+                                <!-- Future filters can be added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Product Selection -->
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <span
+                            class="bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">4</span>
+                        상품 정보
+                    </h2>
+                    <div class="space-y-5">
+                        <div>
+                            <label class="form-label">연동 상품</label>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="selectedProductName"
+                                    class="form-input bg-gray-50 cursor-not-allowed flex-1" placeholder="상품을 선택해주세요"
+                                    readonly>
+                                <input type="hidden" id="selectedProductId">
+                                <button type="button" id="openProductSearchBtn"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shrink-0 open-product-search-btn">
+                                    상품 검색
+                                </button>
+                            </div>
+                            <div id="productInfo"
+                                class="hidden p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-500">정상가</span>
+                                    <span class="font-medium" id="productOriginalPrice">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">현재 재고</span>
+                                    <span class="font-medium" id="productStock">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sale Info -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="salePrice" class="form-label">판매 가격</label>
+                                <div class="relative">
+                                    <input type="number" id="salePrice" class="form-input pr-12" placeholder="예: 10000">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">원</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="saleQuantity" class="form-label">판매 수량</label>
+                                <div class="relative">
+                                    <input type="number" id="saleQuantity" class="form-input pr-12"
+                                        placeholder="예: 100">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">개</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Preview (4 cols) -->
+            <div class="lg:col-span-4">
+                <div class="sticky top-8 space-y-8">
+
+                    <!-- Preview Header -->
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center">
+                            <i class="ph-fill ph-eye"></i>
+                        </div>
+                        <h2 class="text-xl font-bold">실시간 미리보기</h2>
+                    </div>
+
+                    <!-- 1. Card Preview (campaign-activities.html style) -->
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-500 mb-3">이벤트 목록 카드 (List View)</h3>
+                        <div
+                            class="bg-[#f8f8f8] p-6 rounded-sm flex items-center justify-between group border border-transparent hover:border-black transition-all">
+                            <div>
+                                <span id="preview-card-badge"
+                                    class="bg-black text-white text-xs font-bold px-2 py-1 mb-3 inline-block">선착순
+                                    N명</span>
+                                <h4 id="preview-card-title" class="text-xl font-black mb-2 leading-tight">활동 이름</h4>
+                            </div>
+                            <div
+                                class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-md shrink-0 ml-4">
+                                <i id="preview-card-icon" class="ph ph-gift text-3xl text-dark-gray"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Detail Preview (entry.html style) -->
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-500 mb-3">이벤트 상세 정보 (Detail View)</h3>
+                        <div class="bg-[#f8f8f8] rounded-sm p-6 border border-gray-100">
+                            <div class="flex flex-col gap-6">
+                                <!-- Image Area -->
+                                <div
+                                    class="w-full aspect-video bg-white rounded-sm flex items-center justify-center shadow-sm">
+                                    <i id="preview-detail-icon" class="ph ph-gift text-5xl text-dark-gray"></i>
+                                </div>
+
+                                <!-- Info Area -->
+                                <div class="w-full">
+                                    <h3 class="text-lg font-bold mb-2">이벤트 상품 정보</h3>
+                                    <div class="space-y-1 text-sm text-gray-600 mb-4">
+                                        <p>상품명: <span id="preview-detail-title" class="text-black font-medium">활동
+                                                이름</span></p>
+                                        <p>정상가: <span class="line-through">?원</span></p>
+                                        <p>할인가: <span class="text-red-600 font-bold text-lg">?원</span></p>
+                                        <p>제한수량: <span id="preview-detail-limit"
+                                                class="text-black font-medium">?개</span>
+                                        </p>
+                                    </div>
+                                    <div class="p-3 bg-white border border-[#eee] rounded-sm text-xs text-gray-500">
+                                        <p class="mb-1">· 1인 1회 응모 가능합니다.</p>
+                                        <p class="mb-1">· 당첨 시 구매 가능 기간 내에 결제해야 합니다.</p>
+                                        <p>· 부정한 방법으로 응모 시 당첨이 취소될 수 있습니다.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Filter Preview -->
+                    <div id="preview-filter-container" class="hidden">
+                        <h3 class="text-sm font-bold text-gray-500 mb-3">참여 조건 (Filters)</h3>
+                        <div class="bg-white border border-black rounded-sm p-5 relative">
+                            <div
+                                class="absolute -top-3 left-4 bg-white px-2 text-sm font-bold text-black flex items-center gap-1">
+                                <i class="ph-fill ph-check-circle text-blue-600"></i>
+                                참여 조건 안내
+                            </div>
+                            <ul id="preview-filter-list" class="space-y-2 mt-2">
+                                <!-- Dynamic Filters -->
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
 
-        <!-- 미리보기 -->
-        <div class="lg:col-span-1">
-            <section class="section-card sticky top-24">
-                <h2 class="section-title">미리보기</h2>
-                <div class="border border-neutral-200 rounded-lg overflow-hidden">
-                    <div class="bg-neutral-300 h-32 flex items-center justify-center"><span class="text-white text-sm">대표 이미지</span></div>
-                    <div class="p-4">
-                        <h3 class="text-neutral-900 mb-2">캠페인 제목</h3>
-                        <div class="space-y-2 text-sm text-neutral-600">
-                            <div class="flex items-center"><i class="fa-solid fa-calendar mr-2"></i><span>2025-01-01 ~ 2025-01-31</span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-tag mr-2"></i><span>선착순</span></div>
-                            <div class="flex items-center"><i class="fa-solid fa-gift mr-2"></i><span>보상 정보</span></div>
-                        </div>
-                        <button class="w-full mt-4 bg-black text-white py-2 rounded-lg text-sm">참여하기</button>
-                    </div>
+
+        </div>
+    </main>
+
+    <!-- Product Search Modal -->
+    <div id="productSearchModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-bold text-lg">상품 검색</h3>
+                <button type="button" id="closeProductSearchBtn"
+                    class="text-gray-400 hover:text-gray-600 close-product-search-btn">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="productSearchInput" class="form-input" placeholder="상품명을 입력하세요">
+                    <button type="button" id="productSearchActionBtn"
+                        class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900">
+                        검색
+                    </button>
                 </div>
-                <div class="mt-4 p-3 bg-neutral-50 border border-neutral-200 rounded-lg">
-                    <div class="flex items-start">
-                        <i class="fa-solid fa-exclamation-triangle text-neutral-600 mr-2 mt-0.5"></i>
-                        <div class="text-sm text-neutral-800">
-                            <div>필수 입력 확인</div>
-                            <div>캠페인 이름, 유형, 보상 정보를 입력하세요.</div>
-                        </div>
-                    </div>
+                <div class="h-64 overflow-y-auto border border-gray-100 rounded-lg">
+                    <ul id="productSearchResults" class="divide-y divide-gray-100">
+                        <!-- Search Results will be populated here -->
+                        <li class="p-4 text-center text-gray-500 text-sm">검색 결과가 없습니다.</li>
+                    </ul>
                 </div>
-            </section>
+            </div>
         </div>
     </div>
-    </main>
+
+    <!-- Scripts -->
+    <script src="/js/campaign-activity-module.js"></script>
+    <script th:src="@{/js/admin_create_campaignActivitys.js}"></script>
 </section>
-<script th:src="@{/js/admin_create_campaignActivitys.js}"></script>
+
 </html>
