@@ -1,0 +1,90 @@
+name: Deploy to KT Cloud K2P
+
+on:
+  push:
+    branches: [ "main" ] # main 브랜치에 푸시될 때마다 실행
+
+env:
+  DOCKER_IMAGE_ENTRY: ${{ secrets.DOCKER_USERNAME }}/axon-entry
+  DOCKER_IMAGE_CORE: ${{ secrets.DOCKER_USERNAME }}/axon-core
+  VERSION: ${{ github.sha }} # 커밋 해시값을 태그로 사용 (v1, v2 대신)
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    # 1. Entry Service Build & Push
+    - name: Build Entry Service
+      run: |
+        cd entry-service
+        chmod +x ../gradlew
+        ../gradlew bootJar
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build & Push Entry Image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./entry-service
+        push: true
+        tags: ${{ env.DOCKER_IMAGE_ENTRY }}:${{ env.VERSION }}
+
+    # 2. Core Service Build & Push
+    - name: Build Core Service
+      run: |
+        cd core-service
+        ../gradlew bootJar
+
+    - name: Build & Push Core Image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./core-service
+        push: true
+        tags: ${{ env.DOCKER_IMAGE_CORE }}:${{ env.VERSION }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Configure K2P Access
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+
+    # 3. Deploy to K2P (이미지 태그 교체)
+    - name: Update Kubernetes Deployment
+      run: |
+        # 기존 yaml 파일의 이미지 태그를 sed 명령어로 바꿔치기해서 적용
+        # (주의: k8s/entry-service.yaml 파일이 레포에 있어야 함)
+
+        # Entry Service
+        sed -i "s|image: .*|image: ${{ env.DOCKER_IMAGE_ENTRY }}:${{ env.VERSION }}|g" k8s/entry-service.yaml
+        kubectl apply -f k8s/entry-service.yaml
+
+        # Core Service
+        sed -i "s|image: .*|image: ${{ env.DOCKER_IMAGE_CORE }}:${{ env.VERSION }}|g" k8s/core-service.yaml
+        kubectl apply -f k8s/core-service.yaml
+
+    - name: Verify Deployment
+      run: |
+        kubectl rollout status deployment/entry-service
+        kubectl rollout status deployment/core-service
