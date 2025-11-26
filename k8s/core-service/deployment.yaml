@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: core-service
-          image: yangnail/axon-core:v1
+          image: nileyang/axon-core:v1
           ports:
             - containerPort: 8080
           env:

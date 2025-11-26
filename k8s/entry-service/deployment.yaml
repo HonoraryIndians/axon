@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: entry-service
-          image: yangnail/axon-entry:v1
+          image: nileyang/axon-entry:v1 # GitHub Actions가 교체할 부분
           ports:
             - containerPort: 8081
           env:
