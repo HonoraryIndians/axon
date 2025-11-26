@@ -5,13 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class CoreValidationService {
-    private final WebClient webClient;
+    private final RestClient webClient;
 
     /**
      * Determine eligibility by calling the core validation API for a campaign activity.
@@ -29,8 +29,7 @@ public class CoreValidationService {
                             .build())
                     .header(HttpHeaders.AUTHORIZATION,Token)
                     .retrieve()
-                    .bodyToMono(ValidationResponse.class)
-                    .block();
+                    .body(ValidationResponse.class);
             log.info("SERVICE - return {} || {} ", response.isEligible(),response);
             return response;
         } catch (Exception e) {

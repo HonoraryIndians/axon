@@ -13,8 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClient;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class CampaignActivityMetaService {
 
     private static final Duration CACHE_TTL = Duration.ofMinutes(5);
 
-    private final WebClient campaignWebClient;
+    private final RestClient campaignRestClient;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
     private final JwtTokenProvider jwtTokenProvider;
@@ -110,13 +110,12 @@ public class CampaignActivityMetaService {
     private CampaignActivitySummaryResponse fetchCampaignActivity(Long campaignActivityId) {
         try {
             String accessToken = jwtTokenProvider.generateAccessToken(0L);// system user
-            return campaignWebClient.get()
+            return campaignRestClient.get()
                     .uri("/api/v1/campaign/activities/{id}", campaignActivityId)
-                    .headers(headers -> headers.setBearerAuth(accessToken))
+                    .header("Authorization", "Bearer " + accessToken)
                     .retrieve()
-                    .bodyToMono(CampaignActivitySummaryResponse.class)
-                    .block();
-        } catch (WebClientResponseException.NotFound e) {
+                    .body(CampaignActivitySummaryResponse.class);
+        } catch (HttpClientErrorException.NotFound e) {
             log.warn("Campaign activity not found. id={}", campaignActivityId);
             return null;
         } catch (Exception e) {
