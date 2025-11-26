@@ -1,6 +1,9 @@
 server:
   port: 8081
 spring:
+  threads:
+    virtual:
+      enabled: true
   data:
     redis:
       host: localhost
@@ -22,11 +25,11 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
 jwt:
-  secret: YOUR_VERY_SECRET_RANDOM_STRING_THAT_IS_LONG_ENOUGH_axonskusw
+  secret: ${JWT_SECRET:dev_jwt_secret_key_very_long_for_hs512_verification_only_do_not_use_in_prod}
 
 payment:
   token:
-    secret: ${PAYMENT_TOKEN_SECRET:JQqYDAy12XkHVTBSBY4yXGnnT0R8GcHa}
+    secret: ${PAYMENT_TOKEN_SECRET:dev_payment_token_secret_key}
 
 axon:
   core-service:

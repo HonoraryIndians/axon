@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-config
+data:
+  application.yml: |
+    server:
+      port: 8080
+    spring:
+      threads:
+        virtual:
+          enabled: true
+      datasource:
+        # TODO: Replace with actual KT Cloud DB VIP
+        url: jdbc:mysql://10.0.0.0:3306/axon_db?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+        username: axon_prod
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: false
+      kafka:
+        bootstrap-servers: my-kafka.default.svc.cluster.local:9092
+      data:
+        redis:
+          host: my-redis-master.default.svc.cluster.local
+          port: 6379
