@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Alert</title>
+</head>
+
+<body>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var message = [[${ message }]];
+        if (message) {
+            alert(message);
+        }
+        if (document.referrer) {
+            history.back();
+        } else {
+            location.href = '/events';
+        }
+        /*]]>*/
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axon Store</title>
+
+    <!-- Pretendard Font -->
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        black: '#000000',
+                        white: '#FFFFFF',
+                        'dark-gray': '#333333',
+                        gray: '#888888',
+                        'light-gray': '#F1F1F1',
+                        accent: '#0078FF',
+                        danger: '#FF0000',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Global Styles (Optional Overrides) -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+</body>
+
+</html>

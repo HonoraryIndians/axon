@@ -4,12 +4,12 @@ spring:
     include: oauth
   datasource:
     url: jdbc:mysql://localhost:3306/axon_db?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-    username: axon_user
-    password: axon_password
+    username: ${DB_USERNAME:axon_user}
+    password: ${DB_PASSWORD:axon_password}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create # Use 'validate' in production
+      ddl-auto: update # Use 'validate' in production
     properties:
       hibernate:
         format_sql: true

@@ -19,6 +19,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
@@ -41,7 +44,7 @@ public class CampaignActivity extends BaseTimeEntity {
     private Campaign campaign;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="product_id")
+    @JoinColumn(name = "product_id")
     private Product product;
 
     @Column(name = "name", nullable = false)
@@ -68,6 +71,18 @@ public class CampaignActivity extends BaseTimeEntity {
     @Column(name = "filters", columnDefinition = "JSON")
     private List<FilterDetail> filters;
 
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity;
+
+    @Column(name = "budget", precision = 12, scale = 2)
+    private BigDecimal budget;  // Activity-specific marketing budget for ROAS calculation
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
     /**
      * Constructs a CampaignActivity with the specified association and attributes.
      *
@@ -79,6 +94,11 @@ public class CampaignActivity extends BaseTimeEntity {
      * @param endDate    activity end date and time (inclusive)
      * @param activityType type categorizing the activity
      * @param filters    list of filter rules applied to the activity (may be null or empty)
+     * @param price      product price for this activity
+     * @param quantity   available quantity
+     * @param budget     marketing budget allocated for this activity
+     * @param filters      list of filter rules applied to the activity (may be null
+     *                     or empty)
      */
     @Builder
     public CampaignActivity(Campaign campaign,
@@ -89,7 +109,12 @@ public class CampaignActivity extends BaseTimeEntity {
                             LocalDateTime startDate,
                             LocalDateTime endDate,
                             CampaignActivityType activityType,
-                            List<FilterDetail> filters) {
+                            List<FilterDetail> filters,
+                            BigDecimal price,
+                            Integer quantity,
+                            BigDecimal budget,
+                            String imageUrl
+                            ) {
         this.campaign = campaign;
         this.product = product;
         this.name = name;
@@ -99,6 +124,10 @@ public class CampaignActivity extends BaseTimeEntity {
         this.endDate = endDate;
         this.activityType = activityType;
         this.filters = filters;
+        this.price = price;
+        this.quantity = quantity;
+        this.imageUrl = imageUrl;
+        this.budget = budget;
     }
 
     /**
@@ -110,13 +139,16 @@ public class CampaignActivity extends BaseTimeEntity {
         return campaign != null ? campaign.getId() : null;
     }
 
-    public Long getProductId() {return  product != null ? product.getId() : null;}
+    public Long getProductId() {
+        return product != null ? product.getId() : null;
+    }
 
     /**
      * Updates the activity's display name and participant limit.
      *
      * @param name       the new name for the activity
-     * @param limitCount the maximum allowed count for the activity; may be null to indicate no limit
+     * @param limitCount the maximum allowed count for the activity; may be null to
+     *                   indicate no limit
      */
     public void updateInfo(String name, Integer limitCount) {
         this.name = name;
@@ -146,18 +178,34 @@ public class CampaignActivity extends BaseTimeEntity {
     /**
      * Replaces the activity's filters with the provided list.
      *
-     * @param filters the new list of FilterDetail objects to assign to this activity; may be null to remove all filters
+     * @param filters the new list of FilterDetail objects to assign to this
+     *                activity; may be null to remove all filters
      */
     public void setFilters(List<FilterDetail> filters) {
         this.filters = filters;
     }
 
+    public void updateProductInfo(Product product, BigDecimal price, Integer quantity) {
+        this.product = product;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
+    public void updateActivityType(CampaignActivityType activityType) {
+        this.activityType = activityType;
+    }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     /**
      * Associates this activity with the given Campaign.
      *
-     * @param campaign the Campaign to associate with this activity; may be {@code null} to remove the association
+     * @param campaign the Campaign to associate with this activity; may be
+     *                 {@code null} to remove the association
      */
-    void assignCampaign(Campaign campaign) {
+    public void assignCampaign(Campaign campaign) {
         this.campaign = campaign;
     }
 }

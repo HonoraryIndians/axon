@@ -11,15 +11,67 @@ document.addEventListener("DOMContentLoaded", () => {
     const campaignSelect = document.getElementById("campaignId");
     const activityTypeInput = document.getElementById("activityTypeInput");
 
-    /**
-     * Fetches campaign list from the server and populates the campaign select with option elements.
-     *
-     * On success, creates an <option> per campaign using the campaign's name as the label and id as the value,
-     * appending each to the global `campaignSelect` element.
-     *
-     * On failure, logs the error and, if present, updates the element with id "cam_default" to indicate campaigns
-     * could not be loaded.
-     */
+    // --- Shared Module Initialization ---
+    const { FilterRegistry, Helpers } = CampaignActivityModule;
+
+    // 1. Image Upload
+    let uploadedImageUrl = "";
+    Helpers.initImageUpload(document, 'activityImage', 'imagePreview', 'imagePlaceholder', 'imageOverlay', 'uploadBtn', (url) => {
+        uploadedImageUrl = url;
+        updateBasicPreview();
+    });
+
+    // 2. Product Search
+    Helpers.initProductSearch(document, 'productSearchModal', 'productSearchInput', 'productSearchResults', 'productSearchActionBtn', (product) => {
+        document.getElementById('selectedProductId').value = product.id;
+        document.getElementById('selectedProductName').value = product.name;
+        document.getElementById('productOriginalPrice').textContent = `${product.price}원`;
+        document.getElementById('productStock').textContent = `${product.stock}개`;
+        document.getElementById('productInfo').classList.remove('hidden');
+        updateBasicPreview();
+    });
+
+    // 3. Filters
+    const filterContainer = document.getElementById("filter-container");
+    const dynamicFilterContainer = document.getElementById("dynamic-filter-container");
+
+    // Init Static Filters
+    FilterRegistry.initStaticFilters(document);
+
+    // Init Dynamic Filter Button
+    const addFilterBtn = document.getElementById('add-filter-btn');
+    const addFilterMenu = document.getElementById('add-filter-menu');
+
+    if (addFilterBtn && addFilterMenu) {
+        addFilterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            addFilterMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', () => addFilterMenu.classList.add('hidden'));
+
+        addFilterMenu.querySelectorAll('[data-add-filter]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.addFilter;
+                FilterRegistry.addDynamicFilter(document, type);
+                updateFilterPreview();
+            });
+        });
+    }
+
+    // Filter Change Listener for Preview
+    if (filterContainer) {
+        filterContainer.addEventListener("change", updateFilterPreview);
+        filterContainer.addEventListener("input", updateFilterPreview);
+
+        // Observer for dynamic changes
+        const observer = new MutationObserver(updateFilterPreview);
+        observer.observe(filterContainer, { childList: true, subtree: true });
+        if (dynamicFilterContainer) observer.observe(dynamicFilterContainer, { childList: true, subtree: true });
+    }
+
+
+    // --- Basic Logic ---
     function loadCampaigns() {
         fetch("/api/v1/campaign")
             .then(res => res.json())
@@ -32,20 +84,18 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(error => {
                 console.error("캠페인을 불러오지 못했습니다.", error);
                 const defaultOption = document.getElementById("cam_default");
-                if (defaultOption) {
-                    defaultOption.textContent = "캠페인을 선택하지 못했습니다.";
-                }
+                if (defaultOption) defaultOption.textContent = "캠페인을 선택하지 못했습니다.";
             });
     }
-
     loadCampaigns();
 
-    const selectableTypes = document.querySelectorAll(".campaign-type.selectable");
+    const selectableTypes = document.querySelectorAll(".campaign-type-card.selectable");
     selectableTypes.forEach(button => {
         button.addEventListener("click", () => {
             selectableTypes.forEach(btn => btn.classList.remove("selected"));
             button.classList.add("selected");
             activityTypeInput.value = button.dataset.type;
+            updateBasicPreview();
         });
     });
 
@@ -55,233 +105,218 @@ document.addEventListener("DOMContentLoaded", () => {
             const filterType = checkbox.dataset.filterType;
             const details = document.querySelector(`.filter-details[data-filter-details="${filterType}"]`);
             if (!details) return;
-
-            if (checkbox.checked) {
-                details.classList.remove("hidden");
-            } else {
-                details.classList.add("hidden");
+            details.classList.toggle("hidden", !checkbox.checked);
+            if (!checkbox.checked) {
                 details.querySelectorAll("input, select").forEach(input => {
-                    if (input.type === "checkbox" || input.type === "radio") {
-                        input.checked = false;
-                    } else {
-                        input.value = "";
-                    }
+                    if (input.type === "checkbox" || input.type === "radio") input.checked = false;
+                    else input.value = "";
                 });
             }
+            updateFilterPreview();
         });
     });
 
-    const addAgeRangeBtn = document.getElementById("add-age-range-btn");
-    const ageFilterInputs = document.getElementById("age-filter-inputs");
+    // --- Preview Logic ---
+    const previewElements = {
+        card: {
+            badge: document.getElementById("preview-card-badge"),
+            title: document.getElementById("preview-card-title"),
+            icon: document.getElementById("preview-card-icon")
+        },
+        detail: {
+            title: document.getElementById("preview-detail-title"),
+            limit: document.getElementById("preview-detail-limit"),
+            icon: document.getElementById("preview-detail-icon")
+        },
+        filter: {
+            container: document.getElementById("preview-filter-container"),
+            list: document.getElementById("preview-filter-list")
+        }
+    };
 
-    if (addAgeRangeBtn && ageFilterInputs) {
-        addAgeRangeBtn.addEventListener("click", () => {
-            if (ageFilterInputs.children.length >= 10) return;
-            const wrapper = document.createElement("div");
-            wrapper.className = "flex items-center gap-2 mb-2";
-            wrapper.innerHTML = `
-                <input type="number" placeholder="20" class="form-input age-range-start w-20">
-                ~
-                <input type="number" placeholder="29" class="form-input age-range-end w-20">
-                <button type="button" class="remove-age-range-btn text-red-500">-</button>
-            `;
-            ageFilterInputs.appendChild(wrapper);
-        });
+    const inputs = {
+        name: document.getElementById("activityName"),
+        limit: document.getElementById("limitCountInput"),
+        type: document.getElementById("activityTypeInput")
+    };
 
-        ageFilterInputs.addEventListener("click", (event) => {
-            if (event.target.classList.contains("remove-age-range-btn")) {
-                event.target.parentElement.remove();
+    function updateBasicPreview() {
+        const name = inputs.name?.value || "활동 이름";
+        const limit = inputs.limit?.value ? `${inputs.limit.value}명` : "00명";
+        const type = inputs.type?.value || "FIRST_COME_FIRST_SERVE";
+
+        const originalPriceVal = document.getElementById('productOriginalPrice')?.textContent.replace(/[^0-9]/g, '') || '0';
+        const salePriceVal = document.getElementById('salePrice')?.value || '0';
+        const originalPrice = parseInt(originalPriceVal);
+        const salePrice = parseInt(salePriceVal);
+
+        if (previewElements.card.title) previewElements.card.title.textContent = name;
+        if (previewElements.detail.title) previewElements.detail.title.textContent = name;
+        if (previewElements.detail.limit) previewElements.detail.limit.textContent = limit.replace("명", "개");
+
+        const detailOriginalPrice = document.querySelector('#preview-detail-title').parentElement.nextElementSibling.querySelector('span');
+        const detailSalePrice = document.querySelector('#preview-detail-title').parentElement.nextElementSibling.nextElementSibling.querySelector('span');
+
+        if (detailOriginalPrice) detailOriginalPrice.textContent = originalPrice > 0 ? `${originalPrice.toLocaleString()}원` : '?원';
+        if (detailSalePrice) detailSalePrice.textContent = salePrice > 0 ? `${salePrice.toLocaleString()}원` : '?원';
+
+        let typeLabel = "선착순";
+        if (type === "COUPON") typeLabel = "쿠폰";
+        else if (type === "GIVEAWAY") typeLabel = "응모/추첨";
+
+        if (previewElements.card.badge) previewElements.card.badge.textContent = `${typeLabel} ${limit}`;
+
+        let iconClass = "ph-gift";
+        if (type === "FIRST_COME_FIRST_SERVE") iconClass = "ph-stopwatch";
+        else if (type === "COUPON") iconClass = "ph-ticket";
+
+        // Image Handling for Preview
+        const updateImageOrIcon = (imgContainer, iconEl) => {
+            if (!imgContainer) return;
+
+            // Remove existing image if any
+            const existingImg = imgContainer.querySelector('.preview-image');
+            if (existingImg) existingImg.remove();
+
+            if (uploadedImageUrl) {
+                // Show Image
+                if (iconEl) iconEl.classList.add('hidden');
+                const img = document.createElement('img');
+                img.src = uploadedImageUrl;
+                img.className = "w-full h-full object-cover preview-image";
+                imgContainer.appendChild(img);
+                imgContainer.classList.remove('bg-white', 'bg-[#f8f8f8]'); // Remove background if needed
+                imgContainer.classList.add('overflow-hidden');
+            } else {
+                // Show Icon
+                if (iconEl) {
+                    iconEl.classList.remove('hidden');
+                    iconEl.className = `ph ${iconClass} text-3xl text-dark-gray`;
+                    // Adjust icon size for detail view
+                    if (iconEl.id === 'preview-detail-icon') {
+                        iconEl.className = `ph ${iconClass} text-5xl text-dark-gray`;
+                    }
+                }
+                imgContainer.classList.add('bg-white');
+                imgContainer.classList.remove('overflow-hidden');
             }
-        });
+        };
+
+        // Card Preview Image Area
+        const cardIconContainer = previewElements.card.icon?.parentElement;
+        updateImageOrIcon(cardIconContainer, previewElements.card.icon);
+
+        // Detail Preview Image Area
+        const detailIconContainer = previewElements.detail.icon?.parentElement;
+        updateImageOrIcon(detailIconContainer, previewElements.detail.icon);
     }
 
-    const sidoSelect = document.getElementById("region-sido-select");
-    const sigunguSelect = document.getElementById("region-sigungu-select");
-    const selectedRegionsContainer = document.getElementById("selected-regions-container");
-    let districtData = {};
+    function updateFilterPreview() {
+        const container = previewElements.filter.container;
+        const list = previewElements.filter.list;
+        if (!container || !list) return;
 
-    if (sidoSelect && sigunguSelect && selectedRegionsContainer) {
-        fetch("/data/korean-districts.json")
-            .then(res => res.json())
-            .then(data => {
-                districtData = data;
-                Object.keys(districtData).forEach(sido => {
-                    sidoSelect.add(new Option(sido, sido));
-                });
-            })
-            .catch(error => console.error("지역 데이터를 불러오지 못했습니다.", error));
+        if (typeof common === 'undefined') return;
 
-        sidoSelect.addEventListener("change", () => {
-            sigunguSelect.innerHTML = '<option value="">시/군/구 선택</option><option value="ALL">전체</option>';
-            const selectedSido = sidoSelect.value;
-            if (!selectedSido || !districtData[selectedSido]) return;
+        list.innerHTML = "";
+        const wrapper = document.querySelector('.lg\\:col-span-8'); // Main form column
+        // Use silent mode for preview to avoid alerts while typing
+        const filters = FilterRegistry.extractAll(wrapper, { silent: true });
 
-            districtData[selectedSido].forEach(sigungu => {
-                sigunguSelect.add(new Option(sigungu, sigungu));
+        if (filters && filters.length > 0) {
+            container.classList.remove("hidden");
+            filters.forEach(filter => {
+                const li = document.createElement("li");
+                li.className = "flex items-start gap-2 text-sm text-gray-600";
+                li.innerHTML = `<i class="ph-bold ph-dot text-gray-400 mt-1"></i> <span>${common.formatCondition(filter)}</span>`;
+                list.appendChild(li);
             });
-        });
+        } else {
+            container.classList.add("hidden");
+        }
+    }
 
-        sigunguSelect.addEventListener("change", () => {
-            const sido = sidoSelect.value;
-            const sigungu = sigunguSelect.value;
-            if (!sido || !sigungu) return;
+    if (inputs.name) inputs.name.addEventListener("input", updateBasicPreview);
+    if (inputs.limit) inputs.limit.addEventListener("input", updateBasicPreview);
+    const salePriceInput = document.getElementById('salePrice');
+    if (salePriceInput) salePriceInput.addEventListener('input', updateBasicPreview);
 
-            const value = sigungu === "ALL" ? sido : `${sido}-${sigungu}`;
-            const label = sigungu === "ALL" ? `${sido} 전체` : `${sido} ${sigungu}`;
+    updateBasicPreview();
+    updateFilterPreview();
 
-            const exists = Array.from(selectedRegionsContainer.querySelectorAll(".selected-region-tag"))
-                .some(tag => tag.dataset.region === value);
-            if (exists) {
-                alert("이미 추가된 지역입니다.");
+    // --- Submit Logic ---
+    if (submit) {
+        submit.addEventListener("click", async () => {
+            const campaignId = document.getElementById("campaignId").value;
+            const name = document.getElementById("activityName").value;
+            const type = document.getElementById("activityTypeInput").value;
+            const startDate = document.getElementById("startDate").value;
+            const endDate = document.getElementById("endDate").value;
+            const limitCount = document.getElementById("limitCountInput").value;
+            const productId = document.getElementById("selectedProductId").value;
+            const salePrice = document.getElementById("salePrice").value;
+            const saleQuantity = document.getElementById("saleQuantity").value;
+
+            if (!campaignId || !name || !type || !startDate || !endDate || !limitCount) {
+                alert("필수 항목을 모두 입력해주세요.");
                 return;
             }
 
-            const tag = document.createElement("span");
-            tag.className = "selected-region-tag bg-gray-200 text-gray-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded";
-            tag.dataset.region = value;
-            tag.textContent = label;
+            if (new Date(startDate) > new Date(endDate)) {
+                alert("종료 일시는 시작 일시보다 뒤여야 합니다.");
+                return;
+            }
 
-            const removeBtn = document.createElement("button");
-            removeBtn.type = "button";
-            removeBtn.className = "ml-2 text-red-500";
-            removeBtn.innerHTML = "&times;";
-            removeBtn.addEventListener("click", () => tag.remove());
+            // Product Validation
+            if (productId) {
+                if (!salePrice || parseInt(salePrice) < 0) {
+                    alert("상품 판매 가격은 0원 이상이어야 합니다.");
+                    return;
+                }
+                if (!saleQuantity || parseInt(saleQuantity) <= 0) {
+                    alert("상품 판매 수량은 1개 이상이어야 합니다.");
+                    return;
+                }
+            }
 
-            tag.appendChild(removeBtn);
-            selectedRegionsContainer.appendChild(tag);
+            const wrapper = document.querySelector('.lg\\:col-span-8');
+            const filters = FilterRegistry.extractAll(wrapper);
+
+            if (filters === null) return; // Validation error occurred in filters
+
+            const payload = {
+                name: name,
+                activityType: type,
+                startDate: startDate,
+                endDate: endDate,
+                limitCount: parseInt(limitCount),
+                filters: filters,
+                imageUrl: uploadedImageUrl,
+                productId: productId ? parseInt(productId) : null,
+                price: salePrice ? parseInt(salePrice) : 0,
+                quantity: saleQuantity ? parseInt(saleQuantity) : 0,
+                status: "DRAFT"
+            };
+
+            try {
+                const response = await fetch(`/api/v1/campaign/${campaignId}/activities`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert("캠페인 활동이 성공적으로 생성되었습니다.");
+                    window.location.href = "/admin_board";
+                } else {
+                    const errorText = await response.text();
+                    console.log(errorText);
+                    alert("오류가 발생하여 생성에 실패하였습니다.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("오류가 발생했습니다.");
+            }
         });
     }
-
-    submit.addEventListener("click", async () => {
-        const campaignId = document.getElementById("campaignId").value;
-        const activityName = document.getElementById("activityName").value.trim();
-        const activityType = activityTypeInput.value;
-        const limitCount = document.getElementById("limitCountInput").value;
-        const startDate = document.getElementById("startDate").value;
-        const endDate = document.getElementById("endDate").value;
-        const status = "DRAFT";
-
-        if (!campaignId || !activityName || !activityType || !startDate || !endDate) {
-            alert("필수 항목을 반드시 선택하세요.");
-            return;
-        }
-
-        if (!limitCount || Number(limitCount) <= 0) {
-            alert("최소 참여 인원은 1명입니다.");
-            return;
-        }
-
-        const now = new Date();
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        if (start <= now) {
-            alert("시작 시간은 현재 시간보다 미래여야 합니다.");
-            return;
-        }
-        if (end <= now) {
-            alert("종료 시간은 현재 시간보다 미래여야 합니다.");
-            return;
-        }
-        if (end <= start) {
-            alert("종료 시간은 시작 시간보다 미래여야 합니다.");
-            return;
-        }
-
-        const filters = [];
-        const checkedGroups = document.querySelectorAll(".filter-type-checkbox:checked");
-        let hasFilterValidationError = false;
-
-        checkedGroups.forEach(groupCheckbox => {
-            if (hasFilterValidationError) return;
-
-            const type = groupCheckbox.dataset.filterType;
-            let values = [];
-
-            if (type === "AGE") {
-                const ageRanges = document.querySelectorAll("#age-filter-inputs .flex");
-                ageRanges.forEach(range => {
-                    if (hasFilterValidationError) return;
-                    const startAge = range.querySelector(".age-range-start")?.value;
-                    const endAge = range.querySelector(".age-range-end")?.value;
-
-                    if (!startAge || !endAge) {
-                        alert("나이 범위를 모두 입력해주세요.");
-                        hasFilterValidationError = true;
-                        return;
-                    }
-                    if (Number(startAge) < 0 || Number(endAge) < 0) {
-                        alert("나이는 0 이상이어야 합니다.");
-                        hasFilterValidationError = true;
-                        return;
-                    }
-                    if (Number(endAge) < Number(startAge)) {
-                        alert("끝 나이는 시작 나이보다 크거나 같아야 합니다.");
-                        hasFilterValidationError = true;
-                        return;
-                    }
-                    values.push(`${startAge}-${endAge}`);
-                });
-            } else if (type === "REGION") {
-                const regionTags = document.querySelectorAll(".selected-region-tag");
-                if (regionTags.length === 0) {
-                    alert("지역 필터를 선택했지만 지역을 추가하지 않았습니다.");
-                    hasFilterValidationError = true;
-                    return;
-                }
-                regionTags.forEach(tag => values.push(tag.dataset.region));
-            } else {
-                const valueCheckboxes = document.querySelectorAll(
-                    `.filter-details[data-filter-details="${type}"] .filter-value-checkbox:checked`
-                );
-                if (valueCheckboxes.length === 0) {
-                    alert("선택한 필터에 대한 값을 하나 이상 선택하세요.");
-                    hasFilterValidationError = true;
-                    return;
-                }
-                values = Array.from(valueCheckboxes).map(cb => cb.value);
-            }
-
-            if (!hasFilterValidationError && values.length > 0) {
-                filters.push({ type, values });
-            }
-        });
-
-        if (hasFilterValidationError) {
-            return;
-        }
-
-        const payload = {
-            name: activityName,
-            limitCount: Number(limitCount),
-            status,
-            startDate,
-            endDate,
-            activityType,
-            filters
-        };
-
-        try {
-            const response = await fetch(`/api/v1/campaign/${campaignId}/activities`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({}));
-                throw new Error(error.message || "캠페인 활동 생성에 실패했습니다.");
-            }
-
-            const data = await response.json();
-            alert(`${data.name} 캠페인 활동이 생성되었습니다.`);
-            window.location.href = "../admin_board.html";
-        } catch (error) {
-            console.error("캠페인 활동 생성 오류:", error);
-            alert("알 수 없는 오류가 발생했습니다. 나중에 다시 시도해주세요.");
-        }
-    });
 });

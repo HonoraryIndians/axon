@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/default}">
+
+<head>
+    <title>SKU STORE - Events</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="w-full">
+
+        <!-- Event Hero Banner -->
+        <div
+            class="h-[300px] bg-accent text-white flex flex-col items-center justify-center text-center mb-16 relative overflow-hidden">
+            <div class="absolute inset-0 bg-black opacity-20"></div>
+            <div class="relative z-10">
+                <h2 class="text-5xl font-black mb-4 tracking-tighter">AXON EXCLUSIVE EVENTS</h2>
+                <p class="text-xl font-medium opacity-90">매일 쏟아지는 특별한 혜택을 놓치지 마세요</p>
+            </div>
+        </div>
+
+        <div class="max-w-[1200px] mx-auto px-4 mb-24">
+
+            <!-- 1. FCFS Event -->
+            <div class="mb-20">
+                <div class="flex justify-between items-end mb-6 border-b-2 border-black pb-4">
+                    <h3 class="text-2xl font-extrabold text-black">선착순 특가</h3>
+                    <span class="text-sm font-bold text-danger">매일 오전 10시 OPEN</span>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${#lists.isEmpty(fcfsCampaignActivities)}" class="text-center py-20 bg-gray-50 rounded-sm">
+                    <i class="ph-fill ph-calendar-x text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-500 mb-2">진행 중인 이벤트가 없습니다</h3>
+                    <p class="text-gray-400">새로운 이벤트가 곧 찾아옵니다! 조금만 기다려주세요.</p>
+                </div>
+
+                <!-- Event Grid -->
+                <div th:unless="${#lists.isEmpty(fcfsCampaignActivities)}"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                    <!-- Event Card -->
+                    <a th:each="activity, stat : ${fcfsCampaignActivities}"
+                        th:href="@{/campaignActivity/{id}(id=${activity.id})}"
+                        th:style="${stat.index >= 4} ? 'display: none;' : ''"
+                        th:classappend="${stat.index >= 4} ? 'hidden-activity' : ''"
+                        class="bg-[#f8f8f8] p-8 rounded-sm flex items-center justify-between group cursor-pointer hover:bg-[#f0f0f0] transition-colors event-card">
+                        <div>
+                            <span class="bg-black text-white text-xs font-bold px-2 py-1 mb-3 inline-block"
+                                th:text="'선착순 ' + ${activity.limitCount} + '명'">선착순 100명</span>
+                            <h4 class="text-2xl font-black mb-2" th:utext="${activity.title}">LG 스탠바이미<br>99,000원</h4>
+                            <p class="text-sm text-gray" th:text="${activity.description}">정가 1,090,000원</p>
+                        </div>
+                        <div
+                            class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-md shrink-0 ml-4 overflow-hidden relative">
+                            <img th:if="${activity.imageUrl != null and activity.imageUrl != ''}"
+                                th:src="@{${activity.imageUrl}}" class="w-full h-full object-cover absolute inset-0"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <i class="ph ph-gift text-3xl text-dark-gray"
+                                th:style="${activity.imageUrl != null and activity.imageUrl != ''} ? 'display: none;' : ''"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="mt-8 text-center" id="load-more-container" th:if="${fcfsCampaignActivities.size() > 4}">
+                <button onclick="loadMoreEvents()"
+                    class="px-8 py-3 border border-black bg-white text-black font-bold hover:bg-black hover:text-white transition-colors">
+                    더보기 +
+                </button>
+            </div>
+
+            <script>
+                function loadMoreEvents() {
+                    // Select all currently hidden activities
+                    const hiddenCards = Array.from(document.querySelectorAll('.hidden-activity'));
+
+                    // Slice the next 4 items to show
+                    const toShow = hiddenCards.slice(0, 4);
+
+                    toShow.forEach(card => {
+                        card.style.display = ''; // Remove inline display: none
+                        card.classList.remove('hidden-activity'); // Remove marker class
+
+                        // Add a subtle fade-in animation
+                        card.animate([
+                            { opacity: 0, transform: 'translateY(20px)' },
+                            { opacity: 1, transform: 'translateY(0)' }
+                        ], {
+                            duration: 400,
+                            easing: 'ease-out',
+                            fill: 'forwards'
+                        });
+                    });
+
+                    // Check if any hidden items remain
+                    if (document.querySelectorAll('.hidden-activity').length === 0) {
+                        document.getElementById('load-more-container').style.display = 'none';
+                    }
+                }
+            </script>
+
+            <!-- 2. Raffle Event -->
+            <div class="mb-20">
+                <div class="flex justify-between items-end mb-6 border-b-2 border-black pb-4">
+                    <h3 class="text-2xl font-extrabold text-black">LUCKY DRAW</h3>
+                    <span class="text-sm font-bold text-black">응모 기간 : 11.21 ~ 11.23</span>
+                </div>
+                <div
+                    class="bg-black text-white p-10 rounded-sm flex items-center justify-between relative overflow-hidden">
+                    <div class="relative z-10">
+                        <span class="text-accent font-bold text-sm mb-2 block">THIS WEEK'S RAFFLE</span>
+                        <h4 class="text-4xl font-black mb-4">PlayStation 5 Pro<br>30th Anniversary</h4>
+                        <button
+                            class="h-12 px-8 bg-white text-black font-bold hover:bg-gray-200 transition-colors">응모하기</button>
+                    </div>
+                    <div class="absolute right-0 top-0 bottom-0 w-1/2 bg-gradient-to-l from-[#222] to-transparent">
+                    </div>
+                    <i class="ph ph-game-controller text-[200px] absolute right-10 opacity-20 rotate-12"></i>
+                </div>
+            </div>
+
+            <!-- 3. Coupon Zone -->
+            <div>
+                <div class="flex justify-between items-end mb-6 border-b-2 border-black pb-4">
+                    <h3 class="text-2xl font-extrabold text-black">쿠폰 존</h3>
+                </div>
+                <div class="grid grid-cols-3 gap-6">
+                    <div
+                        class="border border-[#ddd] p-6 rounded-sm text-center hover:border-black transition-colors cursor-pointer">
+                        <div class="text-3xl font-black text-accent mb-2">20%</div>
+                        <h5 class="font-bold text-lg mb-2">신규회원 환영 쿠폰</h5>
+                        <p class="text-xs text-gray mb-4">최대 5만원 할인</p>
+                        <button class="w-full h-10 bg-black text-white text-sm font-bold">다운로드</button>
+                    </div>
+                    <div
+                        class="border border-[#ddd] p-6 rounded-sm text-center hover:border-black transition-colors cursor-pointer">
+                        <div class="text-3xl font-black text-black mb-2">5,000원</div>
+                        <h5 class="font-bold text-lg mb-2">배송비 지원 쿠폰</h5>
+                        <p class="text-xs text-gray mb-4">3만원 이상 구매 시</p>
+                        <button class="w-full h-10 bg-black text-white text-sm font-bold">다운로드</button>
+                    </div>
+                    <div
+                        class="border border-[#ddd] p-6 rounded-sm text-center hover:border-black transition-colors cursor-pointer">
+                        <div class="text-3xl font-black text-black mb-2">10%</div>
+                        <h5 class="font-bold text-lg mb-2">주말 쇼핑 쿠폰</h5>
+                        <p class="text-xs text-gray mb-4">토/일요일 사용 가능</p>
+                        <button class="w-full h-10 bg-black text-white text-sm font-bold">다운로드</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

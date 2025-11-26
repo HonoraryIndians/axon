@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: entry-config
+data:
+  application.yml: |
+    server:
+      port: 8081
+    spring:
+      threads:
+        virtual:
+          enabled: true
+      kafka:
+        bootstrap-servers: my-kafka.default.svc.cluster.local:9092
+      data:
+        redis:
+          host: my-redis-master.default.svc.cluster.local
+          port: 6379
+    axon:
+      core-service:
+        base-url: http://core-service:8080

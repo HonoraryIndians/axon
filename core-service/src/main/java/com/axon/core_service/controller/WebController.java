@@ -3,6 +3,7 @@ package com.axon.core_service.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @Slf4j
 @Controller
@@ -28,7 +29,7 @@ public class WebController {
     public String welcomepage() {
         log.info("Serving welcomepage.html");
         return "welcomepage";
-        //TO-DO: 로그아웃 이후 임시 대피처 재정의 필요
+        // TO-DO: 로그아웃 이후 임시 대피처 재정의 필요
     }
 
     /**
@@ -84,5 +85,22 @@ public class WebController {
     public String shoppingmall() {
         log.info("Serving shoppingmall.html");
         return "shoppingmall";
+    }
+
+    @GetMapping("/admin/events")
+    public String eventBoard() {
+        log.info("Serving event-board.html");
+        return "forward:/admin/events/event-board.html";
+    }
+
+    /**
+     * Serves the real-time dashboard page for a specific campaign activity.
+     *
+     * @return the view name "dashboard"
+     */
+    @GetMapping("/dashboard/activity/{activityId}")
+    public String activityDashboard() {
+        log.info("Serving dashboard.html for activity-level monitoring");
+        return "dashboard";
     }
 }

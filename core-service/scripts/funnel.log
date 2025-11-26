@@ -1,0 +1,56 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 Complete Conversion Funnel Generator
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Activity ID:    1
+Entry Service:  http://localhost:8081
+Database:       axon@localhost:3306
+
+Expected Funnel:
+  👁️  Visitors:  100 (100%)
+  👆 Clicks:    40 (0.4% → 40%)
+  ✅ Approved:  12 (0.3% → 12%)
+  💰 Purchases: 8 (0.7% → 8%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Step 1/3: Generating 100 PAGE_VIEW events...
+.................................................. [50/100]
+.................................................. [100/100]
+ ✅ Done (100 visits)
+
+📊 Step 2/3: Generating 40 CLICK events...
+........................................ ✅ Done (40 clicks)
+
+📊 Step 3/4: Generating 12 reservations (APPROVED events)...
+✓✓✓✓✓✓✓✓✓✓✓✓
+✅ Done (12/12 reservations succeeded)
+   → ReservationApprovedEvent → BackendEventPublisher → Kafka → Elasticsearch
+
+📊 Step 4/4: Generating 8 PURCHASE events...
+........ ✅ Done (8 purchases)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Conversion Funnel Generated Successfully!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Generated Data:
+  👁️  PAGE_VIEW:  100 events → Elasticsearch
+  👆 CLICK:      40 events → Elasticsearch
+  ✅ APPROVED:   12 reservations → Elasticsearch (via entry-service)
+  💰 PURCHASE:   8 events → Elasticsearch
+
+🔍 Verification Commands:
+
+  # Elasticsearch events by type (should show all 4 types)
+  curl -s 'http://localhost:9200/behavior-events/_search' -H 'Content-Type: application/json' -d '{"size":0,"query":{"term":{"properties.activityId":1}},"aggs":{"by_type":{"terms":{"field":"triggerType.keyword"}}}}' | jq '.aggregations.by_type.buckets'
+
+  # Dashboard API (should show complete funnel)
+  curl 'http://localhost:8080/api/v1/dashboard/activity/1?period=7d' | jq '.funnel'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 View Dashboard (updates every 5 seconds):
+   http://localhost:8080/admin/dashboard/1
+
+🧹 Clean up test data:
+   ./cleanup-test-data.sh 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

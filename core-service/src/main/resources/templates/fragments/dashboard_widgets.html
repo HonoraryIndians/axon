@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- KPI Card Fragment -->
+<div th:fragment="kpiCard(id, title, iconClass, iconColor, initialValue, trend, trendClass)">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span class="kpi-title" th:text="${title}">Title</span>
+            <div th:class="'kpi-icon ' + ${iconColor}">
+                <i th:class="${iconClass}"></i>
+            </div>
+        </div>
+        <div class="kpi-value" th:id="${id}" th:text="${initialValue}">0</div>
+        <div class="kpi-trend" th:classappend="${trendClass}">
+            <i th:if="${trendClass == 'up'}" class="fa-solid fa-arrow-up"></i>
+            <i th:if="${trendClass == 'down'}" class="fa-solid fa-arrow-down"></i>
+            <span th:text="${trend}">0% vs last period</span>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Container Fragment -->
+<div th:fragment="chartContainer(id, title, widthClass)">
+    <div th:class="'chart-container ' + ${widthClass}">
+        <div class="chart-header">
+            <h3 class="chart-title" th:text="${title}">Chart Title</h3>
+            <div class="chart-actions">
+                <button class="chart-btn active">7D</button>
+                <button class="chart-btn">30D</button>
+            </div>
+        </div>
+        <div style="position: relative; height: 300px;">
+            <canvas th:id="${id}"></canvas>
+        </div>
+    </div>
+</div>
+
+</html>

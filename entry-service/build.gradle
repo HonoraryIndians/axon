@@ -29,7 +29,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // implementation 'org.springframework.boot:spring-boot-starter-webflux' (Removed for Virtual Threads migration)
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -37,10 +37,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // JWT
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
     // axon-module
     implementation 'com.axon:common-messaging:0.0.1-SNAPSHOT'
@@ -53,6 +52,9 @@ dependencies {
 		testImplementation 'org.springframework.security:spring-security-test'
         //testImplementation 'org.mockito:mockito-inline:5.14.2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Security (HMAC) for generation token
+    implementation 'commons-codec:commons-codec:1.15'
 }
 
 tasks.named('test') {

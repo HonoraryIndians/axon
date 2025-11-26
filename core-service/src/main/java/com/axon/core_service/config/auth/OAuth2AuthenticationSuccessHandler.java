@@ -2,12 +2,10 @@ package com.axon.core_service.config.auth;
 
 import com.axon.core_service.domain.user.CustomOAuth2User;
 import com.axon.core_service.domain.user.User;
+import com.axon.core_service.event.UserLoginEvent;
 import com.axon.core_service.repository.UserRepository;
 import com.axon.core_service.service.UserSummaryService;
-import com.axon.core_service.service.producer.CoreServiceKafkaProducer;
-import com.axon.messaging.dto.UserLoginInfo;
 import com.axon.messaging.dto.validation.UserCacheDto;
-import com.axon.messaging.topic.KafkaTopics;
 import com.axon.util.CookieUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
@@ -38,10 +36,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final JwtTokenProvider jwtTokenProvider;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
     private final UserRepository userRepository;
-    private final CoreServiceKafkaProducer kafkaProducer;
     private final UserSummaryService userSummaryService;
-
     private final RedisTemplate<String, Object> redisTemplate;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     /**
      * Handle a successful OAuth2 authentication: determine the redirect URL, record the login event,
@@ -125,34 +122,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         //CookieUtils.addCookie(response, "refreshToken", refreshToken, refreshTokenMaxAge, true);
         log.info("Generated Access Token (first 15 chars): {}", accessToken.substring(0, 15));
         log.info("Generated Refresh Token (first 15 chars): {}", refreshToken.substring(0, 15));
-        PublishUserLoginLog(userId);
 
+        // Publish domain event for analytics pipeline
+        eventPublisher.publishEvent(new UserLoginEvent(userId, Instant.now()));
 
         return UriComponentsBuilder.fromUriString(targetUrl)
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
-    }
-
-    /**
-     * Publish a user login event to the USER_LOGIN Kafka topic.
-     *
-     * Builds a UserLoginInfo payload with the provided userId and the current timestamp,
-     * sends it to the Kafka topic, and logs success or failure.
-     *
-     * @param userId ID of the user who just logged in
-     */
-    private void PublishUserLoginLog(Long userId) {
-        UserLoginInfo userLoginInfo = UserLoginInfo.builder()
-                .userId(userId)
-                .loggedAt(Instant.now())
-                .build();
-        try {
-            kafkaProducer.send(KafkaTopics.USER_LOGIN, userLoginInfo);
-            log.info("Handler send to Consumer : TOPIC {} User {}", KafkaTopics.USER_LOGIN, userLoginInfo.getUserId());
-        } catch (Exception e) {
-            log.error("Handler logger is occurred error || TOPIC {}", KafkaTopics.USER_LOGIN, e);
-        }
     }
 
     /**

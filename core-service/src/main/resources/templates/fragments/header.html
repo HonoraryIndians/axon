@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="header" class="sticky top-0 z-50 bg-white border-b border-light-gray">
+
+    <!-- Top Bar -->
+    <div class="bg-black text-white py-2 text-[11px]">
+        <div class="max-w-[1200px] mx-auto px-4 flex justify-between items-center">
+            <div class="flex gap-4">
+                <span>Axon Exclusive</span>
+                <span>Campaigns</span>
+            </div>
+            <div class="flex gap-4 cursor-pointer">
+                <span class="hover:text-gray-300">로그인</span>
+                <span class="hover:text-gray-300">회원가입</span>
+                <span class="hover:text-gray-300">고객센터</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <div class="max-w-[1200px] mx-auto px-4 h-20 flex justify-between items-center">
+        <a href="/mainshop" class="text-2xl font-black tracking-tighter">SKU STORE</a>
+
+        <div class="w-[400px] bg-light-gray py-2.5 px-4 rounded flex items-center">
+            <i class="ph ph-magnifying-glass text-gray text-lg"></i>
+            <input type="text" class="bg-transparent border-none w-full ml-2 outline-none text-sm placeholder-gray"
+                placeholder="검색어를 입력하세요">
+        </div>
+
+        <div class="flex gap-6">
+            <a href="#" class="flex flex-col items-center hover:opacity-70 transition-opacity">
+                <i class="ph ph-heart text-2xl"></i>
+            </a>
+            <a href="#" class="flex flex-col items-center hover:opacity-70 transition-opacity">
+                <i class="ph ph-shopping-cart text-2xl"></i>
+            </a>
+            <a href="#" class="flex flex-col items-center hover:opacity-70 transition-opacity">
+                <i class="ph ph-user text-2xl"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Category Nav -->
+    <div class="border-t border-light-gray">
+        <div class="max-w-[1200px] mx-auto px-4 flex items-center">
+            <a href="/mainshop" class="py-3 px-4 text-sm font-bold border-b-2 border-black">전체</a>
+            <a href="/events" class="py-3 px-4 text-sm font-bold text-accent hover:text-black transition-colors">이벤트</a>
+            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">패션</a>
+            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">뷰티</a>
+            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">라이프</a>
+            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">테크</a>
+            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">푸드</a>
+            <div class="ml-auto py-3 px-4 text-sm font-bold text-danger cursor-pointer hover:opacity-80">
+                타임세일
+            </div>
+        </div>
+    </div>
+</div>
+
+</html>

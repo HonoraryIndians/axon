@@ -24,29 +24,46 @@ public class CampaignActivityResponse {
     private final LocalDateTime createdAt;
     private final Long participantCount;
     private final List<FilterDetail> filters;
+    private final String imageUrl;
+
+    private final String productName;
+    private final Integer originalPrice;
+    private final Integer price;
+    private final Integer quantity;
 
     /**
-     * Create a CampaignActivityResponse from a CampaignActivity with no participant count.
+     * Create a CampaignActivityResponse from a CampaignActivity with no participant
+     * count.
      *
      * @param campaignActivity the source CampaignActivity to map into the response
-     * @return a CampaignActivityResponse populated from the given CampaignActivity with `participantCount` set to {@code null}
+     * @return a CampaignActivityResponse populated from the given CampaignActivity
+     *         with `participantCount` set to {@code null}
      */
     public static CampaignActivityResponse from(CampaignActivity campaignActivity) {
         return from(campaignActivity, null);
     }
 
     /**
-     * Create a CampaignActivityResponse DTO from a CampaignActivity entity, optionally including participant count.
+     * Create a CampaignActivityResponse DTO from a CampaignActivity entity,
+     * optionally including participant count.
      *
-     * @param campaignActivity the source domain entity whose fields are copied into the DTO
-     * @param participantCount the participant count to assign to the DTO; may be {@code null}
-     * @return a CampaignActivityResponse populated from the provided entity and participant count
+     * @param campaignActivity the source domain entity whose fields are copied into
+     *                         the DTO
+     * @param participantCount the participant count to assign to the DTO; may be
+     *                         {@code null}
+     * @return a CampaignActivityResponse populated from the provided entity and
+     *         participant count
      */
     public static CampaignActivityResponse from(CampaignActivity campaignActivity, Long participantCount) {
         return CampaignActivityResponse.builder()
                 .id(campaignActivity.getId())
                 .campaignId(campaignActivity.getCampaignId())
                 .productId(campaignActivity.getProductId())
+                .productName(
+                        campaignActivity.getProduct() != null ? campaignActivity.getProduct().getProductName() : null)
+                .originalPrice(
+                        campaignActivity.getProduct() != null ? campaignActivity.getProduct().getPrice().intValue()
+                                : null)
                 .name(campaignActivity.getName())
                 .limitCount(campaignActivity.getLimitCount())
                 .status(campaignActivity.getStatus())
@@ -56,6 +73,9 @@ public class CampaignActivityResponse {
                 .createdAt(campaignActivity.getCreatedAt())
                 .participantCount(participantCount)
                 .filters(campaignActivity.getFilters())
+                .imageUrl(campaignActivity.getImageUrl())
+                .price(campaignActivity.getPrice() != null ? campaignActivity.getPrice().intValue() : null)
+                .quantity(campaignActivity.getQuantity())
                 .build();
     }
 }

@@ -1,7 +1,7 @@
 package com.axon.core_service.domain.dto.dashboard;
 
 public record ActivityRealtime(
-        Long participantCount,
-        Long remainingStock
-) {
+                Long participantCount,
+                Long remainingStock,
+                Long totalStock) {
 }
