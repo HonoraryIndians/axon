@@ -67,14 +67,18 @@ else
     echo "     ℹ️  No events to delete"
 fi
 
-# 1-2. MySQL 정리 (Activity 포함)
-echo "  🗑️  MySQL 정리 (Activity 포함)..."
-$MYSQL_CMD -e "DELETE FROM purchases WHERE campaign_activity_id = $ACTIVITY_ID;" 2>/dev/null
-$MYSQL_CMD -e "DELETE FROM campaign_activity_entries WHERE campaign_activity_id = $ACTIVITY_ID;" 2>/dev/null
+# 1-2. MySQL 정리 (테스트 유저 및 데이터)
+echo "  🗑️  MySQL 정리 (테스트 유저 및 데이터)..."
+# 참조 무결성 제약을 피하기 위해 순서대로 삭제
+$MYSQL_CMD -e "DELETE FROM purchases WHERE user_id >= 1000;" 2>/dev/null
+$MYSQL_CMD -e "DELETE FROM campaign_activity_entries WHERE user_id >= 1000;" 2>/dev/null
+$MYSQL_CMD -e "DELETE FROM user_summary WHERE user_id >= 1000;" 2>/dev/null
+$MYSQL_CMD -e "DELETE FROM users WHERE id >= 1000;" 2>/dev/null
+# Activity 관련 잔여 데이터 정리
 $MYSQL_CMD -e "DELETE FROM campaign_activities WHERE id = $ACTIVITY_ID;" 2>/dev/null
 $MYSQL_CMD -e "DELETE FROM campaigns WHERE id = $ACTIVITY_ID;" 2>/dev/null
 $MYSQL_CMD -e "DELETE FROM products WHERE id = $ACTIVITY_ID;" 2>/dev/null
-echo "     ✅ Deleted all data including Activity"
+echo "     ✅ Deleted all test data (Users >= 1000, Activity $ACTIVITY_ID)"
 
 # 1-3. Redis 정리
 echo "  🗑️  Redis 정리..."
