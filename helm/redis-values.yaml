@@ -1,0 +1,11 @@
+architecture: standalone
+auth:
+  enabled: true
+  password: "axon1234"
+master:
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: "ktc-nfs-client"
+service:
+  type: ClusterIP

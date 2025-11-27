@@ -28,6 +28,11 @@ spec:
                 secretKeyRef:
                   name: axon-secrets
                   key: jwt-secret
+            - name: REDIS-PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: axon-secrets
+                  key: redis-password
           volumeMounts:
             - name: config-volume
               mountPath: /app/config

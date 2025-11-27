@@ -25,7 +25,7 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
 jwt:
-  secret: ${JWT_SECRET:dev_jwt_secret_key_very_long_for_hs512_verification_only_do_not_use_in_prod}
+  secret: ${JWT_SECRET:YOUR_VERY_SECRET_RANDOM_STRING_THAT_IS_LONG_ENOUGH_axonskusw}
 
 payment:
   token:

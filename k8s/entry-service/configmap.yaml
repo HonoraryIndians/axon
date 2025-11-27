@@ -14,8 +14,9 @@ data:
         bootstrap-servers: my-kafka.default.svc.cluster.local:9092
       data:
         redis:
-          host: my-redis-master.default.svc.cluster.local
+          host: axon-redis-master
           port: 6379
+          password: ${REDIS-PASSWORD}
     axon:
       core-service:
         base-url: http://core-service:8080

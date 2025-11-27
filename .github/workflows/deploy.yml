@@ -74,16 +74,14 @@ jobs:
     # 3. Deploy to K2P (이미지 태그 교체)
     - name: Update Kubernetes Deployment
       run: |
-        # 기존 yaml 파일의 이미지 태그를 sed 명령어로 바꿔치기해서 적용
+        # 1. 기본 리소스 적용 (이미지는 템플릿 그대로)
+        kubectl apply -f k8s/entry-service/deployment.yaml
+        kubectl apply -f k8s/core-service/deployment.yaml
         
-        # Entry Service
-        sed -i "s|image: .*|image: ${{ env.DOCKER_IMAGE_ENTRY }}:${{ env.VERSION }}|g" k8s/entry-service/deployment.yaml
-        kubectl apply -f k8s/entry-service/
-        
-        # Core Service
-        sed -i "s|image: .*|image: ${{ env.DOCKER_IMAGE_CORE }}:${{ env.VERSION }}|g" k8s/core-service/deployment.yaml
-        kubectl apply -f k8s/core-service/
-        
+        # 2. 이미지를 방금 빌드한 버전으로 정확하게 교체
+        kubectl set image deployment/entry-service entry-service=${{ env.DOCKER_IMAGE_ENTRY }}:${{ env.VERSION }}
+        kubectl set image deployment/core-service core-service=${{ env.DOCKER_IMAGE_CORE }}:${{ env.VERSION }}
+
     - name: Verify Deployment
       run: |
         kubectl rollout status deployment/entry-service
