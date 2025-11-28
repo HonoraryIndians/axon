@@ -20,6 +20,7 @@ public class RedissonConfig {
         config.useSingleServer()
               .setAddress("redis://" + host + ":" + port)
               .setConnectionPoolSize(64)
+              .setPassword(password)
               .setConnectionMinimumIdleSize(10)
               .setRetryAttempts(3)
               .setRetryInterval(1500)
