@@ -16,7 +16,7 @@ data:
         redis:
           host: axon-redis-master
           port: 6379
-          password: ${REDIS-PASSWORD}
+          password: ${REDIS_PASSWORD}
     axon:
       core-service:
         base-url: http://core-service:8080

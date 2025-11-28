@@ -28,7 +28,7 @@ spec:
                 secretKeyRef:
                   name: axon-secrets
                   key: jwt-secret
-            - name: REDIS-PASSWORD
+            - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: axon-secrets

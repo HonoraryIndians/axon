@@ -20,7 +20,7 @@ data:
           table-prefix: "BATCH_"
       jpa:
         hibernate:
-          ddl-auto: validate
+          ddl-auto: update
         show-sql: false
       kafka:
         bootstrap-servers: my-kafka.default.svc.cluster.local:9092
@@ -28,4 +28,4 @@ data:
         redis:
           host: axon-redis-master
           port: 6379
-          password: ${REDIS-PASSWORD}
+          password: ${REDIS_PASSWORD}
