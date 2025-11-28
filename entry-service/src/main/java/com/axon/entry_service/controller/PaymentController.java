@@ -42,6 +42,7 @@ public class PaymentController {
                             .campaignActivityId(payload.getCampaignActivityId())
                             .productId(payload.getProductId())
                             .campaignActivityType(payload.getCampaignActivityType())
+                            .quantity(payload.getQuantity())
                             .reservationToken(reservationToken)
                             .build();
 

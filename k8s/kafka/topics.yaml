@@ -1,0 +1,44 @@
+# Axon CDP Kafka Topics Configuration (Simplified)
+# This file defines all Kafka topics for the Axon CDP system
+
+topics:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Analytics Event Topic
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: axon.event.raw
+    partitions: 3
+    replicationFactor: 1  # For single-node; use 3 for production
+    config:
+      retention.ms: 604800000  # 7 days
+      compression.type: lz4
+      cleanup.policy: delete
+    description: |
+      All user behavior events from frontend and backend:
+      - PAGE_VIEW, CLICK (frontend JS tracker)
+      - APPROVED, PURCHASE (backend events)
+      - LOGIN (backend OAuth success)
+      → Consumed by Kafka Connect → Elasticsearch
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # CQRS Command Topic
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: axon.campaign-activity.command
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: 2592000000  # 30 days
+      compression.type: lz4
+      cleanup.policy: delete
+    description: |
+      CQRS commands for core-service business logic processing:
+      - Entry creation (FCFS, Raffle)
+      - Purchase creation
+      - NOT for analytics (use event.raw instead)
+      → Consumed by core-service @KafkaListener
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Kafka Connect Topics (automatically created by Connect)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# connect-configs
+# connect-offsets
+# connect-status

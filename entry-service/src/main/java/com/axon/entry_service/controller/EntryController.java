@@ -143,6 +143,7 @@ public class EntryController {
                 .campaignActivityId(meta.id())
                 .productId(meta.productId())
                 .campaignActivityType(meta.campaignActivityType())
+                .quantity(requestDto.getQuantity())
                 .build();
         String reservationToken = reservationTokenService.issueToken(tokenPayload);
         return ResponseEntity.ok(PaymentConfirmationResponse.success(reservationToken));
