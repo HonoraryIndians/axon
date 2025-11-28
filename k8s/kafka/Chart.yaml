@@ -1,0 +1,10 @@
+apiVersion: v2
+name: axon-kafka
+description: Kafka deployment for Axon CDP
+version: 1.0.0
+appVersion: "3.9.1"
+
+dependencies:
+  - name: kafka
+    version: 31.4.0
+    repository: oci://registry-1.docker.io/bitnamicharts

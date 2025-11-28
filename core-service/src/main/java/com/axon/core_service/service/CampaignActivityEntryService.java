@@ -80,7 +80,7 @@ public class CampaignActivityEntryService {
                     dto.occurredAt(),
                     PurchaseType.CAMPAIGNACTIVITY,
                     campaignActivity.getPrice(),
-                    campaignActivity.getQuantity(),
+                    (int) (dto.getQuantity() != null ? dto.getQuantity().longValue() : 1L),
                     requestedAt));
         }
 

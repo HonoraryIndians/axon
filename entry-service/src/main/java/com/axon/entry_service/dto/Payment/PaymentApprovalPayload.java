@@ -15,5 +15,6 @@ public class PaymentApprovalPayload {
     private Long campaignActivityId;
     private Long productId;
     private CampaignActivityType campaignActivityType;
+    private Integer quantity;
     private String reservationToken;  // 1차 토큰
 }

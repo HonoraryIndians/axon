@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # K2P 앱 메트릭 수집 (나중에 K2P LoadBalancer IP로 수정 필요)
+  # - job_name: 'k2p-apps'
+  #   metrics_path: '/actuator/prometheus'
+  #   static_configs:
+  #     - targets: ['<ENTRY_LB_IP>:8081', '<CORE_LB_IP>:8080']

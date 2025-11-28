@@ -26,6 +26,7 @@ public class PaymentService {
                         .campaignActivityId(payload.getCampaignActivityId())
                         .productId(payload.getProductId())
                         .campaignActivityType(payload.getCampaignActivityType())
+                        .quantity(payload.getQuantity())
                         .timestamp(Instant.now().toEpochMilli())
                         .build();
 

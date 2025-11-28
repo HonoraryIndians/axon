@@ -17,4 +17,5 @@ public class ReservationTokenPayload implements Serializable {
     private Long campaignActivityId;
     private Long productId;
     private CampaignActivityType campaignActivityType;
+    private Integer quantity;
 }

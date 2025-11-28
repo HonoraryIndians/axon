@@ -1,0 +1,66 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "axon-kafka.fullname" . }}-topic-init
+  labels:
+    {{- include "axon-kafka.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: topic-init
+        image: docker.io/bitnami/kafka:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          
+          KAFKA_BROKER="{{ include "axon-kafka.fullname" . }}:9092"
+
+          echo "⏳ Waiting for Kafka at $KAFKA_BROKER..."
+          until kafka-topics.sh --bootstrap-server $KAFKA_BROKER --list > /dev/null 2>&1; do
+            echo "   Kafka not ready yet, waiting..."
+            sleep 5
+          done
+
+          echo "✅ Kafka is ready!"
+          echo ""
+          echo "📊 Creating Axon CDP topics..."
+
+          # Topic creation function
+          create_topic() {
+            local TOPIC=$1
+            local PARTITIONS=$2
+            local REPLICATION=$3
+
+            if kafka-topics.sh --bootstrap-server $KAFKA_BROKER --list | grep -q "^${TOPIC}$^"; then
+              echo "   ⏭️  Topic '$TOPIC' already exists, skipping..."
+            else
+              kafka-topics.sh --bootstrap-server $KAFKA_BROKER \
+                --create \
+                --topic $TOPIC \
+                --partitions $PARTITIONS \
+                --replication-factor $REPLICATION \
+                --config retention.ms=604800000
+              echo "   ✅ Created topic: $TOPIC (partitions: $PARTITIONS, replication: $REPLICATION)"
+            fi
+          }
+
+          # Axon CDP Topics
+          # 1. Raw Events (High throughput, 3 partitions)
+          create_topic "axon.event.raw" 3 3
+
+          # 2. Command Events (Critical, 3 partitions)
+          create_topic "axon.campaign-activity.command" 3 3
+
+          echo ""
+          echo "✅ All topics created successfully!"
+          echo ""
+          echo "📋 Topic list:"
+          kafka-topics.sh --bootstrap-server $KAFKA_BROKER --list

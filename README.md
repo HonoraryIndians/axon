@@ -1,108 +1,141 @@
-# Axon Campaign Intelligence Platform
+# Axon: High-Performance Campaign Intelligence Platform
 
-Axon is a multi-module Spring ecosystem that powers campaign orchestration, FCFS style promotions, and fine-grained behavior tracking for the Axon commerce stack. The repo hosts both runtime services and the documentation/operational assets that glue them together.
+> **Scale-ready, Event-driven Architecture for FCFS Commerce & Marketing Analytics**
 
-## Repository Layout
+Axon is a specialized commerce platform designed to handle massive traffic spikes typical of **"First-Come, First-Served" (FCFS)** events. It orchestrates high-concurrency reservations, processes real-time user behavior logs, and provides deep marketing insights through Cohort Analysis and LTV metrics.
 
-| Path | Description |
+---
+
+## Key Features
+
+### High-Concurrency Traffic Control
+- **Deterministic FCFS**: Guarantees 100% data consistency even under thousands of concurrent requests using **Redisson Distributed Locks** and **Redis Atomic Counters**.
+- **Zero-Overbooking**: Strict inventory management with a "Check-then-Act" protection mechanism.
+- **Spike Buffering**: Entry Service acts as a shock absorber, buffering requests into Kafka before they reach the core logic.
+
+### Real-time Marketing Analytics
+- **Full-Funnel Tracking**: Tracks user journey from `Visit` -> `Click` -> `Reservation` -> `Purchase`.
+- **Cohort & LTV Analysis**: Analyzes user retention and Lifetime Value (LTV) over 30d/90d/365d periods.
+- **Hybrid Data Pipeline**:
+  - **Elasticsearch**: For massive behavior log aggregation and real-time dashboarding.
+  - **MySQL**: For transactional integrity and precise financial metrics.
+
+### Modern Engineering
+- **Virtual Threads (JDK 21)**: Migrated from Reactive Streams to Virtual Threads for high throughput with simpler debugging.
+- **Event-Driven Architecture**: Decoupled microservices via Kafka (KRaft mode).
+- **Observability**: Full stack monitoring with Prometheus, Grafana, and Kibana.
+
+---
+
+## System Architecture
+
+```mermaid
+graph TD
+    Client[User / Browser] -->|Traffic| Entry[Entry Service]
+    
+    subgraph "Ingestion Layer (Entry Service)"
+        Entry -->|Fast Validation| Redis_Cache[(Redis Cache)]
+        Entry -->|Buffer| Kafka_Raw[Kafka: axon.event.raw]
+        Entry -->|Command| Kafka_Cmd[Kafka: axon.command]
+    end
+
+    subgraph "Core Domain (Core Service)"
+        Kafka_Cmd -->|Consume| Core[Core Service]
+        Core -->|Tx| MySQL[(MySQL DB)]
+        Core -->|Lock| Redis_Lock[(Redisson Lock)]
+    end
+
+    subgraph "Data & Analytics"
+        Kafka_Raw -->|Sink| ES[(Elasticsearch)]
+        MySQL -->|Sync| Core
+        Core -->|Query| Admin[Admin Dashboard]
+    end
+```
+
+| Module | Description | Tech Stack |
+| --- | --- | --- |
+| **`entry-service`** | Traffic gateway. Handles validation, FCFS reservation, and behavior logging. | Spring Boot, Netty, Redis, Kafka |
+| **`core-service`** | Domain engine. Manages products, campaigns, purchases, and analytics. | Spring Boot (Virtual Threads), JPA, Redisson |
+| **`common-messaging`** | Shared DTOs, Enums, and Kafka constants. | Java Library |
+| **`infrastructure`** | Deployment configurations and scripts. | Docker, K8s, Helm |
+
+---
+
+## Tech Stack
+
+- **Language**: Java 21 (LTS)
+- **Framework**: Spring Boot 3.2, Spring Cloud
+- **Messaging**: Apache Kafka (KRaft mode)
+- **Database**: MySQL 8.0, Redis (Cluster/Sentinel ready), Elasticsearch 8.x
+- **DevOps**: Docker Compose, Kubernetes (K2P), GitHub Actions
+- **Testing**: JUnit 5, k6 (Load Testing), Shell Scripts (E2E Simulation)
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Java 21+
+- Docker & Docker Compose
+
+### 1. Start Infrastructure
+Spin up Kafka, MySQL, Redis, and Elasticsearch.
+```bash
+docker-compose up -d
+```
+
+### 2. Run Services
+**Entry Service (Port 8081)**
+```bash
+./gradlew :entry-service:bootRun
+```
+
+**Core Service (Port 8080)**
+```bash
+./gradlew :core-service:bootRun
+```
+
+### 3. Access Dashboard
+Navigate to `http://localhost:8080/admin/dashboard/1` to view the real-time marketing dashboard.
+
+---
+
+## Testing & Simulation
+
+Axon includes a powerful simulation suite to verify complex scenarios.
+
+| Script | Purpose |
 | --- | --- |
-| `core-service/` | Primary Spring Boot app that owns campaign logic, purchase workflows, MySQL persistence, and async consumers. |
-| `entry-service/` | Lightweight ingestion edge that validates requests, enforces FCFS via Redis, and publishes behavior/campaign events to Kafka. |
-| `common-messaging/` | Shared DTOs, enums, and Kafka topic constants used by the services. |
-| `docs/` | Reference material (behavior tracker spec, Fluentd/Filebeat plan, dashboard spec, etc.). |
-| `docker-compose.yml`, `kafka-init/`, `fluentd/`, `k8s/` | Local infra + deployment assets (Kafka, MySQL, Redis, Fluentd sidecars, K8s manifests). |
+| `run-dashboard-test.sh` | Generates a full user journey (Visit -> Purchase) and populates the dashboard. |
+| `generate-ltv-simulation.sh` | Simulates future repurchases (30d/90d/365d) for Cohort/LTV analysis. |
+| `time-travel-activity.sh` | Moves campaign dates to the past to test expired/historical scenarios. |
 
-## Highlights
-
-- **Deterministic FCFS pipeline** – Entry-service performs segment filtering + Redis-based slot reservation so Kafka already carries ordered winners, while core-service focuses on domain effects (stock decrement, approvals, user summary updates).
-- **Behavior tracking JS snippet** – `behavior-tracker.js` is auto-injected via Thymeleaf, fetches active trigger rules, captures page views/clicks, and streams events into `axon.event.raw` for downstream ES/DWH analytics.
-- **Composable messaging** – Kafka topics (command + raw behavior) are the backbone; Fluentd/Filebeat gateways allow shipping behavior logs into Elasticsearch/K2P Logging without touching MySQL.
-- **Documentation-first** – Flow docs (`docs/purchase-event-flow.md`, `docs/campaign-activity-limit-flow.md`, `docs/behavior-event-fluentd-plan.md`, `docs/marketing-dashboard-spec.md`) keep business and infra context close to the code.
-
-## Architecture Overview
-
-```
-Browser (behavior-tracker.js)
-        │ page views / clicks + entry requests
-        ▼
-Entry-service (Thymeleaf UI + controllers)
-        │ Redis FCFS + validation
-        ├── Kafka axon.campaign-activity.command
-        └── Kafka axon.event.raw
-                         │
-                         ▼
-              ┌──────────────────────┐
-              │ core-service         │
-              │  - Consumer          │
-              │  - Domain services   │
-              └─────────┬────────────┘
-                        │
-        ┌──────────────▼──────────────┐
-        │ MySQL (campaigns/entries)   │
-        │ Redis (counters/cache)      │
-        └──────────────┬──────────────┘
-                        │
-        ┌──────────────▼──────────────┐
-        │ Fluentd/Filebeat → ES/K2P   │
-        │ (behavior analytics)        │
-        └─────────────────────────────┘
+**Example: Run a full test**
+```bash
+# Generate 100 visitors for Activity ID 1
+./core-service/scripts/run-dashboard-test.sh 1 100
 ```
 
-## Local Development
+---
 
-1. **Prerequisites**
-   - Java 17+
-   - Docker + Docker Compose
-   - Make sure `./gradlew` is executable (`chmod +x gradlew` if needed).
+## Performance Engineering
 
-2. **Spin up infra**
-   ```bash
-   docker-compose up -d
-   ```
-   This supplies Kafka, ZooKeeper, MySQL, Redis, and any supporting containers defined in `docker-compose.yml`.
+### Concurrency Control
+We addressed the "Over-booking" issue in FCFS events by implementing **Redisson Distributed Locks**.
+- **Before**: Database `check-then-act` caused race conditions under load.
+- **After**: `RLock` ensures atomic reservations across distributed instances.
 
-3. **Run services**
-   - Entry-service UI / ingestion
-     ```bash
-     ./gradlew :entry-service:bootRun
-     ```
-   - Core-service domain engine
-     ```bash
-     ./gradlew :core-service:bootRun
-     ```
-   The behavior tracker static assets live under `core-service/src/main/resources/static/js`. When the entry UI renders via Thymeleaf, the tracker script is injected automatically.
+### Throughput Optimization
+- **WebFlux -> Virtual Threads**: Replaced complex reactive chains with blocking-style Virtual Threads, improving throughput while maintaining code readability.
+- **Async Event Publishing**: ApplicationEvents + Kafka ensures the main transaction is never blocked by logging or notification tasks.
 
-4. **Helpful commands**
-   - Build & test everything: `./gradlew build`
-   - Module-specific tests: `./gradlew :core-service:test` or `:entry-service:test`
-   - Consume Kafka topics for debugging: use `kafka-console-consumer` against `axon.campaign-activity.command` or `axon.event.raw`.
+---
 
-## Behavior Tracker Integration
+## Documentation
+- [Behavior Tracker Spec](docs/behavior-tracker.md)
+- [Marketing Dashboard Plan](docs/marketing-dashboard-development-plan.md)
+- [Performance Improvement Plan](docs/performance-improvement-plan.md)
 
-- Authoritative spec: `docs/behavior-tracker.md`
-- Snippet source for reference or CDN publishing: `docs/snippets/behavior-tracker.js`
-- Entry-service provides:
-  - `GET /api/v1/events/active` (active trigger definitions)
-  - `POST /api/v1/behavior/events` (collect endpoint that writes to Kafka)
-- Configure `tokenProvider`, `userIdProvider`, etc., per the doc. Toggle `debug=true` to view `[AxonBehaviorTracker]` logs in the browser console during QA.
+---
 
-## Analytics & Logging Plan
-
-- `docs/behavior-event-fluentd-plan.md` – outlines Kafka → Fluentd/Filebeat → Elasticsearch ingestion for behavior logs, with K2P Logging deployment notes.
-- `docs/marketing-dashboard-spec.md` – dashboard wireframe spec (KPI cards, funnel charts, cost/ROI panels) for the marketing team.
-- Operational flows such as purchase events, campaign limits, and Redis FCFS handoffs are captured in the respective docs under `docs/`.
-
-## Testing
-
-- Unit & slice tests live under each module’s `src/test/java`.
-- Integration tests rely on the Docker services; ensure `docker-compose` stack is running if a test references Kafka/MySQL.
-- Gradle wrapper lock: if CI encounters the known wrapper lock issue, remove the stale `.gradle` lock file manually before rerunning (documented in `docs/project-tasks.md`).
-
-## Contributing & Conventions
-
-- Follow Conventional Commits (`feat:`, `fix:`, `chore:` …).
-- Java code style: Spring defaults (4-space indent, constructor injection via Lombok `@RequiredArgsConstructor`, DTOs/enums in `common-messaging`).
-- Tests must be deterministic—cleanup DB state or use transactional rollbacks.
-- When adding new flows, update/author docs in `docs/` so the pipeline remains discoverable.
-
-Happy shipping! Reach out via AGENTS.md instructions if additional automation or infra changes are needed.
+**Axon Team** | *Built for Scale, Designed for Insight.*
