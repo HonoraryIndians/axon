@@ -14,6 +14,10 @@ data:
         # TODO: Replace with actual KT Cloud DB VIP
         url: jdbc:mysql://172.25.0.57:10000/axon_db?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
         username: axon_user
+      batch:
+        jdbc:
+          initialize-schema: never
+          table-prefix: "BATCH_"
       jpa:
         hibernate:
           ddl-auto: validate

@@ -39,21 +39,26 @@ public class BatchInitalTableConfig {
     }
 
     /**
-     * Checks whether Spring Batch metadata tables already exist by querying the JOB_INSTANCE table.
+     * Checks whether Spring Batch metadata tables already exist by checking INFORMATION_SCHEMA.
      *
      * Uses the JDBC table prefix from {@code properties.getJdbc().getTablePrefix()}, defaulting to {@code "BATCH_"} when not set.
      *
      * @param dataSource the DataSource to run the probe query against
      * @param properties Batch properties that may contain a JDBC table prefix
-     * @return {@code true} if the JOB_INSTANCE table contains at least one row (metadata present), {@code false} otherwise
+     * @return {@code true} if the JOB_INSTANCE table exists (metadata present), {@code false} otherwise
      */
     private boolean isBatchMetadataPresent(DataSource dataSource, BatchProperties properties) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String tablePrefix = Optional.ofNullable(properties.getJdbc().getTablePrefix()).orElse("BATCH_");
         String jobInstanceTable = tablePrefix + "JOB_INSTANCE";
         try {
-            jdbcTemplate.queryForObject("SELECT 1 FROM " + jobInstanceTable + " LIMIT 1", Integer.class);
-            return true;
+            // Check if table exists in INFORMATION_SCHEMA (works for both empty and populated tables)
+            Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?",
+                Integer.class,
+                jobInstanceTable
+            );
+            return count != null && count > 0;
         } catch (DataAccessException ex) {
             return false;
         }
