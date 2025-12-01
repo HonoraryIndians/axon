@@ -40,6 +40,10 @@ spec:
                 secretKeyRef:
                   name: axon-secrets
                   key: redis-password
+            - name: SPRING_DATA_REDIS_HOST
+              value: axon-redis-master
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
           volumeMounts:
             - name: config-volume
               mountPath: /app/config

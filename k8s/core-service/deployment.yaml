@@ -40,11 +40,15 @@ spec:
                 secretKeyRef:
                   name: axon-secrets
                   key: redis-password
+            - name: SPRING_DATA_REDIS_HOST
+              value: axon-redis-master
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
           volumeMounts:
             - name: config-volume
               mountPath: /app/config
               readOnly: true
-          args: ["--spring.config.location=classpath:/application.yml,file:/app/config/application.yml"]
+          args: ["--spring.config.location=file:/app/config/application.yml,classpath:/application.yml"]
       volumes:
         - name: config-volume
           configMap:
