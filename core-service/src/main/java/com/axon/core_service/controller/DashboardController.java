@@ -1,6 +1,7 @@
 package com.axon.core_service.controller;
 
 import com.axon.core_service.domain.dashboard.DashboardPeriod;
+import com.axon.core_service.domain.dto.dashboard.CampaignDashboardResponse;
 import com.axon.core_service.domain.dto.dashboard.CohortAnalysisResponse;
 import com.axon.core_service.domain.dto.dashboard.DashboardResponse;
 import com.axon.core_service.service.CohortAnalysisService;
@@ -18,6 +19,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import com.axon.core_service.domain.dto.dashboard.GlobalDashboardResponse;
 
 @Slf4j
 @RestController
@@ -37,6 +40,11 @@ public class DashboardController {
     // REST Endpoints (one-time fetch)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+    @GetMapping("/overview")
+    public ResponseEntity<GlobalDashboardResponse> getGlobalDashboard() {
+        return ResponseEntity.ok(dashboardService.getGlobalDashboard());
+    }
+
     @GetMapping("/activity/{activityId}")
     public ResponseEntity<DashboardResponse> getDashboardByActivity(
             @PathVariable Long activityId,
@@ -53,9 +61,9 @@ public class DashboardController {
     }
 
     @GetMapping("/campaign/{campaignId}")
-    public ResponseEntity<com.axon.core_service.domain.dto.dashboard.CampaignDashboardResponse> getDashboardByCampaign(
+    public ResponseEntity<CampaignDashboardResponse> getDashboardByCampaign(
             @PathVariable Long campaignId) {
-        com.axon.core_service.domain.dto.dashboard.CampaignDashboardResponse response = dashboardService
+        CampaignDashboardResponse response = dashboardService
                 .getDashboardByCampaign(campaignId);
         return ResponseEntity.ok(response);
     }
@@ -90,6 +98,32 @@ public class DashboardController {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // SSE Endpoints (real-time streaming)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    /**
+     * Stream real-time dashboard updates for a specific campaign.
+     */
+    @GetMapping(value = "/stream/campaign/{campaignId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamCampaignDashboard(@PathVariable Long campaignId) {
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+        log.info("SSE connection opened for campaign: {}", campaignId);
+
+        ScheduledFuture<?> scheduledTask = scheduler.scheduleAtFixedRate(() -> {
+            try {
+                CampaignDashboardResponse data = dashboardService.getDashboardByCampaign(campaignId);
+                emitter.send(SseEmitter.event().name("dashboard-update").data(data));
+            } catch (Exception e) {
+                log.error("Error streaming dashboard for campaign: {}", campaignId, e);
+                emitter.completeWithError(e);
+            }
+        }, 0, 5, TimeUnit.SECONDS);
+
+        emitter.onCompletion(() -> scheduledTask.cancel(true));
+        emitter.onTimeout(() -> scheduledTask.cancel(true));
+        emitter.onError((ex) -> scheduledTask.cancel(true));
+
+        return emitter;
+    }
 
     /**
      * Stream real-time dashboard updates for a specific campaign activity.

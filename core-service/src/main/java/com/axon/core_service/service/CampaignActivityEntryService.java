@@ -74,6 +74,7 @@ public class CampaignActivityEntryService {
         if (nextStatus == CampaignActivityEntryStatus.APPROVED
                 && campaignActivity.getActivityType().isPurchaseRelated()) {
             eventPublisher.publishEvent(new PurchaseInfoDto(
+                    campaignActivity.getCampaignId(),
                     campaignActivity.getId(),
                     dto.getUserId(),
                     dto.getProductId(),

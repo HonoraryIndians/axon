@@ -31,6 +31,7 @@ public class BehaviorEventAdapter {
         String syntheticUrl = generatePurchaseUrl(event.campaignActivityId());
         Map<String, Object> properties = new HashMap<>();
         properties.put("activityId", event.campaignActivityId());
+        properties.put("campaignId", event.campaignId());
         properties.put("productId", event.productId());
         properties.put("source", "backend");
 

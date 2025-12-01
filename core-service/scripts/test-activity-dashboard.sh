@@ -108,9 +108,9 @@ echo ""
 echo "🏗️  Step 2/5: Activity 생성..."
 echo ""
 
-SETUP_SQL="$SCRIPT_DIR/setup-marketing-test-data.sql"
+SETUP_SQL="$SCRIPT_DIR/setup-activity-data.sql"
 if [ ! -f "$SETUP_SQL" ]; then
-    echo "   ❌ Error: setup-marketing-test-data.sql not found"
+    echo "   ❌ Error: setup-activity-data.sql not found"
     exit 1
 fi
 

@@ -125,6 +125,48 @@ public class BehaviorEventService {
         return getQualifyCount(activityId, start, end);
     }
 
+    /**
+     * Optimized Aggregation: Fetch statistics for all activities in a campaign in a single query.
+     */
+    public java.util.Map<Long, java.util.Map<String, Long>> getCampaignStats(Long campaignId, LocalDateTime start, LocalDateTime end) throws IOException {
+        SearchResponse<Void> response = elasticsearchClient.search(s -> s
+                .index("behavior-events")
+                .size(0) // No documents, only aggregations
+                .query(q -> q.bool(b -> b
+                        .filter(f -> f.term(t -> t.field("properties.campaignId").value(campaignId)))
+                        .filter(buildTimeRangeFilter(start, end))
+                ))
+                .aggregations("by_activity", a -> a
+                        .terms(t -> t.field("properties.activityId").size(1000)) // Support up to 1000 activities per campaign
+                        .aggregations("by_trigger", sub -> sub
+                                .terms(t -> t.field("triggerType.keyword"))
+                        )
+                ),
+                Void.class
+        );
+
+        java.util.Map<Long, java.util.Map<String, Long>> stats = new java.util.HashMap<>();
+
+        if (response.aggregations() != null) {
+            co.elastic.clients.elasticsearch._types.aggregations.LongTermsAggregate activityAgg = 
+                response.aggregations().get("by_activity").lterms();
+
+            for (co.elastic.clients.elasticsearch._types.aggregations.LongTermsBucket bucket : activityAgg.buckets().array()) {
+                Long activityId = Long.valueOf(bucket.key());
+                java.util.Map<String, Long> triggerCounts = new java.util.HashMap<>();
+                
+                co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate triggerAgg = 
+                    bucket.aggregations().get("by_trigger").sterms();
+                
+                for (co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket triggerBucket : triggerAgg.buckets().array()) {
+                    triggerCounts.put(triggerBucket.key().stringValue(), triggerBucket.docCount());
+                }
+                stats.put(activityId, triggerCounts);
+            }
+        }
+        return stats;
+    }
+
     public java.util.Map<Integer, Long> getHourlyTraffic(Long campaignId, LocalDateTime start, LocalDateTime end)
             throws IOException {
         // Hourly aggregation for the campaign (all activities)
@@ -188,6 +230,48 @@ public class BehaviorEventService {
                     }
                     return b;
                 }));
+    }
+
+    /**
+     * Global Aggregation: Fetch statistics for ALL campaigns in a single query.
+     * Used for Global Dashboard.
+     */
+    public java.util.Map<Long, java.util.Map<String, Long>> getAllCampaignStats(LocalDateTime start, LocalDateTime end) throws IOException {
+        SearchResponse<Void> response = elasticsearchClient.search(s -> s
+                .index("behavior-events")
+                .size(0)
+                .query(q -> q.bool(b -> b
+                        .filter(buildTimeRangeFilter(start, end))
+                ))
+                .aggregations("by_campaign", a -> a
+                        .terms(t -> t.field("properties.campaignId").size(1000)) // Get top 1000 campaigns
+                        .aggregations("by_trigger", sub -> sub
+                                .terms(t -> t.field("triggerType.keyword"))
+                        )
+                ),
+                Void.class
+        );
+
+        java.util.Map<Long, java.util.Map<String, Long>> stats = new java.util.HashMap<>();
+
+        if (response.aggregations() != null) {
+            co.elastic.clients.elasticsearch._types.aggregations.LongTermsAggregate campaignAgg = 
+                response.aggregations().get("by_campaign").lterms();
+
+            for (co.elastic.clients.elasticsearch._types.aggregations.LongTermsBucket bucket : campaignAgg.buckets().array()) {
+                Long campaignId = Long.valueOf(bucket.key());
+                java.util.Map<String, Long> triggerCounts = new java.util.HashMap<>();
+                
+                co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate triggerAgg = 
+                    bucket.aggregations().get("by_trigger").sterms();
+                
+                for (co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket triggerBucket : triggerAgg.buckets().array()) {
+                    triggerCounts.put(triggerBucket.key().stringValue(), triggerBucket.docCount());
+                }
+                stats.put(campaignId, triggerCounts);
+            }
+        }
+        return stats;
     }
 
     // == private helpers

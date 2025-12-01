@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record PurchaseInfoDto(
+        Long campaignId,
         Long campaignActivityId,
         Long userId,
         Long productId,

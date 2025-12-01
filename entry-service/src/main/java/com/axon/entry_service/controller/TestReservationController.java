@@ -58,6 +58,7 @@ public class TestReservationController {
                 // Create mock metadata for testing (no core-service dependency)
                 CampaignActivityMeta meta = new CampaignActivityMeta(
                                 request.getCampaignActivityId(), // id
+                                1L, // mock campaignId
                                 1000, // limitCount (high limit for testing)
                                 CampaignActivityStatus.ACTIVE, // status
                                 LocalDateTime.now().minusDays(1), // startDate

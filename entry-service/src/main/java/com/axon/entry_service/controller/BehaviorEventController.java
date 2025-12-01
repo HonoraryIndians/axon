@@ -17,6 +17,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.axon.entry_service.domain.CampaignActivityMeta;
+import com.axon.entry_service.service.CampaignActivityMetaService;
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/behavior/events")
@@ -24,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class BehaviorEventController {
 
     private final BehaviorEventPublisher publisher;
+    private final CampaignActivityMetaService metaService;
 
     /**
      * Accepts a behavior event request, builds a UserBehaviorEvent enriched with user and HTTP metadata, and publishes it for processing.
@@ -39,6 +45,10 @@ public class BehaviorEventController {
                                                     HttpServletRequest servletRequest) {
         log.info("recordBehaviorEvent request={}", request);
         Long userId = resolveUserId(request, userDetails);
+        
+        Map<String, Object> enrichedProperties = new HashMap<>(request.getProperties());
+        enrichWithCampaignId(enrichedProperties);
+
         UserBehaviorEvent event = UserBehaviorEvent.builder()
                 .eventId(request.getEventId())
                 .eventName(request.getEventName())
@@ -49,11 +59,34 @@ public class BehaviorEventController {
                 .pageUrl(request.getPageUrl())
                 .referrer(request.getReferrer())
                 .userAgent(extractUserAgent(servletRequest))
-                .properties(request.getProperties())
+                .properties(enrichedProperties)
                 .build();
 
         publisher.publish(event);
         return ResponseEntity.accepted().build();
+    }
+
+    private void enrichWithCampaignId(Map<String, Object> properties) {
+        if (properties != null && properties.containsKey("activityId")) {
+            try {
+                Object activityIdObj = properties.get("activityId");
+                Long activityId = null;
+                if (activityIdObj instanceof Number) {
+                    activityId = ((Number) activityIdObj).longValue();
+                } else if (activityIdObj instanceof String) {
+                    activityId = Long.parseLong((String) activityIdObj);
+                }
+
+                if (activityId != null) {
+                    CampaignActivityMeta meta = metaService.getMeta(activityId);
+                    if (meta != null && meta.campaignId() != null) {
+                        properties.put("campaignId", meta.campaignId());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to enrich event with campaignId", e);
+            }
+        }
     }
 
     /**

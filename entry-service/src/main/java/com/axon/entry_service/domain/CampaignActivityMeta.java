@@ -11,6 +11,7 @@ import java.util.Objects;
 
 public record CampaignActivityMeta(
         Long id,
+        Long campaignId,
         Integer limitCount,
         CampaignActivityStatus status,
         LocalDateTime startDate,

@@ -70,6 +70,7 @@ public class CampaignActivityMetaService {
 
         CampaignActivityMeta meta = new CampaignActivityMeta(
                 response.id(),
+                response.campaignId(),
                 response.limitCount(),
                 response.status(),
                 response.startDate(),

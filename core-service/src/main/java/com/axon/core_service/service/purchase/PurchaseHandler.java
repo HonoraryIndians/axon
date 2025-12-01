@@ -38,6 +38,7 @@ public class PurchaseHandler {
                     info.userId(), info.campaignActivityId(), info.productId());
 
             eventPublisher.publishEvent(new CampaignActivityApprovedEvent(
+                    info.campaignId(),
                     info.campaignActivityId(),
                     info.userId(),
                     info.productId(),

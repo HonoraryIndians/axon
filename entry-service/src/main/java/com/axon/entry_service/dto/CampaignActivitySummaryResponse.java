@@ -10,6 +10,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CampaignActivitySummaryResponse(
         Long id,
+        Long campaignId,
         Integer limitCount,
         CampaignActivityStatus status,
         LocalDateTime startDate,
