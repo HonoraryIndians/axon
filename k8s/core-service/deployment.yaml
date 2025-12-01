@@ -17,6 +17,13 @@ spec:
           image: nileyang/axon-core:v1
           ports:
             - containerPort: 8080
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "200m"
+            limits:
+              memory: "1536Mi"
+              cpu: "600m"
           env:
             - name: DB_PASSWORD
               valueFrom:
