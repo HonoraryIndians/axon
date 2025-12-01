@@ -57,7 +57,10 @@
                 th:replace="fragments/dashboard_widgets :: kpiCard('gmv', 'GMV (총 거래액)', 'fa-solid fa-sack-dollar', 'emerald', '₩0', '-', 'neutral')">
             </div>
             <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('conversionRate', 'Conversion Rate', 'fa-solid fa-bullseye', 'indigo', '0%', '-', 'neutral')">
+                th:replace="fragments/dashboard_widgets :: kpiCard('engagementRate', 'CTR (Engagement)', 'fa-solid fa-hand-pointer', 'purple', '0%', '-', 'neutral')">
+            </div>
+            <div
+                th:replace="fragments/dashboard_widgets :: kpiCard('conversionRate', 'CVR (Conversion)', 'fa-solid fa-bullseye', 'indigo', '0%', '-', 'neutral')">
             </div>
             <div
                 th:replace="fragments/dashboard_widgets :: kpiCard('aov', 'Avg Order Value', 'fa-solid fa-receipt', 'amber', '₩0', '-', 'neutral')">

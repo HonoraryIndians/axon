@@ -71,6 +71,9 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCurrencyValue('gmv', overview.gmv);
         updateTrend('gmv', calcChange(overview.gmv, previous?.gmv));
 
+        updatePercentageValue('engagementRate', overview.engagementRate);
+        updateTrend('engagementRate', calcChange(overview.engagementRate, previous?.engagementRate));
+
         updatePercentageValue('conversionRate', overview.conversionRate);
         updateTrend('conversionRate', calcChange(overview.conversionRate, previous?.conversionRate));
 

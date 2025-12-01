@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class StoreController {
 
     private final CampaignActivityRepository campaignActivityRepository;
@@ -53,11 +55,19 @@ public class StoreController {
 
     @GetMapping("/events")
     public String getCampaignActivities(Model model) {
-        // Fetch real campaign activities
+        // Fetch real campaign activities (skip broken data)
         List<CampaignActivityDisplayDto> realActivities = campaignActivityRepository
                 .findAllByStatus(com.axon.core_service.domain.dto.campaignactivity.CampaignActivityStatus.ACTIVE)
                 .stream()
-                .map(this::convertToDto)
+                .map(activity -> {
+                    try {
+                        return convertToDto(activity);
+                    } catch (Exception e) {
+                        log.warn("Failed to convert CampaignActivity id={}: {}", activity.getId(), e.getMessage());
+                        return null;  // Skip broken data
+                    }
+                })
+                .filter(dto -> dto != null)  // Remove nulls
                 .collect(Collectors.toList());
 
         // Separate FCFS and Raffle activities

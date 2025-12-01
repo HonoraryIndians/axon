@@ -24,7 +24,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/behavior/events")
+@RequestMapping("/entry/api/v1/behavior/events")
 @RequiredArgsConstructor
 public class BehaviorEventController {
 

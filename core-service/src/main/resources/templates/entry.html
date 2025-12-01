@@ -6,8 +6,8 @@
     <title>SKU STORE - Event Detail</title>
     <script th:inline="javascript">
         window.__AXON_TRACKER_OVERRIDES__ = {
-            apiBaseUrl: 'http://localhost:8080',
-            collectEndpoint: 'http://localhost:8081/api/v1/behavior/events',
+            apiBaseUrl: '',  // Use relative path (same origin via Ingress)
+            collectEndpoint: '/entry/api/v1/behavior/events',
             tokenProvider: () => common.getCookie('accessToken'),
             debug: true
         };
@@ -439,7 +439,7 @@
                         reservationToken: reservationToken
                     }
 
-                    fetch('http://localhost:8081/api/v1/payments/prepare', {
+                    fetch('/entry/api/v1/payments/prepare', {
                         method: 'POST',
                         credentials: 'include',
                         headers: {
@@ -487,7 +487,7 @@
                     const tokenPayload = {
                         reservationToken: token
                     }
-                    fetch('http://localhost:8081/api/v1/payments/confirm', {
+                    fetch('/entry/api/v1/payments/confirm', {
                         method: 'POST',
                         credentials: 'include',
                         headers: {
@@ -552,7 +552,7 @@
                             productId: [[${ campaignActivity.productId }]]
                         };
 
-                        fetch('http://localhost:8081/api/v1/entries', {
+                        fetch('/entry/api/v1/entries', {
                             method: 'POST',
                             credentials: 'include',
                             headers: {

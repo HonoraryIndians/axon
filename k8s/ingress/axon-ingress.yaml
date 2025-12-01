@@ -13,20 +13,16 @@ spec:
   - host: axon.com
     http:
       paths:
-      - path: /api/entry
+      # Entry-service (명확한 prefix로 분리)
+      - path: /entry/
         pathType: Prefix
         backend:
           service:
             name: entry-service
             port:
               number: 80
-      - path: /api/core
-        pathType: Prefix
-        backend:
-          service:
-            name: core-service
-            port:
-              number: 8080
+
+      # Core-service (나머지 모든 경로)
       - path: /
         pathType: Prefix
         backend:

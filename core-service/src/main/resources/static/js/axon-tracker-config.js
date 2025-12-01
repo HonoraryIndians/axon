@@ -5,8 +5,8 @@
 (function (global) {
   'use strict';
 
-  const DEFAULT_API_BASE = 'http://localhost:8080'; // core-service
-  const DEFAULT_COLLECT_ENDPOINT = 'http://localhost:8081/api/v1/behavior/events'; // entry-service
+  const DEFAULT_API_BASE = ''; // Use relative path (same origin via Ingress)
+  const DEFAULT_COLLECT_ENDPOINT = '/entry/api/v1/behavior/events'; // entry-service via Ingress
   const DEFAULT_SCRIPT_SRC = '/js/behavior-tracker.js';
 
   const overrides = global.__AXON_TRACKER_OVERRIDES__ || {};

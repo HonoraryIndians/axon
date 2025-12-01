@@ -21,7 +21,7 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/payments")
+@RequestMapping("/entry/api/v1/payments")
 public class PaymentController {
     private final ReservationTokenService reservationTokenService;
     private final PaymentService paymentService;

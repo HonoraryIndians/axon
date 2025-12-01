@@ -25,9 +25,9 @@ import java.util.Optional;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/entries")
+@RequestMapping("/entry/api/v1/entries")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = "*")  // Same-origin via Ingress, wildcard for flexibility
 public class EntryController {
     private final EntryReservationService reservationService;
     private final CampaignActivityMetaService campaignActivityMetaService;
