@@ -36,6 +36,23 @@ topics:
       - NOT for analytics (use event.raw instead)
       → Consumed by core-service @KafkaListener
 
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Kubernetes Application Logs Topic
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  - name: k8s.logs
+    partitions: 3
+    replicationFactor: 2  # Higher replication for production logs
+    config:
+      retention.ms: 604800000  # 7 days
+      compression.type: lz4
+      cleanup.policy: delete
+    description: |
+      Kubernetes pod stdout/stderr logs collected by Fluent Bit:
+      - Core-service logs
+      - Entry-service logs
+      - All K8s application logs
+      → Consumed by Kafka Connect → Elasticsearch
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Kafka Connect Topics (automatically created by Connect)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

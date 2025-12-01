@@ -4,17 +4,15 @@ metadata:
   name: axon-ingress
   namespace: default
   annotations:
-    # Nginx Ingress 설정
-    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+    # rewrite-target 제거! 서브도메인 방식에서는 불필요
 spec:
   ingressClassName: nginx
   rules:
-  - host: "210.104.76.202.nip.io"
+  # 메인 서비스 (Core/Entry)
+  - host: axon.210.104.76.202.nip.io
     http:
       paths:
-      # 1. Entry Service (API)
       - path: /api/entry
         pathType: Prefix
         backend:
@@ -22,8 +20,6 @@ spec:
             name: entry-service
             port:
               number: 80
-
-      # 2. Core Service (API)
       - path: /api/core
         pathType: Prefix
         backend:
@@ -31,35 +27,6 @@ spec:
             name: core-service
             port:
               number: 8080
-
-      # 3. Grafana (모니터링 대시보드)
-      - path: /grafana
-        pathType: Prefix
-        backend:
-          service:
-            name: grafana
-            port:
-              number: 80
-
-      # 4. Kibana (로그 검색)
-      - path: /kibana
-        pathType: Prefix
-        backend:
-          service:
-            name: kibana
-            port:
-              number: 5601
-
-      # 5. Prometheus (메트릭 수집)
-      - path: /prometheus
-        pathType: Prefix
-        backend:
-          service:
-            name: prometheus-server
-            port:
-              number: 9090
-
-      # 6. Core Service 홈페이지 (루트 경로, 가장 마지막에)
       - path: /
         pathType: Prefix
         backend:
@@ -67,3 +34,39 @@ spec:
             name: core-service
             port:
               number: 8080
+
+  # Grafana 전용 도메인
+  - host: grafana.210.104.76.202.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 80
+
+  # Kibana 전용 도메인
+  - host: kibana.210.104.76.202.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana
+            port:
+              number: 5601
+
+  # Prometheus 전용 도메인
+  - host: prometheus.210.104.76.202.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-server
+            port:
+              number: 9090

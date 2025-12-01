@@ -39,7 +39,7 @@ spec:
             local PARTITIONS=$2
             local REPLICATION=$3
 
-            if kafka-topics.sh --bootstrap-server $KAFKA_BROKER --list | grep -q "^${TOPIC}$^"; then
+            if kafka-topics.sh --bootstrap-server $KAFKA_BROKER --list | grep -q "^${TOPIC}$"; then
               echo "   ⏭️  Topic '$TOPIC' already exists, skipping..."
             else
               kafka-topics.sh --bootstrap-server $KAFKA_BROKER \
@@ -58,6 +58,9 @@ spec:
 
           # 2. Command Events (Critical, 3 partitions)
           create_topic "axon.campaign-activity.command" 3 3
+
+          # 3. Kubernetes Logs (Fluent Bit → Kafka → ES)
+          create_topic "k8s.logs" 3 2
 
           echo ""
           echo "✅ All topics created successfully!"
