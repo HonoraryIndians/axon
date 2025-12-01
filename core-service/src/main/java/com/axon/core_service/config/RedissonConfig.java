@@ -14,17 +14,20 @@ public class RedissonConfig {
     public RedissonClient redissonClient(
             @Value("${spring.data.redis.host}") String host,
             @Value("${spring.data.redis.port}") int port,
-            @Value("${spring.data.redis.password}") String password) {
+            @Value("${spring.data.redis.password:}") String password) { // Default empty password
 
         Config config = new Config();
-        config.useSingleServer()
+        var singleServerConfig = config.useSingleServer()
               .setAddress("redis://" + host + ":" + port)
               .setConnectionPoolSize(64)
-              .setPassword(password)
               .setConnectionMinimumIdleSize(10)
               .setRetryAttempts(3)
               .setRetryInterval(1500)
               .setTimeout(3000);
+
+        if (password != null && !password.isBlank()) { // Only set password if it's not empty
+            singleServerConfig.setPassword(password);
+        }
 
         return Redisson.create(config);
     }

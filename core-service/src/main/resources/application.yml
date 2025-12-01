@@ -2,8 +2,6 @@
 spring:
   profiles:
     include: oauth
-server:
-  forward-headers-strategy: framework
   datasource:
     url: jdbc:mysql://localhost:3306/axon_db?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:axon_user}
@@ -18,14 +16,12 @@ server:
         show_sql: true
   data:
     redis:
-        host: localhost
-        port: 6379
-
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:}
   sql:
     init:
       mode: never
-
-
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -39,6 +35,9 @@ server:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
+
+server:
+  forward-headers-strategy: framework
 
 # Actuator and Metrics
 management:

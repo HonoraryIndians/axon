@@ -10,7 +10,7 @@ spec:
   ingressClassName: nginx
   rules:
   # 메인 서비스 (Core/Entry)
-  - host: axon.210.104.76.202.nip.io
+  - host: axon.com
     http:
       paths:
       - path: /api/entry
