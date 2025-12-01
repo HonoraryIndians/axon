@@ -61,6 +61,54 @@ config:
         K8S-Logging.Parser  On
         K8S-Logging.Exclude On
 
+    # Exclude kube-system namespace (infrastructure logs)
+    [FILTER]
+        Name                grep
+        Match               kube.*
+        Exclude             $kubernetes['namespace_name'] kube-system
+
+    # Exclude Grafana pods
+    [FILTER]
+        Name                grep
+        Match               kube.*
+        Exclude             $kubernetes['pod_name'] grafana.*
+
+    # Exclude nginx-ingress access logs
+    [FILTER]
+        Name                grep
+        Match               kube.*
+        Exclude             $kubernetes['container_name'] nginx-ingress
+
+    # Exclude Fluent Bit itself
+    [FILTER]
+        Name                grep
+        Match               kube.*
+        Exclude             $kubernetes['pod_name'] fluent-bit.*
+
+    # Exclude Kafka pods (infrastructure)
+    [FILTER]
+        Name                grep
+        Match               kube.*
+        Exclude             $kubernetes['pod_name'] axon-kafka.*
+
+    # Exclude Kafka Connect
+    [FILTER]
+        Name                grep
+        Match               kube.*
+        Exclude             $kubernetes['pod_name'] kafka-connect.*
+
+    # Exclude Elasticsearch
+    [FILTER]
+        Name                grep
+        Match               kube.*
+        Exclude             $kubernetes['pod_name'] elasticsearch.*
+
+    # Exclude Kibana
+    [FILTER]
+        Name                grep
+        Match               kube.*
+        Exclude             $kubernetes['pod_name'] kibana.*
+
   outputs: |
     [OUTPUT]
         Name           kafka
