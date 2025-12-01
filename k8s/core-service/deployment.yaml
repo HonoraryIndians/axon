@@ -44,11 +44,13 @@ spec:
               value: axon-redis-master
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: axon-kafka:9092
           volumeMounts:
             - name: config-volume
               mountPath: /app/config
               readOnly: true
-          args: ["--spring.config.location=file:/app/config/application.yml,classpath:/application.yml"]
+          args: ["--spring.config.location=classpath:/application.yml,file:/app/config/application.yml"]
       volumes:
         - name: config-volume
           configMap:
