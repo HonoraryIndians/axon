@@ -64,6 +64,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/v1/**").permitAll()
                                                 .requestMatchers("/fake/data/**").permitAll() // TODO: 가짜 데이터 생성은 나중에
                                                                                               // 반드시 제거할 것
+                                                .requestMatchers("/actuator/**").permitAll() // Prometheus metrics endpoint
                                                 // .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                                                 .anyRequest().authenticated())
                                 .exceptionHandling(exceptions -> exceptions
