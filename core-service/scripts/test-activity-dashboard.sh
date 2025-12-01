@@ -49,13 +49,14 @@ echo ""
 echo "⚠️  완전 초기화 모드: Activity 포함 모든 데이터 재생성"
 echo ""
 
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 1: 완전 초기화
+# Step 1: 완전 초기화 (MySQL cleanup via robust SQL script)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo "🧹 Step 1/5: 완전 초기화 (모든 데이터 삭제)..."
 echo ""
 
-# 1-1. Elasticsearch 정리
+# 1-1. Elasticsearch 정리 (기존 로직 유지)
 echo "  🗑️  Elasticsearch 정리..."
 ES_COUNT=$(curl -s "${ES_URL}/behavior-events/_count?q=properties.activityId:${ACTIVITY_ID}" | jq -r '.count' 2>/dev/null || echo "0")
 if [ "$ES_COUNT" -gt 0 ]; then
@@ -67,18 +68,15 @@ else
     echo "     ℹ️  No events to delete"
 fi
 
-# 1-2. MySQL 정리 (테스트 유저 및 데이터)
+# 1-2. MySQL 정리 (robust cleanup)
 echo "  🗑️  MySQL 정리 (테스트 유저 및 데이터)..."
-# 참조 무결성 제약을 피하기 위해 순서대로 삭제
-$MYSQL_CMD -e "DELETE FROM purchases WHERE user_id >= 1000;" 2>/dev/null
-$MYSQL_CMD -e "DELETE FROM campaign_activity_entries WHERE user_id >= 1000;" 2>/dev/null
-$MYSQL_CMD -e "DELETE FROM user_summary WHERE user_id >= 1000;" 2>/dev/null
-$MYSQL_CMD -e "DELETE FROM users WHERE id >= 1000;" 2>/dev/null
-# Activity 관련 잔여 데이터 정리
-$MYSQL_CMD -e "DELETE FROM campaign_activities WHERE id = $ACTIVITY_ID;" 2>/dev/null
-$MYSQL_CMD -e "DELETE FROM campaigns WHERE id = $ACTIVITY_ID;" 2>/dev/null
-$MYSQL_CMD -e "DELETE FROM products WHERE id = $ACTIVITY_ID;" 2>/dev/null
-echo "     ✅ Deleted all test data (Users >= 1000, Activity $ACTIVITY_ID)"
+"$SCRIPT_DIR/cleanup-test-data.sh" "$ACTIVITY_ID" "$MYSQL_CMD" # Pass activity ID and MYSQL_CMD
+if [ $? -eq 0 ]; then
+    echo "     ✅ Deleted all test data for Activity $ACTIVITY_ID"
+else
+    echo "     ❌ Error deleting MySQL data during cleanup. Exiting."
+    exit 1
+fi
 
 # 1-3. Redis 정리
 echo "  🗑️  Redis 정리..."
@@ -103,28 +101,54 @@ fi
 echo ""
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 2: Activity 생성
+# Step 2: Activity 생성 (using templated SQL script)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo "🏗️  Step 2/5: Activity 생성..."
 echo ""
 
-SETUP_SQL="$SCRIPT_DIR/setup-activity-data.sql"
-if [ ! -f "$SETUP_SQL" ]; then
-    echo "   ❌ Error: setup-activity-data.sql not found"
+SETUP_SQL_TEMPLATE="$SCRIPT_DIR/setup-activity-data.sql"
+TEMP_SETUP_SQL="/tmp/setup_activity_${ACTIVITY_ID}.sql"
+
+if [ ! -f "$SETUP_SQL_TEMPLATE" ]; then
+    echo "   ❌ Error: setup-activity-data.sql not found at $SETUP_SQL_TEMPLATE"
     exit 1
 fi
 
-# Execute setup SQL
-cat "$SETUP_SQL" | $MYSQL_CMD 2>&1 | grep "✅" || echo "   ⚠️  Setup SQL executed (check for errors)"
+# Replace placeholders in setup SQL
+# Ensure variables are set
+if [ -z "$CAMPAIGN_ID" ]; then CAMPAIGN_ID=$ACTIVITY_ID; fi
+if [ -z "$PRODUCT_ID" ]; then PRODUCT_ID=$ACTIVITY_ID; fi
+if [ -z "$TEST_USER_ID_MIN" ]; then TEST_USER_ID_MIN=1000; fi
 
-# Verify Activity creation
-ACTIVITY_EXISTS=$($MYSQL_CMD -s -N -e "SELECT COUNT(*) FROM campaign_activities WHERE id = $ACTIVITY_ID;" 2>/dev/null || echo "0")
-if [ "$ACTIVITY_EXISTS" -eq 1 ]; then
-    echo "   ✅ Activity $ACTIVITY_ID created successfully"
+# Use a simpler sed approach (compatible with both GNU and BSD sed)
+sed "s/ACTIVITY_ID_PLACEHOLDER/$ACTIVITY_ID/g" "$SETUP_SQL_TEMPLATE" > "$TEMP_SETUP_SQL.tmp"
+sed "s/CAMPAIGN_ID_PLACEHOLDER/$CAMPAIGN_ID/g" "$TEMP_SETUP_SQL.tmp" > "$TEMP_SETUP_SQL"
+sed "s/PRODUCT_ID_PLACEHOLDER/$PRODUCT_ID/g" "$TEMP_SETUP_SQL" > "$TEMP_SETUP_SQL.tmp"
+sed "s/TEST_USER_ID_MIN/$TEST_USER_ID_MIN/g" "$TEMP_SETUP_SQL.tmp" > "$TEMP_SETUP_SQL"
+rm "$TEMP_SETUP_SQL.tmp"
+
+# Debug: Check the generated SQL
+echo "🔍 Debugging SQL Content:"
+cat "$TEMP_SETUP_SQL"
+echo "---------------------------------------------------"
+
+# Execute setup SQL (showing errors if any)
+cat "$TEMP_SETUP_SQL" | $MYSQL_CMD
+
+if [ $? -eq 0 ]; then
+    # Verify Activity creation
+    ACTIVITY_EXISTS=$($MYSQL_CMD -s -N -e "SELECT COUNT(*) FROM campaign_activities WHERE id = $ACTIVITY_ID;" 2>/dev/null || echo "0")
+    if [ "$ACTIVITY_EXISTS" -eq 1 ]; then
+        echo "   ✅ Activity $ACTIVITY_ID created successfully"
+    else
+        echo "   ❌ Error: SQL executed but Activity $ACTIVITY_ID not found in DB"
+        exit 1
+    fi
 else
-    echo "   ❌ Error: Activity creation failed"
+    echo "   ❌ Error: SQL execution failed (check above for MySQL errors)"
     exit 1
 fi
+rm "$TEMP_SETUP_SQL"
 
 echo ""
 

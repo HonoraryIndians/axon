@@ -64,7 +64,7 @@ send_event() {
     local user_id=$2
     local session_id=$3
 
-    curl -s -X POST "${ENTRY_SERVICE_URL}/api/v1/behavior/events" \
+    curl -s -X POST "${ENTRY_SERVICE_URL}/entry/api/v1/behavior/events" \
         -H "Content-Type: application/json" \
         -d @- > /dev/null <<EOF
 {

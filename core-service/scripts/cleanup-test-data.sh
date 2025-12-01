@@ -5,12 +5,9 @@
 #
 # 테스트로 생성된 데이터를 삭제합니다 (Activity는 유지):
 #   - Elasticsearch: behavior-events 삭제
-#   - MySQL: campaign_activity_entries 삭제
-#   - MySQL: purchases 삭제
+#   - MySQL: campaign_activity_entries, purchases 등 삭제 (FOREIGN_KEY_CHECKS OFF)
 #   - Redis: FCFS keys 삭제
 #   - Kafka: Consumer group offset 리셋
-#
-# ⚠️  Activity는 삭제하지 않습니다 (재사용)
 #
 # Usage: ./cleanup-test-data.sh [activityId]
 ##############################################################################
@@ -26,6 +23,10 @@ DB_NAME="${DB_NAME:-axon_db}"
 DB_USER="${DB_USER:-axon_user}"
 DB_PASS="${DB_PASS:-axon_password}"
 KAFKA_CONTAINER="${KAFKA_CONTAINER:-broker_1}"
+TEST_USER_ID_MIN=1000 # Test users start from this ID
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MYSQL_CMD="mysql -h$DB_HOST -P$DB_PORT -u$DB_USER -p$DB_PASS $DB_NAME"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🧹 Test Data Cleanup (Activity는 유지)"
@@ -43,7 +44,7 @@ else
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 1: Check current data count
+# Step 1: Check current data count (No change needed, for logging)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo "📊 Current data count:"
 echo ""
@@ -52,7 +53,7 @@ echo ""
 ES_COUNT=$(curl -s "${ES_URL}/behavior-events/_count?q=properties.activityId:${ACTIVITY_ID}" | jq -r '.count' 2>/dev/null || echo "0")
 echo "  📁 Elasticsearch events: $ES_COUNT"
 
-# MySQL count
+# MySQL count (quick check, actual deletion is robust)
 if echo "SELECT 1;" | $MYSQL_CMD > /dev/null 2>&1; then
     DB_COUNT=$($MYSQL_CMD -s -N -e "SELECT COUNT(*) FROM campaign_activity_entries WHERE campaign_activity_id = $ACTIVITY_ID;" 2>/dev/null || echo "0")
     PURCHASE_COUNT=$($MYSQL_CMD -s -N -e "SELECT COUNT(*) FROM purchases WHERE campaign_activity_id = $ACTIVITY_ID;" 2>/dev/null || echo "0")
@@ -69,11 +70,11 @@ echo ""
 if [ "$ES_COUNT" -eq 0 ] && [ "$DB_COUNT" -eq 0 ] && [ "$PURCHASE_COUNT" -eq 0 ]; then
     echo "✅ No test data found for Activity $ACTIVITY_ID"
     echo "💡 Activity 자체는 유지됩니다"
-    exit 0
+    # Proceed with Redis and Kafka cleanup even if no data to delete in ES/MySQL
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 2: Delete Elasticsearch data
+# Step 2: Delete Elasticsearch data (only if ES_COUNT > 0)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 if [ "$ES_COUNT" -gt 0 ]; then
     echo "🗑️  Deleting Elasticsearch events..."
@@ -96,31 +97,31 @@ if [ "$ES_COUNT" -gt 0 ]; then
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 3: Delete MySQL data
+# Step 3: Delete MySQL data (using a single SQL file for robustness)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-if [ "$DB_COUNT" -gt 0 ]; then
-    echo "🗑️  Deleting MySQL entries..."
+echo "🗑️  Deleting MySQL entries & purchases (robust cleanup)..."
+CLEANUP_SQL_TEMPLATE="$SCRIPT_DIR/cleanup_mysql.sql" # Use new SQL file
+TEMP_CLEANUP_SQL="/tmp/cleanup_activity_${ACTIVITY_ID}.sql"
 
-    $MYSQL_CMD -e "DELETE FROM campaign_activity_entries WHERE campaign_activity_id = $ACTIVITY_ID;" 2>/dev/null
+# Replace placeholders with actual activity ID, campaign ID (assuming same as activity ID for simple tests), and product ID
+# And test user ID minimum
+sed -e "s/ACTIVITY_ID_PLACEHOLDER/$ACTIVITY_ID/g" \
+    -e "s/CAMPAIGN_ID_PLACEHOLDER/$ACTIVITY_ID/g" \
+    -e "s/PRODUCT_ID_PLACEHOLDER/$ACTIVITY_ID/g" \
+    -e "s/TEST_USER_ID_MIN/$TEST_USER_ID_MIN/g" \
+    "$CLEANUP_SQL_TEMPLATE" > "$TEMP_CLEANUP_SQL"
 
-    if [ $? -eq 0 ]; then
-        echo "   ✅ Deleted $DB_COUNT entries from MySQL"
-    else
-        echo "   ❌ Error deleting from MySQL"
-    fi
+# Execute the generated SQL file
+$MYSQL_CMD < "$TEMP_CLEANUP_SQL" 2>/dev/null
+
+if [ $? -eq 0 ]; then
+    echo "   ✅ Deleted MySQL data for Activity $ACTIVITY_ID"
+else
+    echo "   ❌ Error deleting from MySQL (check logs for details)"
 fi
 
-if [ "$PURCHASE_COUNT" -gt 0 ]; then
-    echo "🗑️  Deleting MySQL purchases..."
+rm "$TEMP_CLEANUP_SQL" # Clean up temp file
 
-    $MYSQL_CMD -e "DELETE FROM purchases WHERE campaign_activity_id = $ACTIVITY_ID;" 2>/dev/null
-
-    if [ $? -eq 0 ]; then
-        echo "   ✅ Deleted $PURCHASE_COUNT purchases from MySQL"
-    else
-        echo "   ❌ Error deleting purchases from MySQL"
-    fi
-fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 4: Delete Redis data
@@ -130,7 +131,7 @@ docker exec axon-redis redis-cli DEL "campaign:${ACTIVITY_ID}:users" "campaign:$
 if [ $? -eq 0 ]; then
     echo "   ✅ Deleted Redis keys for Activity $ACTIVITY_ID"
 else
-    echo "   ⚠️  Failed to delete Redis keys (container might be down)"
+    echo "   ⚠️  Failed to delete Redis keys (container might be down or key not found)"
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -155,7 +156,7 @@ docker exec $KAFKA_CONTAINER kafka-consumer-groups \
     --execute > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
-    echo "   ✅ Reset Kafka consumer group offset to latest"
+    echo "   ✅ Reset Kafka consumer group offset"
     if [ "$CORE_RUNNING" = true ]; then
         echo "   ⚠️  Please restart core-service to apply offset changes"
     fi
