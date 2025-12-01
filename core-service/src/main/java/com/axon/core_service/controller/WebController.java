@@ -14,8 +14,8 @@ public class WebController {
      *
      * @return the view name "index" used to render the application's index page
      */
-    @GetMapping("/index")
-    public String index() {
+    @GetMapping("/old")
+    public String oldIndex() {
         log.info("Serving index.html");
         return "index";
     }
@@ -26,9 +26,9 @@ public class WebController {
      * @return the view name "welcomepage"
      */
     @GetMapping("/")
-    public String welcomepage() {
+    public String index() {
         log.info("Serving welcomepage.html");
-        return "welcomepage";
+        return "mainshop";
         // TO-DO: 로그아웃 이후 임시 대피처 재정의 필요
     }
 
