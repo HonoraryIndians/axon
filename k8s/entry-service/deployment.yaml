@@ -17,6 +17,13 @@ spec:
           image: nileyang/axon-entry:v1 # GitHub Actions가 교체할 부분
           ports:
             - containerPort: 8081
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "300m"
+            limits:
+              memory: "2Gi"
+              cpu: "800m"
           env:
             - name: JWT_SECRET
               valueFrom:

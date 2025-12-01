@@ -41,13 +41,25 @@ kafka:
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # Resources (Optimized for K2P)
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  resources:
-    limits:
-      memory: 2Gi
-      cpu: 1000m
-    requests:
-      memory: 1Gi
-      cpu: 500m
+  # Controller resources (KRaft combined mode uses controller settings)
+  controller:
+    resources:
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+      requests:
+        memory: 1Gi
+        cpu: 500m
+
+  # Broker resources (not used in combined mode, but kept for clarity)
+  broker:
+    resources:
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+      requests:
+        memory: 1Gi
+        cpu: 500m
 
   heapOpts: "-Xmx1024m -Xms1024m"
 
