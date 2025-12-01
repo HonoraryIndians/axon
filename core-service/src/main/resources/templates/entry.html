@@ -4,14 +4,6 @@
 
 <head>
     <title>SKU STORE - Event Detail</title>
-    <script th:inline="javascript">
-        window.__AXON_TRACKER_OVERRIDES__ = {
-            apiBaseUrl: '',  // Use relative path (same origin via Ingress)
-            collectEndpoint: '/entry/api/v1/behavior/events',
-            tokenProvider: () => common.getCookie('accessToken'),
-            debug: true
-        };
-    </script>
 </head>
 
 <body>
@@ -314,6 +306,21 @@
     <th:block layout:fragment="script">
         <script src="/js/common.js"></script>
         <script th:inline="javascript">
+            // Environment-aware configuration (MUST be defined before DOMContentLoaded)
+            window.isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            window.ENTRY_SERVICE_BASE = window.isLocal ? 'http://localhost:8081' : '';
+
+            window.__AXON_TRACKER_OVERRIDES__ = {
+                apiBaseUrl: '',
+                collectEndpoint: window.ENTRY_SERVICE_BASE + '/entry/api/v1/behavior/events',
+                tokenProvider: () => common.getCookie('accessToken'),
+                debug: true
+            };
+
+            console.log('[ENV CONFIG] isLocal:', window.isLocal);
+            console.log('[ENV CONFIG] ENTRY_SERVICE_BASE:', window.ENTRY_SERVICE_BASE);
+        </script>
+        <script th:inline="javascript">
             document.addEventListener('DOMContentLoaded', function () {
                 const campaignActivityId = [[${ campaignActivity.id }]];
                 const filters = [[${ campaignActivity.filters }]];
@@ -439,7 +446,7 @@
                         reservationToken: reservationToken
                     }
 
-                    fetch('/entry/api/v1/payments/prepare', {
+                    fetch(window.ENTRY_SERVICE_BASE + '/entry/api/v1/payments/prepare', {
                         method: 'POST',
                         credentials: 'include',
                         headers: {
@@ -487,7 +494,7 @@
                     const tokenPayload = {
                         reservationToken: token
                     }
-                    fetch('/entry/api/v1/payments/confirm', {
+                    fetch(window.ENTRY_SERVICE_BASE + '/entry/api/v1/payments/confirm', {
                         method: 'POST',
                         credentials: 'include',
                         headers: {
@@ -552,7 +559,7 @@
                             productId: [[${ campaignActivity.productId }]]
                         };
 
-                        fetch('/entry/api/v1/entries', {
+                        fetch(window.ENTRY_SERVICE_BASE + '/entry/api/v1/entries', {
                             method: 'POST',
                             credentials: 'include',
                             headers: {
