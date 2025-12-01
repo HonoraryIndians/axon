@@ -35,3 +35,13 @@ axon:
   core-service:
     base-url: http://localhost:8080
 
+# Actuator and Metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name:entry-service}
+

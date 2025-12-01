@@ -1,0 +1,59 @@
+# Prometheus 경량 설정 (자원 최소화)
+
+# 서버 설정
+server:
+  enabled: true
+
+  # 자원 제한 (최소)
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+  # 데이터 보관 기간 (짧게 설정)
+  retention: "7d"
+
+  # 스토리지
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+    storageClass: ktc-nfs-client
+
+  # Service 설정 (NodePort로 외부 접근)
+  service:
+    type: NodePort
+    servicePort: 9090
+    nodePort: 30090
+
+# Alert Manager 비활성화 (불필요)
+alertmanager:
+  enabled: false
+
+# Node Exporter 활성화 (노드 메트릭 수집)
+nodeExporter:
+  enabled: true
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Pushgateway 비활성화
+pushgateway:
+  enabled: false
+
+# Kube State Metrics 활성화 (K8s 메트릭)
+kube-state-metrics:
+  enabled: true
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi

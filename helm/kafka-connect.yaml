@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-connect
+  labels:
+    app: kafka-connect
+spec:
+  type: ClusterIP
+  selector:
+    app: kafka-connect
+  ports:
+    - port: 8083
+      targetPort: 8083
+      name: rest-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-connect
+  labels:
+    app: kafka-connect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-connect
+  template:
+    metadata:
+      labels:
+        app: kafka-connect
+    spec:
+      initContainers:
+        # Elasticsearch Sink 플러그인 설치
+        - name: install-plugins
+          image: confluentinc/cp-kafka-connect:7.9.0
+          command:
+            - sh
+            - -c
+            - |
+              confluent-hub install --no-prompt confluentinc/kafka-connect-elasticsearch:15.0.0
+              cp -r /usr/share/confluent-hub-components/* /plugins/
+          volumeMounts:
+            - name: plugins
+              mountPath: /plugins
+      containers:
+        - name: kafka-connect
+          image: confluentinc/cp-kafka-connect:7.9.0
+          ports:
+            - containerPort: 8083
+              name: rest-api
+          env:
+            - name: CONNECT_BOOTSTRAP_SERVERS
+              value: "axon-kafka:9092"
+            - name: CONNECT_REST_PORT
+              value: "8083"
+            - name: CONNECT_REST_ADVERTISED_HOST_NAME
+              value: "kafka-connect"
+            - name: CONNECT_GROUP_ID
+              value: "kafka-connect-cluster"
+            - name: CONNECT_CONFIG_STORAGE_TOPIC
+              value: "connect-configs"
+            - name: CONNECT_OFFSET_STORAGE_TOPIC
+              value: "connect-offsets"
+            - name: CONNECT_STATUS_STORAGE_TOPIC
+              value: "connect-status"
+            - name: CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: CONNECT_STATUS_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: CONNECT_KEY_CONVERTER
+              value: "org.apache.kafka.connect.storage.StringConverter"
+            - name: CONNECT_VALUE_CONVERTER
+              value: "org.apache.kafka.connect.json.JsonConverter"
+            - name: CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE
+              value: "false"
+            - name: CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE
+              value: "false"
+            - name: CONNECT_PLUGIN_PATH
+              value: "/usr/share/java,/usr/share/confluent-hub-components,/plugins"
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xms512m -Xmx1024m"
+          volumeMounts:
+            - name: plugins
+              mountPath: /plugins
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              cpu: "500m"
+              memory: "1.5Gi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8083
+            initialDelaySeconds: 180
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8083
+            initialDelaySeconds: 120
+            periodSeconds: 10
+      volumes:
+        - name: plugins
+          emptyDir: {}

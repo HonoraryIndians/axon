@@ -11,7 +11,7 @@ data:
         virtual:
           enabled: true
       kafka:
-        bootstrap-servers: my-kafka.default.svc.cluster.local:9092
+        bootstrap-servers: axon-kafka:9092
       data:
         redis:
           host: axon-redis-master

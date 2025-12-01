@@ -7,5 +7,17 @@ master:
     enabled: true
     size: 20Gi
     storageClass: "ktc-nfs-client"
+  resources:
+    requests:
+      memory: 4.5Gi
+      cpu: 500m
+    limits:
+      memory: 6Gi
+      cpu: 1000m
+  # Redis 내부 메모리 설정 (6GB의 75% = 4.5GB)
+  configuration: |-
+    maxmemory 4831838208
+    maxmemory-policy allkeys-lru
+    save ""
 service:
   type: ClusterIP

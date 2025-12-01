@@ -1,0 +1,93 @@
+# Grafana 설정
+
+# 자원 제한
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+# 영구 스토리지
+persistence:
+  enabled: true
+  storageClassName: ktc-nfs-client
+  size: 5Gi
+
+# NFS 권한 문제 해결
+initChownData:
+  enabled: false
+
+# SecurityContext 설정
+securityContext:
+  runAsUser: 472
+  runAsGroup: 472
+  fsGroup: 472
+
+# Admin 계정 설정
+adminUser: admin
+adminPassword: axon-admin-2025
+
+# Service 설정 (NodePort로 외부 접근)
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30300
+
+# Prometheus 데이터소스 자동 추가
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server:9090
+      access: proxy
+      isDefault: true
+
+# 대시보드 자동 로드 설정
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
+
+# 기본 대시보드 추가
+dashboards:
+  default:
+    # Kubernetes 클러스터 모니터링
+    kubernetes-cluster:
+      gnetId: 7249
+      revision: 1
+      datasource: Prometheus
+    # Node Exporter
+    node-exporter:
+      gnetId: 1860
+      revision: 27
+      datasource: Prometheus
+    # Pods 모니터링
+    kubernetes-pods:
+      gnetId: 6417
+      revision: 1
+      datasource: Prometheus
+
+# 플러그인 설치
+plugins:
+  - grafana-piechart-panel
+  - grafana-clock-panel
+
+# RBAC
+rbac:
+  create: true
+  pspEnabled: false
+
+serviceAccount:
+  create: true

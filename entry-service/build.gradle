@@ -36,6 +36,10 @@ dependencies {
     implementation 'com.axon:common-messaging:0.0.1-SNAPSHOT'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    // Monitoring
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     implementation 'io.jsonwebtoken:jjwt-impl:0.13.0'
