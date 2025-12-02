@@ -44,6 +44,8 @@ spec:
               value: axon-redis-master
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: axon-kafka:9092
             - name: AXON_CORE_SERVICE_BASE_URL
               value: http://core-service:8080
           volumeMounts:
