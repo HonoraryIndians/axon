@@ -52,7 +52,7 @@ spec:
             - name: config-volume
               mountPath: /app/config
               readOnly: true
-          args: ["--spring.config.location=file:/app/config/application.yml,classpath:/application.yml"]
+          args: ["--spring.config.location=classpath:/application.yml,file:/app/config/application.yml"]
       volumes:
         - name: config-volume
           configMap:
