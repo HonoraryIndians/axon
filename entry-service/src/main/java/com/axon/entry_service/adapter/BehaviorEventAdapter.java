@@ -2,6 +2,7 @@ package com.axon.entry_service.adapter;
 
 import com.axon.entry_service.event.ReservationApprovedEvent;
 import com.axon.messaging.dto.UserBehaviorEventMessage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -17,6 +18,9 @@ public class BehaviorEventAdapter {
 
     private static final String BACKEND_USER_AGENT = "Axon-Backend/1.0";
     private static final String APPROVED_TRIGGER_TYPE = "APPROVED";
+
+    @Value("${axon.core-service.base-url:http://localhost:8080}")
+    private String coreServiceUrl;
 
     /**
      * Convert ReservationApprovedEvent to CDP standard UserBehaviorEventMessage.
@@ -53,6 +57,6 @@ public class BehaviorEventAdapter {
      * @return a synthetic URL like "http://localhost:8080/campaign-activity/123/checkout"
      */
     private String generateApprovedUrl(Long activityId) {
-        return "http://localhost:8080/campaign-activity/" + activityId + "/checkout";
+        return coreServiceUrl + "/campaign-activity/" + activityId + "/checkout";
     }
 }
