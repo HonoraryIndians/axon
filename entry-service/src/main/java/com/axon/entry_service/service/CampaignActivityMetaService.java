@@ -21,7 +21,7 @@ import org.springframework.web.client.RestClient;
 @Slf4j
 public class CampaignActivityMetaService {
 
-    private static final Duration CACHE_TTL = Duration.ofMinutes(5);
+    private static final Duration CACHE_TTL = Duration.ofHours(1);
 
     private final RestClient campaignRestClient;
     private final StringRedisTemplate redisTemplate;
