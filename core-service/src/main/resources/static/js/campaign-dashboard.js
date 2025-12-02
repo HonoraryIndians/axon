@@ -194,13 +194,14 @@ function updateActivityTable(activities) {
     tbody.innerHTML = '';
 
     activities.forEach(activity => {
+        console.log('Activity Data:', activity);
         const row = document.createElement('tr');
         row.className = "bg-white border-b hover:bg-gray-50 transition-colors duration-150";
         row.innerHTML = `
             <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${activity.activityName}</td>
             <td class="px-6 py-4 text-right">${formatNumber(activity.totalVisits)}</td>
             <td class="px-6 py-4 text-right">${formatNumber(activity.totalEngages)}</td>
-            <td class="px-6 py-4 text-right font-semibold text-blue-600">${formatNumber(activity.ctr)}%</td>
+            <td class="px-6 py-4 text-right font-semibold text-blue-600">${formatNumber(activity.engagementRate)}%</td>
             <td class="px-6 py-4 text-right">${formatNumber(activity.totalPurchases)}</td>
             <td class="px-6 py-4 text-right font-semibold text-green-600">${formatNumber(activity.conversionRate)}%</td>
             <td class="px-6 py-4 text-right">${formatCurrency(activity.gmv)}</td>

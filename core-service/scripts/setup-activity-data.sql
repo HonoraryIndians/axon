@@ -1,7 +1,9 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- Step 1: 제품 생성 (아이폰 16 Pro)
 DELETE FROM products WHERE id = PRODUCT_ID_PLACEHOLDER;
-INSERT INTO products (id, product_name, price, stock) VALUES (PRODUCT_ID_PLACEHOLDER, 'iPhone 16 Pro 256GB', 1590000.00, 1000);
+INSERT INTO products (id, product_name, price, stock, category)
+VALUES (PRODUCT_ID_PLACEHOLDER, 'iPhone 16 Pro 256GB', 1590000.00, 1000, 'Electronics');
 
 DELETE FROM campaigns WHERE id = CAMPAIGN_ID_PLACEHOLDER;
 INSERT INTO campaigns (id, name, start_at, end_at, created_at, updated_at) VALUES (CAMPAIGN_ID_PLACEHOLDER, '블랙프라이데이 2024', NOW() - INTERVAL 7 DAY, NOW() + INTERVAL 30 DAY, NOW(), NOW());

@@ -203,8 +203,10 @@ public class DashboardService {
 
             java.math.BigDecimal gmv = calculateGMV(activity.getId(), purchases);
 
+            // Calculate Conversion Rate (Visit -> Purchase)
             double conversionRate = visits > 0 ? (double) purchases / visits * 100 : 0.0;
-            double ctr = visits > 0 ? (double) engages / visits * 100 : 0.0;
+            // Calculate Engagement Rate (Visit -> Engage)
+            double engagementRate = visits > 0 ? (double) engages / visits * 100 : 0.0;
 
             totalVisits += visits;
             totalEngages += engages;
@@ -212,15 +214,18 @@ public class DashboardService {
             totalPurchases += purchases;
             totalGMV = totalGMV.add(gmv);
 
+            String category = activity.getProduct() != null ? activity.getProduct().getCategory() : "Unknown";
+
             comparisonTable.add(new ActivityComparisonData(
                     activity.getId(),
                     activity.getName(),
                     activity.getActivityType().name(),
+                    category,
                     visits,
                     engages,
-                    ctr,
                     purchases,
                     gmv,
+                    engagementRate,
                     conversionRate));
         }
 

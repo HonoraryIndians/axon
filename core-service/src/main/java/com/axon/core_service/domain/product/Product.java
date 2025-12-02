@@ -24,18 +24,23 @@ public class Product {
     @Column(name = "price", nullable = false)
     private java.math.BigDecimal price; // 정상가
 
+    @Column(name = "category")
+    private String category; // 제품 카테고리 (e.g., "Electronics", "Fashion")
+
     // @Version
     /**
-     * Creates a Product with the given name and initial stock quantity.
+     * Creates a Product with the given name, stock, price and category.
      *
      * @param productName the product's name
-     * @param stock       the initial stock quantity (number of items)
+     * @param stock       the initial stock quantity
+     * @param price       the price
+     * @param category    the product category
      */
-
-    public Product(String productName, Long stock, java.math.BigDecimal price) {
+    public Product(String productName, Long stock, java.math.BigDecimal price, String category) {
         this.productName = productName;
         this.stock = stock;
         this.price = price;
+        this.category = category;
     }
 
     /**

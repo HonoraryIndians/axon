@@ -10,8 +10,8 @@ DELETE FROM campaigns WHERE id = 1;
 DELETE FROM products WHERE id IN (1, 2);
 
 -- 2. 제품 생성
-INSERT INTO products (id, product_name, price, stock) VALUES (1, 'iPhone 16 Pro', 1500000, 1000);
-INSERT INTO products (id, product_name, price, stock) VALUES (2, 'MacBook Pro M3', 2500000, 500);
+INSERT INTO products (id, product_name, price, stock, category) VALUES (1, 'iPhone 16 Pro', 1500000, 1000, 'Electronics');
+INSERT INTO products (id, product_name, price, stock, category) VALUES (2, 'MacBook Pro M3', 2500000, 500, 'Electronics');
 
 -- 3. 캠페인 생성
 INSERT INTO campaigns (id, name, start_at, end_at, created_at, updated_at, budget)

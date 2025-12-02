@@ -1,0 +1,48 @@
+<div th:fragment="chatbot" id="chat-widget" class="fixed bottom-6 right-6 z-50">
+    <!-- Chat Button -->
+    <button id="chat-toggle-btn"
+        class="w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-700 transition-all duration-300 focus:outline-none transform hover:scale-110">
+        <i class="fa-solid fa-comment-dots text-2xl"></i>
+    </button>
+
+    <!-- Chat Window -->
+    <div id="chat-window"
+        class="hidden absolute bottom-16 right-0 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col transition-all duration-300 origin-bottom-right transform scale-95 opacity-0">
+
+        <!-- Header -->
+        <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-robot"></i>
+                <span class="font-semibold">Axon AI Assistant</span>
+            </div>
+            <button id="chat-close-btn" class="text-blue-100 hover:text-white focus:outline-none">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto h-80 bg-gray-50 space-y-4 scroll-smooth">
+            <!-- Welcome Message -->
+            <div class="flex justify-start">
+                <div class="bg-white border border-gray-200 rounded-lg py-2 px-4 max-w-[85%] shadow-sm text-sm text-gray-800">
+                    안녕하세요! <strong>Axon AI</strong>입니다.<br>
+                    현재 보고 계신 캠페인 데이터에 대해 무엇이든 물어보세요.<br>
+                    <span class="text-xs text-gray-500 mt-1 block">(예: 매출 요약해줘, 트래픽 추이는?, 재구매율 분석해줘)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 bg-white border-t border-gray-200">
+            <div class="flex gap-2">
+                <input type="text" id="chat-input"
+                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="질문을 입력하세요..." />
+                <button id="chat-send-btn"
+                    class="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
