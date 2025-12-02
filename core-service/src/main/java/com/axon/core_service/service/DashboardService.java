@@ -360,11 +360,28 @@ public class DashboardService {
                 calculateROAS(totalGMV, totalBudget)
         );
 
+        // Calculate Global Heatmap
+        HeatmapData globalHeatmap = null;
+        try {
+            // Pass empty list to signify "All Activities" or implement getAllHourlyTraffic
+            // For now, let's aggregate traffic from all campaigns we iterated
+            // Or better, let behaviorEventService handle "all" query
+            List<Long> allActivityIds = new ArrayList<>();
+            for(com.axon.core_service.domain.campaign.Campaign c : campaigns) {
+                c.getCampaignActivities().forEach(a -> allActivityIds.add(a.getId()));
+            }
+            Map<Integer, Long> hourlyTraffic = behaviorEventService.getHourlyTraffic(allActivityIds, start, end);
+            globalHeatmap = new HeatmapData(hourlyTraffic);
+        } catch (IOException e) {
+            globalHeatmap = new HeatmapData(Collections.emptyMap());
+        }
+
         return new GlobalDashboardResponse(
                 globalOverview,
                 gmvRanking,
                 visitRanking,
                 efficiencyData,
+                globalHeatmap,
                 LocalDateTime.now()
         );
     }

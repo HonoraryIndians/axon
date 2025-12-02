@@ -2,9 +2,6 @@ package com.axon.core_service.service.llm;
 
 import com.axon.core_service.domain.dashboard.DashboardPeriod;
 import com.axon.core_service.domain.dto.dashboard.CampaignDashboardResponse;
-import com.axon.core_service.domain.dto.dashboard.DashboardResponse;
-import com.axon.core_service.domain.dto.dashboard.OverviewData;
-import com.axon.core_service.domain.dto.llm.DashboardQueryResponse;
 import com.axon.core_service.service.CohortAnalysisService;
 import com.axon.core_service.service.DashboardService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,6 +15,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import com.axon.core_service.domain.dto.llm.DashboardQueryResponse;
+import com.axon.core_service.domain.dto.dashboard.DashboardResponse;
+import com.axon.core_service.domain.dto.dashboard.GlobalDashboardResponse;
+import com.axon.core_service.domain.dto.dashboard.OverviewData;
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -49,10 +51,7 @@ public class GeminiLLMQueryService implements LLMQueryService {
     public DashboardQueryResponse processQuery(Long campaignId, String query) {
         log.info("Gemini LLM processing query for campaign: {}", campaignId);
 
-        // 1. Fetch Campaign Dashboard Data
         CampaignDashboardResponse dashboardData = dashboardService.getDashboardByCampaign(campaignId);
-        
-        // 2. Check for Cohort Intent & Fetch if needed
         Object cohortData = null;
         if (shouldFetchCohort(query) && !dashboardData.activities().isEmpty()) {
             Long representativeActivityId = dashboardData.activities().get(0).activityId();
@@ -67,11 +66,7 @@ public class GeminiLLMQueryService implements LLMQueryService {
     public DashboardQueryResponse processQueryByActivity(Long activityId, String query) {
         log.info("Gemini LLM processing query for activity: {}", activityId);
 
-        // 1. Fetch Activity Dashboard Data
-        // Using 7d as default period for context
         DashboardResponse dashboardData = dashboardService.getDashboardByActivity(activityId, DashboardPeriod.SEVEN_DAYS, null, null);
-
-        // 2. Check for Cohort Intent & Fetch if needed
         Object cohortData = null;
         if (shouldFetchCohort(query)) {
             log.info("Fetching cohort data for activity: {}", activityId);
@@ -81,8 +76,16 @@ public class GeminiLLMQueryService implements LLMQueryService {
         return processQueryInternal(query, dashboardData, cohortData, dashboardData.overview());
     }
 
+    @Override
+    public DashboardQueryResponse processGlobalQuery(String query) {
+        log.info("Gemini LLM processing global query.");
+
+        GlobalDashboardResponse dashboardData = dashboardService.getGlobalDashboard();
+        // Global level does not have specific cohort for now, so cohortData is null
+        return processQueryInternal(query, dashboardData, null, dashboardData.overview());
+    }
+
     private DashboardQueryResponse processQueryInternal(String query, Object dashboardData, Object cohortData, OverviewData overview) {
-        // 3. Merge Context
         Map<String, Object> contextMap = new HashMap<>();
         contextMap.put("dashboard", dashboardData);
         if (cohortData != null) {
@@ -90,12 +93,9 @@ public class GeminiLLMQueryService implements LLMQueryService {
         }
 
         String contextJson = serializeData(contextMap);
-
-        // 4. Call Gemini API
         String prompt = buildPrompt(query, contextJson);
         String geminiResponse = callGeminiApi(prompt);
 
-        // 5. Parse Response
         return new DashboardQueryResponse(geminiResponse, overview, "GEMINI_GENERATED");
     }
 
@@ -141,7 +141,6 @@ public class GeminiLLMQueryService implements LLMQueryService {
                 .retrieve()
                 .body(JsonNode.class);
 
-            // Extract text from Gemini response structure
             return response.path("candidates").get(0)
                 .path("content").path("parts").get(0)
                 .path("text").asText();

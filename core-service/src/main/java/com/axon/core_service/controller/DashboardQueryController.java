@@ -33,4 +33,12 @@ public class DashboardQueryController {
         DashboardQueryResponse response = llmQueryService.processQueryByActivity(activityId, request.getQuery());
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/global/query")
+    public ResponseEntity<DashboardQueryResponse> queryGlobalDashboard(
+            @RequestBody DashboardQueryRequest request) {
+        log.info("DashboardQueryController queryGlobalDashboard request: {}", request);
+        DashboardQueryResponse response = llmQueryService.processGlobalQuery(request.getQuery());
+        return ResponseEntity.ok(response);
+    }
 }

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-    th:replace="fragments/layout :: layout('Axon - Global Dashboard', 'bg-gray-50 text-neutral-900', ~{::head}, ~{::section})">
+    th:replace="fragments/layout :: layout('Axon - Global Dashboard', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section})">
 
 <head>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,12 +10,15 @@
     <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
 </head>
 <section>
+    <!-- Hidden input for API context (not used directly for global, but good to have consistent structure) -->
+    <input type="hidden" id="campaignId" value="global" /> 
+
     <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div class="max-w-[1600px] mx-auto px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div class="font-bold text-xl text-purple-600">Axon Global</div>
+                <div class="font-bold text-xl text-blue-600">Axon</div>
                 <div class="h-6 w-px bg-gray-300 mx-2"></div>
-                <h1 class="font-semibold text-gray-900">Enterprise Overview</h1>
+                <h1 class="font-semibold text-gray-900" id="globalDashboardTitle">Global Dashboard Overview</h1>
             </div>
             <div class="flex items-center gap-4">
                 <span id="lastUpdated" class="text-sm text-gray-500">Last updated: --:--:--</span>
@@ -26,51 +29,65 @@
     <main class="dashboard-container">
         <!-- Section 1: Global KPI Cards -->
         <div class="kpi-grid mb-8">
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Visits', 'fa-solid fa-globe', 'blue', '0', 'All Campaigns', 'neutral')"></div>
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalPurchases', 'Total Purchases', 'fa-solid fa-cart-shopping', 'green', '0', 'All Campaigns', 'neutral')"></div>
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalGMV', 'Total GMV', 'fa-solid fa-sack-dollar', 'emerald', '₩0', 'All Campaigns', 'neutral')"></div>
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalROAS', 'Avg ROAS', 'fa-solid fa-chart-line', 'rose', '0%', 'All Campaigns', 'neutral')"></div>
+            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Global Visits', 'fa-solid fa-earth-americas', 'blue', '0', '-', 'neutral')"></div>
+            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalPurchases', 'Total Global Purchases', 'fa-solid fa-shopping-bag', 'green', '0', '-', 'neutral')"></div>
+            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalGMV', 'Total Global GMV', 'fa-solid fa-coins', 'emerald', '₩0', '-', 'neutral')"></div>
+            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalROAS', 'Global ROAS', 'fa-solid fa-chart-line', 'rose', '0%', '-', 'neutral')"></div>
         </div>
 
-        <!-- Section 2: Efficiency Matrix (Scatter Plot) -->
-        <div class="chart-container full-width mb-8">
-            <div class="chart-header border-b border-gray-100 pb-4 mb-4 flex justify-between items-center">
-                <h3 class="chart-title">Campaign Efficiency Matrix (Budget vs GMV)</h3>
-                <div class="text-sm text-gray-500 flex gap-4">
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span>High ROAS</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span>Low ROAS</span>
+        <!-- Section 2: Top N Campaigns by GMV -->
+        <div class="charts-grid mb-8">
+            <div class="chart-container full-width">
+                <div class="chart-header">
+                    <h3 class="chart-title">Top 5 Campaigns by GMV</h3>
                 </div>
-            </div>
-            <div class="h-96">
-                <canvas id="efficiencyChart"></canvas>
+                <div class="h-80">
+                    <canvas id="topCampaignsChart"></canvas>
+                </div>
             </div>
         </div>
 
-        <!-- Section 3: Rankings -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- GMV Ranking -->
-            <div class="chart-container">
+        <!-- Section 3: Global Hourly Traffic Trend -->
+        <div class="charts-grid mb-8">
+            <div class="chart-container full-width">
                 <div class="chart-header">
-                    <h3 class="chart-title">Top Campaigns by Revenue (GMV)</h3>
+                    <h3 class="chart-title">Global Hourly Traffic Trend (Last 24h)</h3>
                 </div>
-                <div class="h-64">
-                    <canvas id="gmvRankChart"></canvas>
+                <div class="h-80">
+                    <canvas id="globalTrafficChart"></canvas>
                 </div>
             </div>
-
-            <!-- Visits Ranking -->
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3 class="chart-title">Top Campaigns by Traffic (Visits)</h3>
+        </div>
+        
+        <!-- Section 4: Campaign Efficiency Table -->
+        <div class="charts-grid mb-8">
+            <div class="chart-container full-width overflow-hidden">
+                <div class="chart-header border-b border-gray-100 pb-4 mb-0">
+                    <h3 class="chart-title">Campaign Efficiency Overview</h3>
                 </div>
-                <div class="h-64">
-                    <canvas id="visitRankChart"></canvas>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Campaign Name</th>
+                                <th scope="col" class="px-6 py-3 text-right">Budget</th>
+                                <th scope="col" class="px-6 py-3 text-right">GMV</th>
+                                <th scope="col" class="px-6 py-3 text-right">ROAS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="campaignEfficiencyTableBody">
+                            <!-- Rows will be populated by JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </main>
 
     <script th:src="@{/js/global-dashboard.js}"></script>
+    <!-- Chatbot -->
+    <div th:replace="fragments/chatbot :: chatbot"></div>
+    <script th:src="@{/js/chatbot.js}"></script>
 </section>
 
 </html>

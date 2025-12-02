@@ -4,9 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record GlobalDashboardResponse(
-        OverviewData totalOverview,
-        List<CampaignRankData> topCampaignsByGmv,
-        List<CampaignRankData> topCampaignsByVisits,
-        List<CampaignEfficiencyData> efficiencyData,
+        OverviewData overview,
+        List<CampaignRankData> topGmvCampaigns,
+        List<CampaignRankData> topVisitCampaigns,
+        List<CampaignEfficiencyData> campaignEfficiency,
+        HeatmapData hourlyTraffic,
         LocalDateTime calculatedAt
 ) {}

@@ -43,6 +43,11 @@ public class MockLLMQueryService implements LLMQueryService {
         return null;
     }
 
+    @Override
+    public DashboardQueryResponse processGlobalQuery(String query) {
+        return null;
+    }
+
     private String determineIntent(String query) {
         if (query.contains("visit") || query.contains("traffic") || query.contains("방문")) {
             return "METRIC_VISITS";

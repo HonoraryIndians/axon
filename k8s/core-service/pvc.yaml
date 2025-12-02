@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: core-uploads-pvc
+spec:
+  accessModes:
+    - ReadWriteMany # 여러 Pod에서 동시에 읽고 써야 하므로 RWX 필수!
+  storageClassName: ktc-nfs-client
+  resources:
+    requests:
+      storage: 5Gi

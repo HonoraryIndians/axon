@@ -50,11 +50,16 @@ spec:
             - name: config-volume
               mountPath: /app/config
               readOnly: true
+            - name: uploads-volume
+              mountPath: /app/core-service/uploads
           args: ["--spring.config.location=classpath:/application.yml,file:/app/config/application.yml"]
       volumes:
         - name: config-volume
           configMap:
             name: core-config
+        - name: uploads-volume
+          persistentVolumeClaim:
+            claimName: core-uploads-pvc
 ---
 apiVersion: v1
 kind: Service

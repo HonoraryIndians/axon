@@ -1,147 +1,169 @@
 document.addEventListener('DOMContentLoaded', function () {
-    fetchGlobalData();
-    // Refresh every 30 seconds (Global dashboard doesn't need instant real-time)
-    setInterval(fetchGlobalData, 30000);
-});
+    const campaignId = document.getElementById('campaignId').value; // Will be "global"
+    let topCampaignsChart = null;
+    let globalTrafficChart = null;
 
-async function fetchGlobalData() {
-    try {
-        const response = await fetch(`/api/v1/dashboard/overview`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    initGlobalDashboard();
+
+    function initGlobalDashboard() {
+        fetchGlobalDashboardData();
+        // Poll every 10 seconds for updates (global can be less frequent)
+        setInterval(fetchGlobalDashboardData, 10000); 
+    }
+
+    async function fetchGlobalDashboardData() {
+        try {
+            const response = await fetch(`/api/v1/dashboard/overview`);
+            const data = await response.json();
+            updateDashboard(data);
+        } catch (error) {
+            console.error('Error fetching global dashboard data:', error);
         }
-        const data = await response.json();
-        updateDashboard(data);
-    } catch (error) {
-        console.error("Error fetching global data:", error);
     }
-}
 
-function updateDashboard(data) {
-    // 1. Update Header
-    document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
-
-    // 2. Update KPI Cards
-    updateKpi('totalVisits', formatNumber(data.totalOverview.totalVisits));
-    updateKpi('totalPurchases', formatNumber(data.totalOverview.purchaseCount));
-    updateKpi('totalGMV', formatCurrency(data.totalOverview.gmv));
-    updateKpi('totalROAS', formatNumber(data.totalOverview.roas) + '%');
-
-    // 3. Render Charts
-    renderEfficiencyChart(data.efficiencyData);
-    renderRankChart('gmvRankChart', data.topCampaignsByGmv, 'GMV', 'rgba(16, 185, 129, 0.7)');
-    renderRankChart('visitRankChart', data.topCampaignsByVisits, 'Visits', 'rgba(59, 130, 246, 0.7)');
-}
-
-function updateKpi(elementId, value) {
-    const el = document.getElementById(elementId);
-    if (el) {
-        el.textContent = value;
+    function updateDashboard(data) {
+        updateOverviewCards(data.overview);
+        renderTopCampaignsChart(data.topGmvCampaigns);
+        renderGlobalTrafficChart(data.hourlyTraffic);
+        updateCampaignEfficiencyTable(data.campaignEfficiency);
+        updateLastUpdatedTime();
     }
-}
 
-let efficiencyChart = null;
-function renderEfficiencyChart(data) {
-    const ctx = document.getElementById('efficiencyChart').getContext('2d');
-    
-    const scatterData = data.map(item => ({
-        x: item.budget, // X: Budget
-        y: item.gmv,    // Y: GMV
-        r: Math.max(5, Math.min(20, item.roas / 10)), // Radius based on ROAS
-        campaignName: item.campaignName,
-        roas: item.roas
-    }));
+    function updateOverviewCards(overview) {
+        updateKpi('totalVisits', overview.totalVisits);
+        updateKpi('totalPurchases', overview.purchaseCount);
+        updateKpi('totalGMV', formatCurrency(overview.gmv));
+        updateKpi('totalROAS', formatNumber(overview.roas) + '%');
+    }
 
-    if (efficiencyChart) {
-        efficiencyChart.data.datasets[0].data = scatterData;
-        efficiencyChart.update();
-    } else {
-        efficiencyChart = new Chart(ctx, {
-            type: 'bubble',
-            data: {
-                datasets: [{
-                    label: 'Campaigns',
-                    data: scatterData,
-                    backgroundColor: (context) => {
-                        const roas = context.raw?.roas || 0;
-                        return roas > 200 ? 'rgba(16, 185, 129, 0.6)' : // High ROAS (Green)
-                               roas > 100 ? 'rgba(245, 158, 11, 0.6)' : // Medium ROAS (Yellow)
-                               'rgba(239, 68, 68, 0.6)';                // Low ROAS (Red)
-                    },
-                    borderColor: 'rgba(0, 0, 0, 0.1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const point = context.raw;
-                                return `${point.campaignName}: Budget ₩${formatNumber(point.x)} -> GMV ₩${formatNumber(point.y)} (ROAS ${point.roas}%)`;
+    function updateKpi(elementId, value) {
+        const el = document.getElementById(elementId);
+        if (el) {
+            el.textContent = value;
+        }
+    }
+
+    let topGmvCampaignsChart = null;
+    function renderTopCampaignsChart(campaigns) {
+        const ctx = document.getElementById('topCampaignsChart').getContext('2d');
+        const labels = campaigns.map(c => c.campaignName);
+        const data = campaigns.map(c => c.value); // Changed from c.gmv to c.value
+
+        if (topGmvCampaignsChart) {
+            topGmvCampaignsChart.data.labels = labels;
+            topGmvCampaignsChart.data.datasets[0].data = data;
+            topGmvCampaignsChart.update();
+        } else {
+            topGmvCampaignsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'GMV (KRW)',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
                             }
                         }
                     },
-                    legend: { display: false }
-                },
-                scales: {
-                    x: {
-                        title: { display: true, text: 'Marketing Budget (₩)' },
-                        beginAtZero: true
-                    },
-                    y: {
-                        title: { display: true, text: 'Revenue (GMV ₩)' },
-                        beginAtZero: true
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                }
+                            }
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
-}
 
-const charts = {};
-function renderRankChart(canvasId, data, label, color) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    const labels = data.map(item => item.campaignName);
-    const values = data.map(item => item.value);
+    function renderGlobalTrafficChart(hourlyTraffic) {
+        const ctx = document.getElementById('globalTrafficChart').getContext('2d');
+        const hours = Array.from({length: 24}, (_, i) => i);
+        const data = hours.map(h => hourlyTraffic.hourlyTraffic[h] || 0);
 
-    if (charts[canvasId]) {
-        charts[canvasId].data.labels = labels;
-        charts[canvasId].data.datasets[0].data = values;
-        charts[canvasId].update();
-    } else {
-        charts[canvasId] = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: label,
-                    data: values,
-                    backgroundColor: color,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                indexAxis: 'y', // Horizontal Bar Chart
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { beginAtZero: true }
+        if (globalTrafficChart) {
+            globalTrafficChart.data.datasets[0].data = data;
+            globalTrafficChart.update();
+        } else {
+            globalTrafficChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours.map(h => `${h}:00`),
+                    datasets: [{
+                        label: 'Hourly Visitors',
+                        data: data,
+                        fill: true,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Visitors'
+                            }
+                        }
+                    }
                 }
-            }
+            });
+        }
+    }
+
+    function updateCampaignEfficiencyTable(campaigns) {
+        const tbody = document.getElementById('campaignEfficiencyTableBody');
+        tbody.innerHTML = ''; // Clear existing rows
+
+        campaigns.forEach(campaign => {
+            const row = document.createElement('tr');
+            row.className = "bg-white border-b hover:bg-gray-50 transition-colors duration-150";
+            row.innerHTML = `
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${campaign.campaignName}</td>
+                <td class="px-6 py-4 text-right">${formatCurrency(campaign.budget)}</td>
+                <td class="px-6 py-4 text-right">${formatCurrency(campaign.gmv)}</td>
+                <td class="px-6 py-4 text-right font-semibold text-blue-600">${formatNumber(campaign.roas)}%</td>
+            `;
+            tbody.appendChild(row);
         });
     }
-}
 
-// Utility functions
-function formatNumber(num) {
-    if (num === undefined || num === null) return '0';
-    return new Intl.NumberFormat('ko-KR').format(num);
-}
+    function updateLastUpdatedTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+        const el = document.getElementById('lastUpdated');
+        if (el) el.textContent = `Last updated: ${timeString}`;
+    }
 
-function formatCurrency(amount) {
-    if (amount === undefined || amount === null) return '₩0';
-    return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(amount);
-}
+    // Utility functions (copied from dashboard.js for now, centralize later)
+    function formatNumber(num) {
+        if (num === undefined || num === null) return '-';
+        return new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 1 }).format(num);
+    }
+
+    function formatCurrency(amount) {
+        if (amount === undefined || amount === null) return '-';
+        return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(amount);
+    }
+});

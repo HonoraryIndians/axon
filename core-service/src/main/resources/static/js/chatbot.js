@@ -65,7 +65,12 @@
 
         try {
             // Call API dynamically based on context
-            const apiUrl = `/api/v1/dashboard/${contextType}/${contextId}/query`;
+            let apiUrl;
+            if (contextType === 'campaign' && contextId === 'global') { // Special handling for global dashboard
+                apiUrl = `/api/v1/dashboard/global/query`;
+            } else {
+                apiUrl = `/api/v1/dashboard/${contextType}/${contextId}/query`;
+            }
             console.log('Sending query to:', apiUrl);
             
             const response = await fetch(apiUrl, {
