@@ -20,13 +20,11 @@ spec:
           resources:
             requests:
               memory: "1Gi"
-              cpu: "500m"
+              cpu: "300m"
             limits:
               memory: "1536Mi"
-              cpu: "1000m"
+              cpu: "800m"
           env:
-            - name: JAVA_OPTS
-              value: "-XX:MaxRAMPercentage=50.0 -XX:+UseG1GC"
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
