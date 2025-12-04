@@ -30,6 +30,7 @@ public class CampaignActivityResponse {
     private final Integer originalPrice;
     private final Integer price;
     private final Integer quantity;
+    private final java.math.BigDecimal budget; // Added budget field
 
     /**
      * Create a CampaignActivityResponse from a CampaignActivity with no participant
@@ -76,6 +77,7 @@ public class CampaignActivityResponse {
                 .imageUrl(campaignActivity.getImageUrl())
                 .price(campaignActivity.getPrice() != null ? campaignActivity.getPrice().intValue() : null)
                 .quantity(campaignActivity.getQuantity())
+                .budget(campaignActivity.getBudget()) // Populate budget
                 .build();
     }
 }

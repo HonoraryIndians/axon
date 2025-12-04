@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<header th:fragment="adminNav(activeMenu)" class="header shrink-0 bg-white border-b border-gray-200 z-50 sticky top-0">
+    <div class="header-inner px-6 py-3 flex justify-between items-center max-w-[1600px] mx-auto">
+        <div class="header-left flex items-center gap-8">
+            <a href="/admin" class="logo text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors">Axon Admin</a>
+            
+            <nav class="nav flex gap-1">
+                <a href="/admin/dashboard/overview" 
+                   th:class="${activeMenu == 'dashboard'} ? 'px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md' : 'px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md'">
+                   <i class="fa-solid fa-chart-line mr-1.5"></i>Dashboard
+                </a>
+                
+                <a href="/admin/campaigns" 
+                   th:class="${activeMenu == 'campaigns'} ? 'px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md' : 'px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md'">
+                   <i class="fa-solid fa-layer-group mr-1.5"></i>Campaigns
+                </a>
+                
+                <a href="/admin/events" 
+                   th:class="${activeMenu == 'events'} ? 'px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md' : 'px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md'">
+                   <i class="fa-regular fa-calendar-check mr-1.5"></i>Events
+                </a>
+
+                <a href="/admin/monitoring" 
+                   th:class="${activeMenu == 'monitoring'} ? 'px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md' : 'px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md'">
+                   <i class="fa-solid fa-server mr-1.5"></i>System
+                </a>
+            </nav>
+        </div>
+        
+        <div class="header-right flex items-center gap-4">
+            <div class="text-sm text-gray-500">
+                <span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-1"></span> Online
+            </div>
+            <button class="p-2 text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-bell"></i>
+            </button>
+            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs">
+                AD
+            </div>
+        </div>
+    </div>
+</header>
+</html>

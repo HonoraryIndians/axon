@@ -58,6 +58,7 @@ public class CampaignActivityService {
                 .quantity(request.getQuantity())
                 .product(product)
                 .imageUrl(request.getImageUrl())
+                .budget(request.getBudget())
                 .build();
         CampaignActivity saved = campaignActivityRepository.save(campaignActivity);
         return CampaignActivityResponse.from(saved);
@@ -112,6 +113,9 @@ public class CampaignActivityService {
 
         // Update Image URL
         campaignActivity.updateImageUrl(request.getImageUrl());
+
+        // Update Budget
+        campaignActivity.updateBudget(request.getBudget());
 
         // Invalidate Cache
         evictMetaCache(campaignActivityId);

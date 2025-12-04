@@ -3,7 +3,6 @@ package com.axon.core_service.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 
 @Slf4j
 @Controller
@@ -44,25 +43,36 @@ public class WebController {
     }
 
     /**
-     * Serve the admin view.
+     * Serve the admin portal home.
+     *
+     * @return the view name "admin_home"
+     */
+    @GetMapping("/admin")
+    public String adminHome() {
+        log.info("Serving admin_home.html");
+        return "admin_home";
+    }
+
+    /**
+     * Serve the campaign management board.
      *
      * @return the view name "admin"
      */
-    @GetMapping("/admin")
-    public String admin() {
-        log.info("Serving admin.html");
+    @GetMapping("/admin/campaigns")
+    public String adminCampaigns() {
+        log.info("Serving admin.html (Campaigns)");
         return "admin";
     }
 
     /**
-     * Display the admin dashboard page.
+     * Serve the system monitoring page.
      *
-     * @return the view name "admin_board"
+     * @return the view name "admin_monitoring"
      */
-    @GetMapping("/admin_board")
-    public String admin_board() {
-        log.info("Serving admin_board.html");
-        return "admin_board";
+    @GetMapping("/admin/monitoring")
+    public String adminMonitoring() {
+        log.info("Serving admin_monitoring.html");
+        return "admin_monitoring";
     }
 
     /**

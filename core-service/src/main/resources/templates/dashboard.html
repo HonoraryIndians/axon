@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-    th:replace="fragments/layout :: layout('Axon - Marketing Dashboard', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section})">
+    th:replace="fragments/layout :: layout('Axon - Marketing Dashboard', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section}, 'dashboard')">
 
 <head>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,14 +12,21 @@
 <section>
     <input type="hidden" id="campaignId" th:value="${campaignId}" />
 
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div class="max-w-[1600px] mx-auto px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <div class="font-bold text-xl text-blue-600">Axon</div>
-                <div class="h-6 w-px bg-gray-300 mx-2"></div>
-                <h1 class="font-semibold text-gray-900" th:text="'Activity Dashboard: ' + ${campaignName}">Activity
-                    Dashboard</h1>
-            </div>
+    <main class="dashboard-container pt-6">
+        <!-- Breadcrumb -->
+        <div class="mb-4 text-sm text-gray-500 flex items-center gap-2">
+            <a href="/admin" class="hover:text-blue-600 transition-colors"><i class="fa-solid fa-house"></i></a>
+            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
+            <a href="/admin/dashboard/overview" class="hover:text-blue-600 transition-colors">Global Dashboard</a>
+            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
+            <a th:if="${parentCampaignId}" th:href="@{/admin/dashboard/campaign/{id}(id=${parentCampaignId})}" class="hover:text-blue-600 transition-colors" th:text="${parentCampaignName}">Campaign</a>
+            <span th:unless="${parentCampaignId}">Unknown Campaign</span>
+            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
+            <span class="font-medium text-gray-900" th:text="${campaignName}">Activity</span>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="font-semibold text-gray-900 text-2xl" th:text="'Activity Dashboard: ' + ${campaignName}">Activity Dashboard</h1>
             <div class="flex items-center gap-4">
                 <a th:href="@{/admin/dashboard/cohort/{id}(id=${campaignId})}"
                    class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
@@ -32,9 +39,7 @@
                 <span id="lastUpdated" class="text-sm text-gray-500">Last updated: --:--:--</span>
             </div>
         </div>
-    </header>
 
-    <main class="dashboard-container">
         <!-- Section 1: KPI Cards Grid (Funnel Metrics) -->
         <div class="kpi-grid">
             <div

@@ -199,6 +199,10 @@ public class CampaignActivity extends BaseTimeEntity {
         this.imageUrl = imageUrl;
     }
 
+    public void updateBudget(BigDecimal budget) {
+        this.budget = budget;
+    }
+
     /**
      * Associates this activity with the given Campaign.
      *

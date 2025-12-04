@@ -1,12 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+    th:replace="fragments/layout :: layout('Axon - 이벤트 관리', 'bg-neutral-50 text-base-content', ~{::head/content()}, ~{::section}, 'events')">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Axon - 이벤트 관리</title>
-
-  <!-- Vendor scripts -->
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -14,9 +10,6 @@
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"
     referrerpolicy="no-referrer"></script>
-
-  <!-- External stylesheet (extracted from inline <style> blocks) -->
-  <link rel="stylesheet" href="./event-board.css" />
 
   <!-- Tailwind theme using CSS variables -->
   <script>
@@ -64,29 +57,7 @@
   </script>
 </head>
 
-<body class="h-full text-base-content bg-neutral-50">
-  <header class="header shrink-0 bg-white border-b border-gray-200 z-10">
-    <div class="header-inner px-6 py-3 flex justify-between items-center">
-      <div class="header-left flex items-center">
-        <div class="logo text-xl font-bold mr-8">Axon</div>
-        <nav class="nav flex gap-6">
-          <a href="/admin_board" class="nav-item text-gray-500 cursor-pointer hover:text-black">대시보드</a>
-          <a href="/admin_board" class="nav-item text-gray-500 cursor-pointer hover:text-black">캠페인</a>
-          <span class="nav-item active text-black font-medium border-b-2 border-black pb-1">이벤트</span>
-        </nav>
-      </div>
-      <div class="header-right flex items-center gap-4">
-        <button
-          class="btn-primary text-xs px-3 py-1.5 rounded bg-black text-white hover:bg-gray-800 transition-colors flex items-center"
-          data-event-create-button>
-          <i class="fa-solid fa-plus mr-1"></i> 새 이벤트
-        </button>
-        <img src="https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=456" alt="User Avatar"
-          class="w-8 h-8 rounded-full">
-      </div>
-    </div>
-  </header>
-
+<section>
   <main id="main-content" class="p-6">
     <div class="max-w-7xl mx-auto">
       <div class="mb-6">
@@ -249,6 +220,6 @@
   </div>
 
   <script src="/admin/events/event-board.js"></script>
-</body>
+</section>
 
 </html>

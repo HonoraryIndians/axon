@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+    th:replace="fragments/layout :: layout('Axon Admin Portal', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section}, 'home')">
+
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
+</head>
+<section class="min-h-screen flex flex-col">
+    <div class="flex-1 flex items-center justify-center p-8">
+        <div class="max-w-5xl w-full">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Axon Admin</h1>
+                <p class="text-lg text-gray-600">Manage your campaigns, analyze performance, and monitor system health.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Dashboard Card -->
+                <a href="/admin/dashboard/overview" class="group bg-white p-8 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-500 transition-all duration-300">
+                    <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-chart-pie text-2xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Dashboard</h2>
+                    <p class="text-gray-500 text-sm">Real-time analytics, funnel analysis, and AI insights.</p>
+                </a>
+
+                <!-- Campaigns Card -->
+                <a href="/admin/campaigns" class="group bg-white p-8 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-500 transition-all duration-300">
+                    <div class="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 mb-6 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-layer-group text-2xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Campaigns</h2>
+                    <p class="text-gray-500 text-sm">Create and manage marketing campaigns and activities.</p>
+                </a>
+
+                <!-- Events Card -->
+                <a href="/admin/events" class="group bg-white p-8 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-500 transition-all duration-300">
+                    <div class="w-14 h-14 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600 mb-6 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                        <i class="fa-regular fa-calendar-check text-2xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Events</h2>
+                    <p class="text-gray-500 text-sm">Schedule and monitor special event triggers.</p>
+                </a>
+
+                <!-- System Card -->
+                <a href="/admin/monitoring" class="group bg-white p-8 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-500 transition-all duration-300">
+                    <div class="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center text-gray-600 mb-6 group-hover:bg-gray-800 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-server text-2xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">System</h2>
+                    <p class="text-gray-500 text-sm">Monitor infrastructure health and logs.</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

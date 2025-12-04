@@ -27,8 +27,16 @@ public class CampaignService {
      * @return a CampaignResponse representing the persisted campaign
      */
     public CampaignResponse createCampaign(CampaignRequest request) {
-        Campaign campaign = new Campaign(request.getName());
-        applyCampaignPolicies(campaign, request);
+        Campaign campaign = Campaign.builder()
+                .name(request.getName())
+                .targetSegmentId(request.getTargetSegmentId())
+                .startAt(request.getStartAt())
+                .endAt(request.getEndAt())
+                .rewardType(request.getRewardType())
+                .rewardPayload(request.getRewardPayload())
+                .budget(request.getBudget())
+                .build();
+        
         return CampaignResponse.from(campaignRepository.save(campaign), List.of());
     }
 
@@ -107,6 +115,7 @@ public class CampaignService {
         campaign.updateBasicInfo(request.getName(), request.getTargetSegmentId());
         campaign.updateSchedule(request.getStartAt(), request.getEndAt());
         campaign.updateReward(request.getRewardType(), request.getRewardPayload());
+        campaign.updateBudget(request.getBudget());
     }
 
     /**

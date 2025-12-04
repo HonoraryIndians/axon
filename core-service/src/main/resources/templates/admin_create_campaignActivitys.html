@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-    th:replace="fragments/layout :: layout('새 캠페인 활동 만들기', 'bg-gray-50', ~{::head/content()}, ~{::section})">
+    th:replace="fragments/layout :: layout('새 캠페인 활동 만들기', 'bg-gray-50', ~{::head/content()}, ~{::section}, 'campaigns')">
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -181,6 +181,16 @@
                                 <input type="number" id="limitCountInput" class="form-input pl-3 pr-12" placeholder="0">
                                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                     <span class="text-gray-500 sm:text-sm">명</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="budgetInput" class="form-label">마케팅 예산</label>
+                            <div class="relative">
+                                <input type="number" id="budgetInput" class="form-input pl-3 pr-12" placeholder="0">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">원</span>
                                 </div>
                             </div>
                         </div>

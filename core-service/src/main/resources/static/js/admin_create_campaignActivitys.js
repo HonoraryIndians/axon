@@ -256,6 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const productId = document.getElementById("selectedProductId").value;
             const salePrice = document.getElementById("salePrice").value;
             const saleQuantity = document.getElementById("saleQuantity").value;
+            const budget = document.getElementById("budgetInput").value;
 
             if (!campaignId || !name || !type || !startDate || !endDate || !limitCount) {
                 alert("필수 항목을 모두 입력해주세요.");
@@ -295,6 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 productId: productId ? parseInt(productId) : null,
                 price: salePrice ? parseInt(salePrice) : 0,
                 quantity: saleQuantity ? parseInt(saleQuantity) : 0,
+                budget: budget ? parseInt(budget) : 0,
                 status: "DRAFT"
             };
 

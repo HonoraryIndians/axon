@@ -115,12 +115,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             item.innerHTML = `
-                <div class="font-bold text-gray-900 mb-1 truncate">${campaign.name}</div>
+                <div class="flex justify-between items-start mb-1">
+                    <div class="font-bold text-gray-900 truncate flex-1" title="${campaign.name}">${campaign.name}</div>
+                    <button class="text-gray-400 hover:text-black edit-campaign-btn p-1 rounded hover:bg-gray-200 transition-colors" data-id="${campaign.id}" title="캠페인 수정">
+                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                    </button>
+                </div>
                 <div class="text-xs text-gray-500 flex justify-between items-center">
                     <span>${formatDateShort(campaign.startAt)} ~ ${formatDateShort(campaign.endAt)}</span>
                     <span class="px-2 py-0.5 rounded ${statusClass}">${statusText}</span>
                 </div>
             `;
+
+            // Edit button click handler (stop propagation to prevent selecting the campaign)
+            const editBtn = item.querySelector('.edit-campaign-btn');
+            if (editBtn) {
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (window.adminModalHandler && window.adminModalHandler.showEditCampaignModal) {
+                        window.adminModalHandler.showEditCampaignModal(campaign.id);
+                    } else {
+                        console.error('showEditCampaignModal not available');
+                    }
+                });
+            }
 
             item.addEventListener('click', () => selectCampaign(campaign.id));
             campaignListContainer.appendChild(item);

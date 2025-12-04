@@ -122,15 +122,25 @@ function renderComparisonChart(activities) {
                 animation: {
                     duration: 500 // Smooth animation
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
                 plugins: {
                     tooltip: {
                         mode: 'index',
                         intersect: false
+                    }
+                },
+                onClick: (evt, activeElements) => {
+                    if (activeElements.length > 0) {
+                        const index = activeElements[0].index;
+                        const activityId = activities[index].activityId;
+                        window.location.href = `/admin/dashboard/${activityId}`;
+                    }
+                },
+                onHover: (event, chartElement) => {
+                    event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
                 }
             }
@@ -198,7 +208,11 @@ function updateActivityTable(activities) {
         const row = document.createElement('tr');
         row.className = "bg-white border-b hover:bg-gray-50 transition-colors duration-150";
         row.innerHTML = `
-            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${activity.activityName}</td>
+            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                <a href="/admin/dashboard/${activity.activityId}" class="text-blue-600 hover:underline hover:text-blue-800 transition-colors">
+                    ${activity.activityName}
+                </a>
+            </td>
             <td class="px-6 py-4 text-right">${formatNumber(activity.totalVisits)}</td>
             <td class="px-6 py-4 text-right">${formatNumber(activity.totalEngages)}</td>
             <td class="px-6 py-4 text-right font-semibold text-blue-600">${formatNumber(activity.engagementRate)}%</td>

@@ -51,5 +51,7 @@ public class CampaignActivityRequest {
     @NotNull
     private Integer quantity;
 
+    private BigDecimal budget;
+
     private String imageUrl;
 }

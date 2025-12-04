@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ public class Campaign extends BaseTimeEntity {
     @Column(length = 2000)
     private String rewardPayload;
 
-    private java.math.BigDecimal budget; // 캠페인 예산
+    private BigDecimal budget; // 캠페인 예산
 
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<CampaignActivity> campaignActivities = new ArrayList<>();
@@ -121,5 +122,9 @@ public class Campaign extends BaseTimeEntity {
     public void updateBasicInfo(String name, Long targetSegmentId) {
         this.name = name;
         this.targetSegmentId = targetSegmentId;
+    }
+
+    public void updateBudget(BigDecimal budget) {
+        this.budget = budget;
     }
 }

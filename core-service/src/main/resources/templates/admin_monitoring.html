@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+    th:replace="fragments/layout :: layout('Axon - System Monitoring', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section}, 'monitoring')">
+
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
+</head>
+<section class="min-h-screen p-8">
+    <div class="max-w-[1600px] mx-auto">
+        <div class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">System Monitoring</h1>
+                <p class="text-gray-500">Infrastructure health and performance metrics</p>
+            </div>
+            <a href="http://localhost:3000" target="_blank" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-external-link-alt"></i> Open Grafana
+            </a>
+        </div>
+
+        <!-- Mock Monitoring Dashboard (Placeholder) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-gray-700">CPU Usage</h3>
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Normal</span>
+                </div>
+                <div class="text-3xl font-bold text-gray-900 mb-2">12%</div>
+                <div class="w-full bg-gray-100 rounded-full h-2">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width: 12%"></div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-gray-700">Memory Usage</h3>
+                    <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Warning</span>
+                </div>
+                <div class="text-3xl font-bold text-gray-900 mb-2">64%</div>
+                <div class="w-full bg-gray-100 rounded-full h-2">
+                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 64%"></div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-gray-700">Active Threads</h3>
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Normal</span>
+                </div>
+                <div class="text-3xl font-bold text-gray-900 mb-2">204</div>
+                <div class="text-sm text-gray-500">Peak: 250</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center h-96 flex flex-col items-center justify-center">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fa-solid fa-chart-area text-gray-400 text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Grafana Dashboard Integration</h3>
+            <p class="text-gray-500 max-w-md mb-6">
+                Detailed metrics are available in Grafana. In a production environment, 
+                dashboards can be embedded here using iframe.
+            </p>
+        </div>
+    </div>
+</section>
+</html>

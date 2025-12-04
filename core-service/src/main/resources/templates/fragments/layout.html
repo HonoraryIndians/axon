@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(pageTitle, bodyClass, headContent, content)">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(pageTitle, bodyClass, headContent, content, activeMenu)">
 
 <head>
     <meta charset="UTF-8">
@@ -11,6 +11,9 @@
 </head>
 
 <body th:class="${bodyClass}">
+    <!-- Common Admin Navigation -->
+    <div th:replace="fragments/admin_nav :: adminNav(${activeMenu})"></div>
+
     <main th:if="${content} != null" th:replace="${content}"></main>
 
     <script th:src="@{/js/axon-tracker-config.js}"></script>

@@ -176,6 +176,16 @@ window.adminModalHandler = {
                                             </div>
                                         </div>
                                     </div>
+
+                                    <div>
+                                        <label for="edit-budgetInput" class="form-label">마케팅 예산</label>
+                                        <div class="relative">
+                                            <input type="number" id="edit-budgetInput" class="form-input pl-3 pr-12" placeholder="0" value="${activityDetails.budget || ''}">
+                                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                <span class="text-gray-500 sm:text-sm">원</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -432,6 +442,7 @@ window.adminModalHandler = {
             const startDate = document.getElementById('edit-startDate').value;
             const endDate = document.getElementById('edit-endDate').value;
             const limitCount = document.getElementById('edit-limitCountInput').value;
+            const budget = document.getElementById('edit-budgetInput').value;
             const productId = document.getElementById('edit-selectedProductId').value;
             const salePrice = document.getElementById('edit-salePrice').value;
             const saleQuantity = document.getElementById('edit-saleQuantity').value;
@@ -463,7 +474,8 @@ window.adminModalHandler = {
                 limitCount: parseInt(limitCount), filters, imageUrl: uploadedImageUrl, status: activityDetails.status,
                 productId: productId ? parseInt(productId) : null,
                 price: salePrice ? parseInt(salePrice) : 0,
-                quantity: saleQuantity ? parseInt(saleQuantity) : 0
+                quantity: saleQuantity ? parseInt(saleQuantity) : 0,
+                budget: budget ? parseInt(budget) : 0
             };
 
             try {
@@ -548,6 +560,123 @@ window.adminModalHandler = {
         });
     },
 
+    showEditCampaignModal: async function (campaignId) {
+        const existingModal = document.getElementById('edit-campaign-modal-backdrop');
+        if (existingModal) existingModal.remove();
+
+        try {
+            const res = await fetch(`/api/v1/campaign/${campaignId}`);
+            if (!res.ok) throw new Error('캠페인 정보를 불러오는데 실패했습니다.');
+            const campaign = await res.json();
+
+            const modalHtml = `
+                <div id="edit-campaign-modal-backdrop" class="modal-backdrop">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">캠페인 수정</h3>
+                            <button class="modal-close-button">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="edit-campaign-form" class="space-y-4">
+                                <div>
+                                    <label for="edit-campaign-name" class="form-label">캠페인 이름 *</label>
+                                    <input type="text" id="edit-campaign-name" class="form-input" required value="${campaign.name}">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="edit-campaign-start" class="form-label">시작일 *</label>
+                                        <input type="datetime-local" id="edit-campaign-start" class="form-input" required value="${campaign.startAt ? campaign.startAt.substring(0, 16) : ''}">
+                                    </div>
+                                    <div>
+                                        <label for="edit-campaign-end" class="form-label">종료일 *</label>
+                                        <input type="datetime-local" id="edit-campaign-end" class="form-input" required value="${campaign.endAt ? campaign.endAt.substring(0, 16) : ''}">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="edit-campaign-budget" class="form-label">총 예산</label>
+                                    <div class="relative">
+                                        <input type="number" id="edit-campaign-budget" class="form-input pr-8" placeholder="0" value="${campaign.budget || ''}">
+                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                            <span class="text-gray-500 sm:text-sm">원</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="confirm-edit-campaign-btn" class="btn-primary">저장</button>
+                            <button id="cancel-edit-campaign-btn" class="btn-secondary">취소</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            const modalBackdrop = document.getElementById('edit-campaign-modal-backdrop');
+            const closeButton = modalBackdrop.querySelector('.modal-close-button');
+            const cancelBtn = document.getElementById('cancel-edit-campaign-btn');
+            const confirmBtn = document.getElementById('confirm-edit-campaign-btn');
+
+            const closeModal = () => modalBackdrop.remove();
+
+            closeButton.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
+
+            confirmBtn.addEventListener('click', async () => {
+                const name = document.getElementById('edit-campaign-name').value.trim();
+                const startAt = document.getElementById('edit-campaign-start').value;
+                const endAt = document.getElementById('edit-campaign-end').value;
+                const budget = document.getElementById('edit-campaign-budget').value;
+
+                if (!name || !startAt || !endAt) {
+                    alert('필수 항목을 모두 입력해주세요.');
+                    return;
+                }
+
+                const payload = {
+                    name: name,
+                    startAt: startAt + ':00',
+                    endAt: endAt + ':00',
+                    budget: budget ? parseInt(budget) : 0,
+                    // Preserve other fields if needed, or backend handles partial update
+                    targetSegmentId: campaign.targetSegmentId,
+                    rewardType: campaign.rewardType,
+                    rewardPayload: campaign.rewardPayload
+                };
+                const token = common.getCookie("accessToken");
+
+                try {
+                    const res = await fetch(`/api/v1/campaign/${campaignId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        alert('캠페인이 수정되었습니다!');
+                        closeModal();
+                        location.reload();
+                    } else {
+                        const errorText = await res.text();
+                        alert('캠페인 수정 실패: ' + errorText);
+                    }
+                } catch (error) {
+                    console.error('캠페인 수정 오류:', error);
+                    alert('캠페인 수정 중 오류가 발생했습니다.');
+                }
+            });
+
+        } catch (error) {
+            console.error('캠페인 정보 로드 오류:', error);
+            alert('캠페인 정보를 불러오는데 실패했습니다.');
+        }
+    },
+
     showCreateCampaignModal: function () {
         const existingModal = document.getElementById('create-campaign-modal-backdrop');
         if (existingModal) existingModal.remove();
@@ -577,6 +706,15 @@ window.adminModalHandler = {
                                 <div>
                                     <label for="new-campaign-end" class="form-label">종료일 *</label>
                                     <input type="datetime-local" id="new-campaign-end" class="form-input" required>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="new-campaign-budget" class="form-label">총 예산</label>
+                                <div class="relative">
+                                    <input type="number" id="new-campaign-budget" class="form-input pr-8" placeholder="0">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">원</span>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -646,6 +784,7 @@ window.adminModalHandler = {
             const name = campaignNameInput.value.trim();
             const startAt = startDateInput.value;
             const endAt = endDateInput.value;
+            const budget = document.getElementById('new-campaign-budget').value;
 
             if (!startAt || !endAt) {
                 alert('시작일과 종료일을 모두 입력해주세요.');
@@ -671,7 +810,8 @@ window.adminModalHandler = {
             const payload = {
                 name: name,
                 startAt: startAt + ':00', // Append seconds if needed by backend format
-                endAt: endAt + ':00'
+                endAt: endAt + ':00',
+                budget: budget ? parseInt(budget) : 0
             };
             const token = common.getCookie("accessToken");
 

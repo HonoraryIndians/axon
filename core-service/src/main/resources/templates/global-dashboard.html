@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-    th:replace="fragments/layout :: layout('Axon - Global Dashboard', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section})">
+    th:replace="fragments/layout :: layout('Axon - Global Dashboard', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section}, 'dashboard')">
 
 <head>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,20 +13,7 @@
     <!-- Hidden input for API context (not used directly for global, but good to have consistent structure) -->
     <input type="hidden" id="campaignId" value="global" /> 
 
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div class="max-w-[1600px] mx-auto px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <div class="font-bold text-xl text-blue-600">Axon</div>
-                <div class="h-6 w-px bg-gray-300 mx-2"></div>
-                <h1 class="font-semibold text-gray-900" id="globalDashboardTitle">Global Dashboard Overview</h1>
-            </div>
-            <div class="flex items-center gap-4">
-                <span id="lastUpdated" class="text-sm text-gray-500">Last updated: --:--:--</span>
-            </div>
-        </div>
-    </header>
-
-    <main class="dashboard-container">
+    <main class="dashboard-container pt-6">
         <!-- Section 1: Global KPI Cards -->
         <div class="kpi-grid mb-8">
             <div th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Global Visits', 'fa-solid fa-earth-americas', 'blue', '0', '-', 'neutral')"></div>

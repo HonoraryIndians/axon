@@ -87,6 +87,16 @@ document.addEventListener('DOMContentLoaded', function () {
                                 }
                             }
                         }
+                    },
+                    onClick: (evt, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const index = activeElements[0].index;
+                            const campaignId = campaigns[index].campaignId;
+                            window.location.href = `/admin/dashboard/campaign/${campaignId}`;
+                        }
+                    },
+                    onHover: (event, chartElement) => {
+                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
                     }
                 }
             });
@@ -140,7 +150,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const row = document.createElement('tr');
             row.className = "bg-white border-b hover:bg-gray-50 transition-colors duration-150";
             row.innerHTML = `
-                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${campaign.campaignName}</td>
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                    <a href="/admin/dashboard/campaign/${campaign.campaignId}" class="text-blue-600 hover:underline hover:text-blue-800 transition-colors">
+                        ${campaign.campaignName}
+                    </a>
+                </td>
                 <td class="px-6 py-4 text-right">${formatCurrency(campaign.budget)}</td>
                 <td class="px-6 py-4 text-right">${formatCurrency(campaign.gmv)}</td>
                 <td class="px-6 py-4 text-right font-semibold text-blue-600">${formatNumber(campaign.roas)}%</td>
