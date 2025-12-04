@@ -182,7 +182,7 @@ public class StoreController {
         }
 
         public static ProductDisplayDto generateSingleProduct(Long id) {
-            // Randomly pick a category for general generation
+            // Randomly pick a category for general
             String[] categories = { "Tech", "Food", "Home", "Fashion" };
             return generateSingleProduct(id, categories[random.nextInt(categories.length)]);
         }
