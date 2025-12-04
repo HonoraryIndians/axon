@@ -5,7 +5,12 @@
 <div th:fragment="kpiCard(id, title, iconClass, iconColor, initialValue, trend, trendClass)">
     <div class="kpi-card">
         <div class="kpi-header">
-            <span class="kpi-title" th:text="${title}">Title</span>
+            <div class="flex items-center gap-2">
+                <span class="kpi-title" th:text="${title}">Title</span>
+                <span th:id="${id} + '-tooltip-icon'" class="cursor-help text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-regular fa-circle-question text-xs"></i>
+                </span>
+            </div>
             <div th:class="'kpi-icon ' + ${iconColor}">
                 <i th:class="${iconClass}"></i>
             </div>

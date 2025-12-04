@@ -8,6 +8,11 @@
 
     <th:block th:if="${headContent} != null" th:replace="${headContent}"></th:block>
     <script th:src="@{/js/common.js}"></script>
+
+    <!-- Tippy.js for Tooltips -->
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
 </head>
 
 <body th:class="${bodyClass}">

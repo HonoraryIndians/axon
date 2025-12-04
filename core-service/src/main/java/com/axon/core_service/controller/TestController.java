@@ -29,7 +29,7 @@ public class TestController {
      * @return the generated access token string
      */
     @GetMapping("/auth/token")
-    public ResponseEntity<String> getTestToken(@RequestParam int userId) {
+    public ResponseEntity<String> gigetTestToken(@RequestParam int userId) {
         // 1. 가짜 인증 정보 생성
         String userRole = "ROLE_USER"; // 기본 권한
         Authentication authentication = new UsernamePasswordAuthenticationToken(

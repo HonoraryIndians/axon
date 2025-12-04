@@ -100,7 +100,7 @@ public class WebController {
     @GetMapping("/admin/events")
     public String eventBoard() {
         log.info("Serving event-board.html");
-        return "forward:/admin/events/event-board.html";
+        return "event-board";
     }
 
     /**

@@ -31,3 +31,8 @@ data:
           host: axon-redis-master
           port: 6379
           password: ${REDIS_PASSWORD}
+    axon:
+      entry-service-url: http://entry-service
+    gemini:
+      api:
+        key: ${GEMINI_API_KEY}

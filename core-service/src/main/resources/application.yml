@@ -40,6 +40,9 @@ gemini:
   api:
     key: ${GEMINI_API_KEY:}
 
+axon:
+  entry-service-url: ${ENTRY_SERVICE_URL:http://localhost:8081}
+
 server:
   forward-headers-strategy: framework
 
@@ -48,7 +51,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health,info,prometheus,metrics
   metrics:
     tags:
       application: ${spring.application.name:core-service}

@@ -4,62 +4,181 @@
 
 <head>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
 </head>
-<section class="min-h-screen p-8">
-    <div class="max-w-[1600px] mx-auto">
-        <div class="mb-8 flex justify-between items-center">
+<section class="min-h-screen p-6 lg:p-10">
+    <div class="max-w-[1600px] mx-auto space-y-8">
+        <!-- Header Section -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">System Monitoring</h1>
-                <p class="text-gray-500">Infrastructure health and performance metrics</p>
+                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">System Monitoring</h1>
+                <p class="text-gray-500 mt-1">Real-time infrastructure health & performance metrics</p>
             </div>
-            <a href="http://localhost:3000" target="_blank" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-external-link-alt"></i> Open Grafana
-            </a>
-        </div>
-
-        <!-- Mock Monitoring Dashboard (Placeholder) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-gray-700">CPU Usage</h3>
-                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Normal</span>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm">
+                    <div class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </div>
+                    <span class="text-sm font-medium text-green-700" id="monitor-status-text">System Healthy</span>
                 </div>
-                <div class="text-3xl font-bold text-gray-900 mb-2">12%</div>
-                <div class="w-full bg-gray-100 rounded-full h-2">
-                    <div class="bg-blue-500 h-2 rounded-full" style="width: 12%"></div>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-gray-700">Memory Usage</h3>
-                    <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Warning</span>
-                </div>
-                <div class="text-3xl font-bold text-gray-900 mb-2">64%</div>
-                <div class="w-full bg-gray-100 rounded-full h-2">
-                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 64%"></div>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-gray-700">Active Threads</h3>
-                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Normal</span>
-                </div>
-                <div class="text-3xl font-bold text-gray-900 mb-2">204</div>
-                <div class="text-sm text-gray-500">Peak: 250</div>
+                <a href="http://localhost:3000" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-all shadow-sm">
+                    <i class="fa-solid fa-chart-simple"></i>
+                    <span>Open Grafana</span>
+                </a>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center h-96 flex flex-col items-center justify-center">
-            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <i class="fa-solid fa-chart-area text-gray-400 text-3xl"></i>
+        <!-- Key Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- CPU Card -->
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+                <div class="flex justify-between items-start mb-4 relative z-10">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">CPU Usage</p>
+                        <h3 class="text-4xl font-extrabold text-gray-900 mt-2" id="cpu-value">0%</h3>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-microchip text-xl"></i>
+                    </div>
+                </div>
+                <div class="h-24 -mx-2 -mb-4">
+                    <canvas id="cpuChart"></canvas>
+                </div>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Grafana Dashboard Integration</h3>
-            <p class="text-gray-500 max-w-md mb-6">
-                Detailed metrics are available in Grafana. In a production environment, 
-                dashboards can be embedded here using iframe.
-            </p>
+
+            <!-- Memory Card -->
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+                <div class="flex justify-between items-start mb-4 relative z-10">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Memory (JVM)</p>
+                        <div class="flex items-baseline gap-2 mt-2">
+                            <h3 class="text-4xl font-extrabold text-gray-900" id="memory-value">0MB</h3>
+                            <span class="text-sm text-gray-400" id="memory-max">/ 0MB</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-yellow-50 rounded-xl text-yellow-600 group-hover:bg-yellow-500 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-memory text-xl"></i>
+                    </div>
+                </div>
+                <div class="h-24 -mx-2 -mb-4">
+                    <canvas id="memoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Threads Card -->
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+                <div class="flex justify-between items-start mb-4 relative z-10">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Active Threads</p>
+                        <h3 class="text-4xl font-extrabold text-gray-900 mt-2" id="thread-value">0</h3>
+                    </div>
+                    <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-network-wired text-xl"></i>
+                    </div>
+                </div>
+                <div class="h-24 -mx-2 -mb-4">
+                    <canvas id="threadChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Stats Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- HTTP Requests (Pie Chart) -->
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm lg:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-900">Traffic Distribution</h3>
+                    <select class="text-xs border-gray-200 rounded-lg text-gray-500 focus:ring-0 focus:border-gray-300">
+                        <option>Last 1 Hour</option>
+                        <option>Last 24 Hours</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-center h-64">
+                    <div class="w-64 h-64">
+                        <canvas id="httpChart"></canvas>
+                    </div>
+                    <!-- Legend/Stats -->
+                    <div class="ml-8 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                            <div>
+                                <p class="text-xs text-gray-500">Success (200)</p>
+                                <p class="font-bold text-gray-900" id="http-200-val">0</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                            <div>
+                                <p class="text-xs text-gray-500">Client Error (4xx)</p>
+                                <p class="font-bold text-gray-900" id="http-400-val">0</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                            <div>
+                                <p class="text-xs text-gray-500">Server Error (5xx)</p>
+                                <p class="font-bold text-gray-900" id="http-500-val">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Info List -->
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <h3 class="text-lg font-bold text-gray-900 mb-6">Instance Details</h3>
+                <div class="space-y-5">
+                    <div class="flex justify-between items-center pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500">
+                                <i class="fa-regular fa-clock"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-600">Uptime</span>
+                        </div>
+                        <span class="font-mono text-sm font-bold text-gray-900" id="uptime-value">0s</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500">
+                                <i class="fa-solid fa-play"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-600">Start Time</span>
+                        </div>
+                        <span class="font-mono text-sm font-bold text-gray-900" id="starttime-value">-</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500">
+                                <i class="fa-solid fa-cubes"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-600">Classes</span>
+                        </div>
+                        <span class="font-mono text-sm font-bold text-gray-900" id="classes-value">0</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500">
+                                <i class="fa-solid fa-broom"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-600">GC Pause</span>
+                        </div>
+                        <span class="font-mono text-sm font-bold text-gray-900" id="gc-value">0ms</span>
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-gray-100">
+                    <div class="bg-blue-50 rounded-xl p-4 flex gap-3 items-start">
+                        <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+                        <div class="text-xs text-blue-700 leading-relaxed">
+                            <strong>Tip:</strong> CPU 사용량이 80%를 초과하면 오토스케일링(HPA)이 동작하여 Pod가 자동으로 증설됩니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+    <script th:src="@{/js/admin_monitoring.js}"></script>
 </section>
 </html>

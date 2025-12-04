@@ -20,3 +20,8 @@ data:
     axon:
       core-service:
         base-url: http://core-service:8080
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,prometheus,metrics

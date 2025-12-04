@@ -102,7 +102,53 @@ const common = (() => {
             } else {
                 return `<strong class="text-black">${type}</strong>: <strong>${formattedValue}</strong> (${suffix})`;
             }
+        },
+
+        initTooltips: function () {
+            if (typeof tippy === 'undefined') {
+                console.warn('Tippy.js not loaded');
+                return;
+            }
+
+            console.log('Initializing Tooltips...');
+
+            const tooltips = {
+                'totalVisits': '기간 내 페이지 총 방문 횟수입니다.',
+                'totalEngages': '페이지 내에서 발생한 의미 있는 상호작용(클릭 등) 횟수입니다.',
+                'totalQualifies': '참여 자격 검증(나이, 등급 등)을 통과한 사용자 수입니다.',
+                'totalPurchases': '실제 구매(결제)가 완료된 총 건수입니다.',
+                'purchaseCount': '실제 구매(결제)가 완료된 총 건수입니다.',
+                'totalGMV': '총 거래액 (Gross Merchandise Value)<br>= 판매 수량 × 상품 가격',
+                'gmv': '총 거래액 (Gross Merchandise Value)<br>= 판매 수량 × 상품 가격',
+                'totalROAS': '광고 비용 대비 수익률 (Return on Ad Spend)<br>= (GMV / 마케팅 예산) × 100%',
+                'roas': '광고 비용 대비 수익률 (Return on Ad Spend)<br>= (GMV / 마케팅 예산) × 100%',
+                'conversionRate': '방문 대비 구매 전환율 (CVR)<br>= (구매 건수 / 방문 수) × 100%',
+                'engagementRate': '방문 대비 참여율 (CTR)<br>= (참여 건수 / 방문 수) × 100%',
+                'aov': '평균 주문 금액 (Average Order Value)<br>= GMV / 구매 건수'
+            };
+
+            let count = 0;
+            Object.keys(tooltips).forEach(id => {
+                const targetId = id + '-tooltip-icon';
+                const target = document.getElementById(targetId);
+                if (target) {
+                    console.log('Found tooltip target:', targetId);
+                    tippy(target, {
+                        content: tooltips[id],
+                        allowHTML: true,
+                        placement: 'top',
+                        animation: 'shift-away',
+                        zIndex: 99999,
+                        appendTo: document.body
+                    });
+                    count++;
+                } else {
+                    // console.log('Target not found:', targetId);
+                }
+            });
+            console.log(`Tooltips initialized: ${count} / ${Object.keys(tooltips).length}`);
         }
-        // 추가 기능은 여기 추가
     };
 })();
+
+document.addEventListener('DOMContentLoaded', common.initTooltips);
