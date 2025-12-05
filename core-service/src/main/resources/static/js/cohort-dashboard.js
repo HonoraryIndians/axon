@@ -82,40 +82,91 @@ document.addEventListener('DOMContentLoaded', function () {
             ltvGrowthChart.destroy();
         }
 
-        const chartData = {
-            labels: ['초기', '30일', '90일', '365일', '현재'],
-            datasets: [
-                {
-                    label: 'LTV (₩)',
-                    data: [
-                        0, // Initial
-                        data.ltv30d || 0,
-                        data.ltv90d || 0,
-                        data.ltv365d || 0,
-                        data.ltvCurrent || 0
-                    ],
-                    borderColor: 'rgb(16, 185, 129)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                },
-                {
-                    label: 'CAC (₩)',
-                    data: [
-                        data.avgCAC || 0,
-                        data.avgCAC || 0,
-                        data.avgCAC || 0,
-                        data.avgCAC || 0,
-                        data.avgCAC || 0
-                    ],
-                    borderColor: 'rgb(239, 68, 68)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderDash: [5, 5],
-                    tension: 0,
-                    fill: false
-                }
-            ]
-        };
+        // Use monthly details if available (batch data), otherwise fallback to legacy format
+        const hasMonthlyData = data.monthlyDetails && data.monthlyDetails.length > 0;
+
+        let chartData;
+        if (hasMonthlyData) {
+            // Monthly batch data (e.g., "2025년 7월", "2025년 8월", ...)
+            chartData = {
+                labels: data.monthlyDetails.map(m => m.monthLabel),
+                datasets: [
+                    {
+                        label: '누적 매출 (₩)',
+                        data: data.monthlyDetails.map(m => m.cumulativeRevenue || 0),
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: '캠페인 비용 (₩)',
+                        data: data.monthlyDetails.map(() => data.totalAcquisitionCost || 0),
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderDash: [5, 5],
+                        tension: 0,
+                        fill: false
+                    },
+                    {
+                        label: '누적 이익 (₩)',
+                        data: data.monthlyDetails.map(m => m.profit || 0),
+                        borderColor: function(context) {
+                            const value = context.parsed?.y || 0;
+                            return value >= 0 ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)';
+                        },
+                        backgroundColor: function(context) {
+                            const value = context.parsed?.y || 0;
+                            return value >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+                        },
+                        segment: {
+                            borderColor: ctx => {
+                                const value = ctx.p1.parsed.y;
+                                return value >= 0 ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)';
+                            }
+                        },
+                        tension: 0.4,
+                        fill: false
+                    }
+                ]
+            };
+        } else {
+            // Fallback to legacy 30d/90d/365d format (real-time calculation)
+            chartData = {
+                labels: ['초기', '30일', '90일', '365일', '현재'],
+                datasets: [
+                    {
+                        label: 'LTV (₩)',
+                        data: [
+                            0, // Initial
+                            data.ltv30d || 0,
+                            data.ltv90d || 0,
+                            data.ltv365d || 0,
+                            data.ltvCurrent || 0
+                        ],
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'CAC (₩)',
+                        data: [
+                            data.avgCAC || 0,
+                            data.avgCAC || 0,
+                            data.avgCAC || 0,
+                            data.avgCAC || 0,
+                            data.avgCAC || 0
+                        ],
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderDash: [5, 5],
+                        tension: 0,
+                        fill: false
+                    }
+                ]
+            };
+        }
 
         ltvGrowthChart = new Chart(ctx, {
             type: 'line',
@@ -140,6 +191,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                     label += ': ';
                                 }
                                 label += formatCurrency(context.parsed.y);
+
+                                // Add LTV/CAC ratio for monthly data
+                                if (hasMonthlyData && context.datasetIndex === 0) {
+                                    const monthIndex = context.dataIndex;
+                                    const ratio = data.monthlyDetails[monthIndex]?.ltvCacRatio || 0;
+                                    label += ` (LTV/CAC: ${ratio.toFixed(2)})`;
+                                }
+
                                 return label;
                             }
                         }

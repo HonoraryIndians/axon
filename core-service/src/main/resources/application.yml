@@ -9,7 +9,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update # Use 'validate' in production
+      ddl-auto: create # Use 'validate' in production
     properties:
       hibernate:
         format_sql: true
@@ -35,6 +35,10 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
+  task:
+    scheduling:
+      pool:
+        size: 2
 
 gemini:
   api:
