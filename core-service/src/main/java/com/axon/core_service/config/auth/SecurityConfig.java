@@ -73,6 +73,9 @@ public class SecurityConfig {
                                                 .defaultAuthenticationEntryPointFor(
                                                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                                                                 antMatcher("/api/**"))
+                                                .defaultAuthenticationEntryPointFor(
+                                                                new HttpStatusEntryPoint(HttpStatus.OK), // 200 OK 반환 (리다이렉트 방지)
+                                                                antMatcher("/test/**"))
                                                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/naver")))
                                 .logout(logout -> logout.logoutSuccessUrl("/"))
                                 .oauth2Login(oauth2 -> oauth2
