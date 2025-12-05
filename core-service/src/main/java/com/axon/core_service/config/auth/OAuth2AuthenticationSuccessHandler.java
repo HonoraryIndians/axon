@@ -127,8 +127,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         eventPublisher.publishEvent(new UserLoginEvent(userId, Instant.now()));
 
         return UriComponentsBuilder.fromUriString(targetUrl)
-                .queryParam("accessToken", accessToken)
-                .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
     }
 
