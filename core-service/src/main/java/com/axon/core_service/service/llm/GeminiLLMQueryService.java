@@ -125,6 +125,10 @@ public class GeminiLLMQueryService implements LLMQueryService {
 
     private String callGeminiApi(String prompt) {
         try {
+            String url = GEMINI_URL + "?key=" + apiKey;
+            log.info("Calling Gemini API. URL: {} (key masked), Prompt length: {}", 
+                     GEMINI_URL, prompt.length());
+
             var requestBody = Map.of(
                 "contents", List.of(
                     Map.of("parts", List.of(
@@ -135,19 +139,21 @@ public class GeminiLLMQueryService implements LLMQueryService {
 
             JsonNode response = restClientBuilder.build()
                 .post()
-                .uri(GEMINI_URL + "?key=" + apiKey)
+                .uri(url)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestBody)
                 .retrieve()
                 .body(JsonNode.class);
+
+            log.info("Gemini API response received successfully.");
 
             return response.path("candidates").get(0)
                 .path("content").path("parts").get(0)
                 .path("text").asText();
 
         } catch (Exception e) {
-            log.error("Gemini API call failed", e);
-            return "죄송합니다. AI 분석 서버와 연결할 수 없습니다. (Error: " + e.getMessage() + ")";
+            log.error("Gemini API call failed details. URL: {}", GEMINI_URL, e);
+            return "죄송합니다. AI 분석 서버와 연결할 수 없습니다. (Error: " + e.getClass().getName() + " - " + e.getMessage() + ")";
         }
     }
 
