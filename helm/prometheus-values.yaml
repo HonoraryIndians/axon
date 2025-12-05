@@ -58,20 +58,18 @@ kube-state-metrics:
       cpu: 50m
       memory: 64Mi
 
-# Custom scrape configs for Core/Entry services
-serverFiles:
-  prometheus.yml:
-    scrape_configs:
-      - job_name: 'core-service'
-        metrics_path: '/actuator/prometheus'
-        static_configs:
-          - targets: ['core-service:8080']
-            labels:
-              application: 'core-service'
+# Custom scrape configs for Core/Entry services (추가 설정)
+extraScrapeConfigs: |
+  - job_name: 'core-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['core-service:8080']
+        labels:
+          application: 'core-service'
 
-      - job_name: 'entry-service'
-        metrics_path: '/actuator/prometheus'
-        static_configs:
-          - targets: ['entry-service:80']
-            labels:
-              application: 'entry-service'
+  - job_name: 'entry-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['entry-service:80']
+        labels:
+          application: 'entry-service'

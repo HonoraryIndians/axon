@@ -2,6 +2,7 @@ package com.axon.core_service.domain.dto.dashboard;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Cohort 분석 응답 DTO
@@ -36,8 +37,26 @@ public record CohortAnalysisResponse(
         BigDecimal avgOrderValue,       // 평균 주문 금액
 
         // 메타 정보
-        LocalDateTime calculatedAt      // 계산 시점
+        LocalDateTime calculatedAt,     // 계산 시점
+
+        // 월별 상세 데이터 (그래프용)
+        List<MonthlyDetail> monthlyDetails  // 12개월 월별 데이터
 ) {
+
+    /**
+     * 월별 상세 데이터 (중첩 Record)
+     */
+    public record MonthlyDetail(
+            Integer monthOffset,           // 0~11 (월 인덱스)
+            String monthLabel,             // "2025년 7월" (화면 표시용)
+            String collectedMonth,         // "2025-07-01" (ISO 형식)
+            BigDecimal cumulativeRevenue,  // 누적 매출
+            BigDecimal monthlyRevenue,     // 해당 월 매출
+            BigDecimal profit,             // 누적 이익
+            Double ltvCacRatio,            // LTV/CAC 비율
+            Boolean isBreakEven,           // 손익분기점 도달 여부
+            Integer activeUsers            // 활성 구매자 수
+    ) {}
     /**
      * 기본 생성자 (필수 필드만)
      */
@@ -67,7 +86,8 @@ public record CohortAnalysisResponse(
                 0.0, // repeatPurchaseRate
                 0.0, // avgPurchaseFrequency
                 BigDecimal.ZERO, // avgOrderValue
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                List.of() // monthlyDetails (빈 리스트)
         );
     }
 

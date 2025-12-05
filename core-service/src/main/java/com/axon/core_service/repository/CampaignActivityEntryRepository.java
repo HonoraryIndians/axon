@@ -3,11 +3,14 @@ package com.axon.core_service.repository;
 import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntry;
 import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntryStatus;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface CampaignActivityEntryRepository extends JpaRepository<CampaignActivityEntry, Long> {
 
@@ -54,4 +57,22 @@ public interface CampaignActivityEntryRepository extends JpaRepository<CampaignA
             java.time.LocalDateTime startTime,
             java.time.LocalDateTime endTime
     );
+
+    /**
+     * Bulk 조회: 여러 (activityId, userId) 조합의 Entry 한번에 조회
+     *
+     * 역할: 배치 처리 시 기존 Entry 존재 여부 확인용
+     *
+     * @param activityIds 캠페인 활동 ID 리스트
+     * @param userIds 유저 ID 리스트
+     * @return 조건에 맞는 Entry 리스트
+     */
+    @Query("SELECT e FROM CampaignActivityEntry e " +
+            "WHERE e.campaignActivity.id IN :activityIds " +
+            "AND e.userId IN :userIds")
+    List<CampaignActivityEntry> findByActivityIdsAndUserIds(
+            @Param("activityIds") List<Long> activityIds,
+            @Param("userIds") List<Long> userIds
+    );
+
 }
