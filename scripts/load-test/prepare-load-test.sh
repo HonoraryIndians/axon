@@ -45,7 +45,9 @@ DB_USER="${DB_USER:-axon_user}"
 DB_PASS="${DB_PASS:-axon_password}"
 DB_NAME="${DB_NAME:-axon_db}"
 
-MYSQL_CMD="mysql -h$DB_HOST -P$DB_PORT -u$DB_USER -p$DB_PASS $DB_NAME"
+# Redis 설정
+REDIS_MODE="${REDIS_MODE:-k8s}" # k8s or docker
+REDIS_PASSWORD="${REDIS_PASSWORD:-axon1234}"
 
 # 스크립트 디렉토리
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -94,7 +96,8 @@ echo "   캐시 없음: $((NUM_USERS - CACHE_COUNT)) (10%) - ID $NO_CACHE_START-
 echo ""
 echo "🔗 서비스:"
 echo "   Core:  $CORE_SERVICE_URL"
-echo "   Entry: $ENTRY_SERVICE_URL"
+echo "   DB:    $DB_HOST:$DB_PORT ($DB_USER)"
+echo "   Redis: $REDIS_MODE"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -102,10 +105,22 @@ echo ""
 # Step 1: Redis 초기화
 # ============================================================================
 echo "🧹 Step 1/5: Redis 초기화..."
-kubectl exec -it axon-redis-master-0 -- redis-cli DEL \
-  "campaignActivity:${ACTIVITY_ID}:participants" \
-  "campaignActivity:${ACTIVITY_ID}:counter" \
-  > /dev/null 2>&1
+
+if [ "$REDIS_MODE" == "docker" ]; then
+    echo "   Docker 모드로 실행..."
+    docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" DEL \
+      "campaign:${ACTIVITY_ID}:users" \
+      "campaign:${ACTIVITY_ID}:counter" \
+      > /dev/null 2>&1
+else
+    echo "   K8s 모드로 실행..."
+    # Pod 이름 동적 조회
+    REDIS_POD=$(kubectl get pods -l app.kubernetes.io/name=redis -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "axon-redis-master-0")
+    kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" DEL \
+      "campaign:${ACTIVITY_ID}:users" \
+      "campaign:${ACTIVITY_ID}:counter" \
+      > /dev/null 2>&1
+fi
 
 echo "   ✅ Redis 초기화 완료"
 echo ""
@@ -115,19 +130,23 @@ echo ""
 # ============================================================================
 echo "👥 Step 2/5: MySQL 테스트 유저 생성 중..."
 
+# MySQL 비밀번호 환경변수 설정
+export MYSQL_PWD="$DB_PASS"
+MYSQL_CMD_BASE="mysql -h$DB_HOST -P$DB_PORT -u$DB_USER $DB_NAME"
+
 # 기존 테스트 유저 삭제
-$MYSQL_CMD -e "DELETE FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END;" 2>/dev/null
+$MYSQL_CMD_BASE -e "DELETE FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END;" 2>/dev/null
 
 # BRONZE 유저 생성 (60%)
-echo "   생성 중: BRONZE $BRONZE_COUNT 명..."
-$MYSQL_CMD << EOF
-INSERT INTO users (id, name, email, grade, password, created_at, updated_at)
+if [ $BRONZE_COUNT -gt 0 ]; then
+  echo "   생성 중: BRONZE $BRONZE_COUNT 명..."
+  $MYSQL_CMD_BASE << EOF
+INSERT INTO users (id, name, email, grade, created_at, updated_at)
 SELECT
     n as id,
     CONCAT('test_bronze_', n) as name,
     CONCAT('bronze_', n, '@test.com') as email,
     'BRONZE' as grade,
-    '\$2a\$10\$dummyHashForTestUserOnly' as password,
     NOW() as created_at,
     NOW() as updated_at
 FROM (
@@ -140,18 +159,18 @@ FROM (
     WHERE ($BRONZE_START + (a.N + b.N * 10 + c.N * 100 + d.N * 1000)) BETWEEN $BRONZE_START AND $BRONZE_END
 ) numbers;
 EOF
+fi
 
 # SILVER 유저 생성 (30%)
 if [ $SILVER_COUNT -gt 0 ]; then
   echo "   생성 중: SILVER $SILVER_COUNT 명..."
-  $MYSQL_CMD << EOF
-INSERT INTO users (id, name, email, grade, password, created_at, updated_at)
+  $MYSQL_CMD_BASE << EOF
+INSERT INTO users (id, name, email, grade, created_at, updated_at)
 SELECT
     n as id,
     CONCAT('test_silver_', n) as name,
     CONCAT('silver_', n, '@test.com') as email,
     'SILVER' as grade,
-    '\$2a\$10\$dummyHashForTestUserOnly' as password,
     NOW() as created_at,
     NOW() as updated_at
 FROM (
@@ -169,14 +188,13 @@ fi
 # GOLD 유저 생성 (10%)
 if [ $GOLD_COUNT -gt 0 ]; then
   echo "   생성 중: GOLD $GOLD_COUNT 명..."
-  $MYSQL_CMD << EOF
-INSERT INTO users (id, name, email, grade, password, created_at, updated_at)
+  $MYSQL_CMD_BASE << EOF
+INSERT INTO users (id, name, email, grade, created_at, updated_at)
 SELECT
     n as id,
     CONCAT('test_gold_', n) as name,
     CONCAT('gold_', n, '@test.com') as email,
     'GOLD' as grade,
-    '\$2a\$10\$dummyHashForTestUserOnly' as password,
     NOW() as created_at,
     NOW() as updated_at
 FROM (
@@ -201,11 +219,12 @@ echo "💾 Step 3/5: Redis 유저 캐싱 중 (90%)..."
 
 # 캐싱할 유저들의 정보를 MySQL에서 조회
 CACHE_DATA=$(mktemp)
-$MYSQL_CMD -N -e "SELECT id, name, email, grade FROM users WHERE id BETWEEN $CACHE_START AND $CACHE_END;" > "$CACHE_DATA"
+$MYSQL_CMD_BASE -N -e "SELECT id, name, email, grade FROM users WHERE id BETWEEN $CACHE_START AND $CACHE_END;" > "$CACHE_DATA"
 
 # Redis PIPELINE으로 배치 캐싱
 REDIS_PIPELINE=$(mktemp)
-while IFS=$'\t' read -r id name email grade; do
+while IFS=$'\t' read -r id name email grade;
+do
   cat >> "$REDIS_PIPELINE" << EOF
 HSET user:${id} id ${id}
 HSET user:${id} name ${name}
@@ -215,7 +234,13 @@ EOF
 done < "$CACHE_DATA"
 
 # Redis에 PIPELINE 실행
-kubectl exec -i axon-redis-master-0 -- redis-cli --pipe < "$REDIS_PIPELINE" > /dev/null 2>&1
+if [ "$REDIS_MODE" == "docker" ]; then
+    cat "$REDIS_PIPELINE" | docker exec -i axon-redis redis-cli -a "$REDIS_PASSWORD" > /dev/null 2>&1
+else
+    # Pod 이름 다시 조회
+    REDIS_POD=$(kubectl get pods -l app.kubernetes.io/name=redis -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "axon-redis-master-0")
+    cat "$REDIS_PIPELINE" | kubectl exec -i "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" > /dev/null 2>&1
+fi
 
 rm -f "$CACHE_DATA" "$REDIS_PIPELINE"
 
@@ -248,7 +273,9 @@ for ((batch=0; batch<TOTAL_BATCHES; batch++)); do
   for ((userId=START_USER; userId<=END_USER; userId++)); do
     (
       TOKEN=$(curl -s "${CORE_SERVICE_URL}/test/auth/token?userId=${userId}")
-      echo "  \"${userId}\": \"${TOKEN}\"," >> "$TEMP_TOKENS"
+      if [[ ${#TOKEN} -gt 20 ]]; then
+          echo "  \"${userId}\": \"${TOKEN}\"," >> "$TEMP_TOKENS"
+      fi
     ) &
   done
 
@@ -265,7 +292,11 @@ for ((batch=0; batch<TOTAL_BATCHES; batch++)); do
 done
 
 # JSON 마무리 (마지막 쉼표 제거)
-sed -i.bak '$ s/,$//' "$TOKEN_FILE" && rm -f "${TOKEN_FILE}.bak"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  sed -i '' '$ s/,$//' "$TOKEN_FILE"
+else
+  sed -i '$ s/,$//' "$TOKEN_FILE"
+fi
 echo "}" >> "$TOKEN_FILE"
 
 echo "   ✅ JWT 토큰 발급 완료!"
@@ -277,7 +308,7 @@ echo ""
 echo "✅ Step 5/5: 검증 중..."
 
 # MySQL 유저 수 확인
-USER_COUNT=$($MYSQL_CMD -s -N -e "SELECT COUNT(*) FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END;")
+USER_COUNT=$($MYSQL_CMD_BASE -s -N -e "SELECT COUNT(*) FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END;")
 echo "   MySQL 유저: $USER_COUNT / $NUM_USERS"
 
 # JWT 토큰 수 확인
@@ -286,7 +317,12 @@ TOKEN_COUNT=$((TOKEN_COUNT / 2))  # key:value이므로 2로 나눔
 echo "   JWT 토큰: $TOKEN_COUNT / $NUM_USERS"
 
 # Redis 캐시 확인
-REDIS_COUNT=$(kubectl exec -i axon-redis-master-0 -- redis-cli KEYS "user:*" | wc -l)
+if [ "$REDIS_MODE" == "docker" ]; then
+    REDIS_COUNT=$(docker exec -i axon-redis redis-cli -a "$REDIS_PASSWORD" KEYS "user:*" | wc -l | tr -d ' ')
+else
+    REDIS_POD=$(kubectl get pods -l app.kubernetes.io/name=redis -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "axon-redis-master-0")
+    REDIS_COUNT=$(kubectl exec -i "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" KEYS "user:*" | wc -l | tr -d ' ')
+fi
 echo "   Redis 캐시: $REDIS_COUNT / $CACHE_COUNT"
 
 if [ "$USER_COUNT" -eq "$NUM_USERS" ] && [ "$TOKEN_COUNT" -ge "$NUM_USERS" ]; then

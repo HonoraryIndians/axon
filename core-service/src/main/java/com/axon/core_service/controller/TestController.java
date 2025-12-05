@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 
-@Profile("dev") // 'dev' 프로필에서만 활성화
 @RestController
 @RequestMapping("/test")
 @RequiredArgsConstructor
