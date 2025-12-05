@@ -51,6 +51,8 @@ spec:
                 secretKeyRef:
                   name: axon-secrets
                   key: gemini-api-key
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod,gemini"
           volumeMounts:
             - name: config-volume
               mountPath: /app/config
