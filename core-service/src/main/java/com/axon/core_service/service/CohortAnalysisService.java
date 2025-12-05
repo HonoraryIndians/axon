@@ -261,7 +261,8 @@ public class CohortAnalysisService {
                 (Double) repeatMetrics.get("repeatPurchaseRate"),
                 (Double) repeatMetrics.get("avgPurchaseFrequency"),
                 (BigDecimal) repeatMetrics.get("avgOrderValue"),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                List.of() // monthlyDetails: 실시간 계산에서는 빈 리스트 (배치 데이터 사용 권장)
         );
     }
 
