@@ -111,7 +111,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Long userId = oauthUser.getUserId();
 
         // 새로운 Authentication 객체 생성
-        Authentication newAuth = new UsernamePasswordAuthenticationToken(String.valueOf(userId), null, oauthUser.getAuthorities());
+        Authentication newAuth = new UsernamePasswordAuthenticationToken(oauthUser, null, oauthUser.getAuthorities());
 
         String accessToken = jwtTokenProvider.generateAccessToken(newAuth);
         String refreshToken = jwtTokenProvider.generateRefreshToken(newAuth);

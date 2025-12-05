@@ -110,8 +110,6 @@ const common = (() => {
                 return;
             }
 
-            console.log('Initializing Tooltips...');
-
             const tooltips = {
                 'totalVisits': '기간 내 페이지 총 방문 횟수입니다.',
                 'totalEngages': '페이지 내에서 발생한 의미 있는 상호작용(클릭 등) 횟수입니다.',
@@ -127,12 +125,10 @@ const common = (() => {
                 'aov': '평균 주문 금액 (Average Order Value)<br>= GMV / 구매 건수'
             };
 
-            let count = 0;
             Object.keys(tooltips).forEach(id => {
                 const targetId = id + '-tooltip-icon';
                 const target = document.getElementById(targetId);
                 if (target) {
-                    console.log('Found tooltip target:', targetId);
                     tippy(target, {
                         content: tooltips[id],
                         allowHTML: true,
@@ -141,12 +137,8 @@ const common = (() => {
                         zIndex: 99999,
                         appendTo: document.body
                     });
-                    count++;
-                } else {
-                    // console.log('Target not found:', targetId);
                 }
             });
-            console.log(`Tooltips initialized: ${count} / ${Object.keys(tooltips).length}`);
         }
     };
 })();

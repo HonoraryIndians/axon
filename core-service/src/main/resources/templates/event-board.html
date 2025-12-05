@@ -10,6 +10,7 @@
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"
     referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" th:href="@{/css/event-board.css}" />
 
   <!-- Tailwind theme using CSS variables -->
   <script>
@@ -60,9 +61,14 @@
 <section>
   <main id="main-content" class="p-6">
     <div class="max-w-7xl mx-auto">
-      <div class="mb-6">
-        <h1 class="text-2xl text-neutral-900 mb-2">이벤트 관리</h1>
-        <p class="text-neutral-600">데이터 수집 센서 목록 및 관리 센터</p>
+      <div class="mb-6 flex justify-between items-end">
+        <div>
+          <h1 class="text-2xl text-neutral-900 mb-2">이벤트 관리</h1>
+          <p class="text-neutral-600">데이터 수집 센서 목록 및 관리 센터</p>
+        </div>
+        <button class="btn-primary text-xs px-3 py-1.5 rounded bg-black text-white hover:bg-gray-800 transition-colors flex items-center" data-event-create-button>
+          <i class="fa-solid fa-plus mr-1"></i> 새 이벤트
+        </button>
       </div>
 
       <div id="search-filter-bar" class="bg-white rounded-lg border border-neutral-200 p-4 mb-6">

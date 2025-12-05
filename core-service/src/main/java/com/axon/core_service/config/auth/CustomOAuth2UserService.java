@@ -54,20 +54,15 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 Collections.singleton(new SimpleGrantedAuthority(user.getRoleKey())),
                 attributes.getAttributes(),
                 attributes.getNameAttributeKey(),
-                user.getId() // CustomOAuth2User에 우리 DB의 userId를 담아서 반환
+                user.getId(), // CustomOAuth2User에 우리 DB의 userId를 담아서 반환
+                user.getName() // displayName
         );
     }
 
     private User saveOrUpdate(OAuthAttributes attributes) {
         User user = userRepository.findByEmail(attributes.getEmail())
-                .map(entity -> {
-                    log.info("Updating existing user: {}", attributes.getEmail());
-                    return entity.update(attributes.getName(), attributes.getPicture());
-                })
-                .orElseGet(() -> {
-                    log.info("Saving new user: {}", attributes.getEmail());
-                    return attributes.toEntity();
-                });
+                .map(entity -> entity.update(attributes.getName(), attributes.getPicture()))
+                .orElseGet(attributes::toEntity);
 
         return userRepository.save(user);
     }

@@ -63,7 +63,7 @@ public class BatchConfig {
 
         String query = "SELECT new com.axon.core_service.domain.dto.Metric.UserPurchaseCountDto(p.userId, COUNT(p.userId)) "
                 + "FROM Purchase p "
-                + "WHERE p.purchasedAt BETWEEN :startDateTime AND :endDateTime "
+                + "WHERE p.purchaseAt BETWEEN :startDateTime AND :endDateTime "
                 + "GROUP BY p.userId";
 
         return new JpaPagingItemReaderBuilder<UserPurchaseCountDto>()

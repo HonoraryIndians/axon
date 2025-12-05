@@ -11,6 +11,7 @@ import java.util.Map;
 public class CustomOAuth2User extends DefaultOAuth2User {
 
     private final Long userId;
+    private final String displayName; // 사용자 실명
 
     /**
      * Create a CustomOAuth2User with authorities, attributes, a name-attribute key, and a system userId.
@@ -21,12 +22,15 @@ public class CustomOAuth2User extends DefaultOAuth2User {
      * @param attributes       the attributes associated with the user
      * @param nameAttributeKey the key used to obtain the user's name from {@link #getAttributes()}
      * @param userId           the system-specific user identifier
+     * @param displayName      the user's display name
      */
     public CustomOAuth2User(Collection<? extends GrantedAuthority> authorities,
                             Map<String, Object> attributes,
                             String nameAttributeKey,
-                            Long userId) { // 우리 시스템의 userId를 추가로 받음
+                            Long userId,
+                            String displayName) {
         super(authorities, attributes, nameAttributeKey);
         this.userId = userId;
+        this.displayName = displayName;
     }
 }

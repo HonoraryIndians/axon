@@ -1,5 +1,6 @@
 package com.axon.core_service.config.auth;
 
+import com.axon.core_service.domain.user.CustomOAuth2User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,77 +38,49 @@ public class JwtTokenProvider {
         return generateToken(authentication, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
-    /**
-     * Generate a refresh JWT for the given authentication.
-     *
-     * @param authentication the authenticated principal whose subject and authorities are embedded in the token
-     * @return a refresh JWT string valid for seven days
-     */
     public String generateRefreshToken(Authentication authentication) {
         return generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
     }
 
-    /**
-     * Create an access JWT for the specified user ID.
-     *
-     * @param userId the user identifier to set as the token subject
-     * @return the generated JWT access token string
-     */
     public String generateAccessToken(Long userId) {
         return generateToken(userId, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
-    /**
-     * Generate a refresh JWT for the given user ID.
-     *
-     * @param userId the user's identifier to set as the token subject
-     * @return the signed JWT refresh token string (expires according to REFRESH_TOKEN_EXPIRE_TIME)
-     */
     public String generateRefreshToken(Long userId) {
         return generateToken(userId, REFRESH_TOKEN_EXPIRE_TIME);
     }
 
-    /**
-     * Creates a signed JWT whose subject is the given user ID and which carries a fixed system role.
-     *
-     * @param userId     the user identifier to set as the token subject
-     * @param expireTime the token lifetime in milliseconds from now
-     * @return           a compact JWT string signed with the provider's key, containing the subject, an "auth" claim set to "ROLE_SYSTEM", an issued-at timestamp, and an expiration timestamp
-     */
     private String generateToken(Long userId, long expireTime) {
         long now = (new Date()).getTime();
         Date validity = new Date(now + expireTime);
 
         return Jwts.builder()
                 .subject(userId.toString())
-                .claim("auth", "ROLE_SYSTEM") // 시스템 권한 추가
+                .claim("auth", "ROLE_SYSTEM")
+                .claim("name", "System") // Default name for system tokens
                 .issuedAt(new Date())
                 .expiration(validity)
                 .signWith(key)
                 .compact();
     }
 
-    /**
-     * Creates a signed JWT for the given authenticated principal.
-     *
-     * The token's subject is set from the authentication's name and the "auth" claim
-     * contains a comma-separated list of the principal's authorities.
-     *
-     * @param authentication the authenticated principal whose name and authorities populate the token
-     * @param expireTime the token lifetime in milliseconds
-     * @return a compact JWT string signed with HS256 containing subject, `auth`, issued-at, and expiration claims
-     */
     private String generateToken(Authentication authentication, long expireTime) {
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
+        String displayName = authentication.getName();
+        if (authentication.getPrincipal() instanceof CustomOAuth2User customUser) {
+            displayName = customUser.getDisplayName();
+        }
+
         long now = (new Date()).getTime();
         Date validity = new Date(now + expireTime);
 
         return Jwts.builder()
-                .subject(authentication.getName())
+                .subject(authentication.getName()) // This is usually userId (PK) from CustomOAuth2User
                 .claim("auth", authorities)
+                .claim("name", displayName) // Store real name
                 .issuedAt(new Date())
                 .expiration(validity)
                 .signWith(key)
@@ -125,7 +99,25 @@ public class JwtTokenProvider {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
+        String name = claims.get("name", String.class);
+        if (name == null) name = "User";
+
+        Long userId;
+        try {
+            userId = Long.parseLong(claims.getSubject());
+        } catch (NumberFormatException e) {
+            userId = 0L; // Fallback or handle error
+        }
+
+        // Reconstruct CustomOAuth2User to carry displayName
+        CustomOAuth2User principal = new CustomOAuth2User(
+                authorities,
+                Map.of("id", userId, "name", name), // Mock attributes
+                "id",
+                userId,
+                name
+        );
+
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 

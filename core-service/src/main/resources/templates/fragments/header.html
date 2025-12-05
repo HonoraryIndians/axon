@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <div th:fragment="header" class="sticky top-0 z-50 bg-white border-b border-light-gray">
 
     <!-- Top Bar -->
@@ -9,9 +9,28 @@
                 <span>Axon Exclusive</span>
                 <span>Campaigns</span>
             </div>
-            <div class="flex gap-4 cursor-pointer">
-                <span class="hover:text-gray-300">로그인</span>
-                <span class="hover:text-gray-300">회원가입</span>
+            <div class="flex gap-4 cursor-pointer items-center">
+                <!-- Anonymous Users -->
+                <th:block sec:authorize="isAnonymous()">
+                    <a href="/oauth2/authorization/naver" class="hover:text-gray-300 flex items-center gap-1">
+                        <i class="fa-solid fa-n"></i> 네이버 로그인
+                    </a>
+                </th:block>
+
+                <!-- Authenticated Users -->
+                <th:block sec:authorize="isAuthenticated()">
+                    <span class="text-gray-300">
+                        <span th:text="${#authentication.principal.displayName}" class="font-bold text-white">User</span>님 환영합니다
+                    </span>
+                    
+                    <!-- Admin Only -->
+                    <a sec:authorize="hasRole('ADMIN')" href="/admin" class="hover:text-yellow-300 text-yellow-400 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-user-shield"></i> 관리자
+                    </a>
+
+                    <a href="#" onclick="common.logout()" class="hover:text-gray-300">로그아웃</a>
+                </th:block>
+
                 <span class="hover:text-gray-300">고객센터</span>
             </div>
         </div>

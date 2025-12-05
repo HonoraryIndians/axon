@@ -46,6 +46,11 @@ spec:
               value: "6379"
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: axon-kafka:9092
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: axon-secrets
+                  key: gemini-api-key
           volumeMounts:
             - name: config-volume
               mountPath: /app/config
