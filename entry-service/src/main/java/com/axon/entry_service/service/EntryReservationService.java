@@ -61,6 +61,7 @@ public class EntryReservationService {
         Integer limitCount = meta.limitCount();
         if (order == null || (limitCount != null && order > limitCount)) {
             redisTemplate.opsForSet().remove(userSetKey, userKey);
+            redisTemplate.opsForValue().decrement(counterKey);
             return ReservationResult.soldOut();
         }
 

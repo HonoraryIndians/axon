@@ -70,15 +70,18 @@ public class JwtTokenProvider {
                 .collect(Collectors.joining(","));
 
         String displayName = authentication.getName();
+        String subject = authentication.getName();
+
         if (authentication.getPrincipal() instanceof CustomOAuth2User customUser) {
             displayName = customUser.getDisplayName();
+            subject = String.valueOf(customUser.getUserId());
         }
 
         long now = (new Date()).getTime();
         Date validity = new Date(now + expireTime);
 
         return Jwts.builder()
-                .subject(authentication.getName()) // This is usually userId (PK) from CustomOAuth2User
+                .subject(subject)
                 .claim("auth", authorities)
                 .claim("name", displayName) // Store real name
                 .issuedAt(new Date())
