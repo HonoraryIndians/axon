@@ -11,9 +11,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,26 +45,27 @@ public class CohortAnalysisService {
                 .orElseThrow(() -> new IllegalArgumentException("Activity not found: " + activityId));
 
         // Cohort 기간 설정
-        Instant startInstant = cohortStartDate != null
-                ? cohortStartDate.atZone(ZoneId.systemDefault()).toInstant()
-                : activity.getStartDate().atZone(ZoneId.systemDefault()).toInstant();
+        LocalDateTime startDateTime = cohortStartDate != null
+                ? cohortStartDate
+                : activity.getStartDate();
 
-        Instant endInstant = cohortEndDate != null
-                ? cohortEndDate.atZone(ZoneId.systemDefault()).toInstant()
-                : Instant.now();
+        LocalDateTime endDateTime = cohortEndDate != null
+                ? cohortEndDate
+                : LocalDateTime.now();
 
-        log.info("Analyzing cohort for activity {} from {} to {}", activityId, startInstant, endInstant);
+        log.info("Analyzing cohort for activity {} from {} to {}", activityId, startDateTime, endDateTime);
 
         // 1. Cohort 정의: 해당 기간에 첫 구매한 고객들
+        // Repository 메서드도 LocalDateTime을 받도록 수정되었다고 가정 (이미 엔티티가 바뀌었으므로)
         List<Purchase> firstPurchases = purchaseRepository.findFirstPurchasesByActivityAndPeriod(
                 activityId,
-                startInstant,
-                endInstant
+                startDateTime,
+                endDateTime
         );
 
         if (firstPurchases.isEmpty()) {
             log.warn("No first purchases found for activity {} in period", activityId);
-            return createEmptyResponse(activityId, activity.getName(), startInstant);
+            return createEmptyResponse(activityId, activity.getName(), startDateTime);
         }
 
         // 2. Cohort 고객 목록 추출
@@ -96,8 +95,8 @@ public class CohortAnalysisService {
         return buildCohortResponse(
                 activityId,
                 activity.getName(),
-                startInstant,
-                endInstant,
+                startDateTime,
+                endDateTime,
                 cohortUserIds.size(),
                 totalBudget,
                 avgCAC,
@@ -116,10 +115,11 @@ public class CohortAnalysisService {
         Map<String, BigDecimal> ltvMap = new HashMap<>();
 
         // 첫 구매 시점 매핑 (userId -> firstPurchaseTime)
-        Map<Long, Instant> userFirstPurchase = firstPurchases.stream()
+        // Instant -> LocalDateTime 변경 완료
+        Map<Long, LocalDateTime> userFirstPurchase = firstPurchases.stream()
                 .collect(Collectors.toMap(
                         Purchase::getUserId,
-                        Purchase::getPurchaseAt,
+                        Purchase::getPurchaseAt, // 이제 LocalDateTime 반환
                         (a, b) -> a.isBefore(b) ? a : b // 중복시 더 이른 시점 선택
                 ));
 
@@ -132,12 +132,13 @@ public class CohortAnalysisService {
         int customerCount = userFirstPurchase.size();
 
         for (Purchase purchase : allPurchases) {
-            Instant firstPurchaseTime = userFirstPurchase.get(purchase.getUserId());
+            LocalDateTime firstPurchaseTime = userFirstPurchase.get(purchase.getUserId());
             if (firstPurchaseTime == null) continue;
 
             BigDecimal purchaseValue = purchase.getPrice().multiply(BigDecimal.valueOf(purchase.getQuantity()));
             ltvCurrent = ltvCurrent.add(purchaseValue);
 
+            // Duration.between은 LocalDateTime도 지원함
             long daysSinceFirst = Duration.between(firstPurchaseTime, purchase.getPurchaseAt()).toDays();
 
             if (daysSinceFirst <= 30) {
@@ -169,8 +170,12 @@ public class CohortAnalysisService {
 
     /**
      * 재구매 분석
+     *
+     * @param cohortUserIds 코호트 고객 ID 목록
+     * @param allPurchases 해당 고객들의 모든 구매 이력
+     * @return repeatPurchaseRate, avgPurchaseFrequency, avgOrderValue를 포함한 Map
      */
-    private Map<String, Object> analyzeRepeatPurchases(
+    public Map<String, Object> analyzeRepeatPurchases(
             List<Long> cohortUserIds,
             List<Purchase> allPurchases
     ) {
@@ -220,16 +225,15 @@ public class CohortAnalysisService {
     private CohortAnalysisResponse buildCohortResponse(
             Long activityId,
             String activityName,
-            Instant startInstant,
-            Instant endInstant,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
             int customerCount,
             BigDecimal totalBudget,
             BigDecimal avgCAC,
             Map<String, BigDecimal> ltvMap,
             Map<String, Object> repeatMetrics
     ) {
-        LocalDateTime startDate = LocalDateTime.ofInstant(startInstant, ZoneId.systemDefault());
-        LocalDateTime endDate = LocalDateTime.ofInstant(endInstant, ZoneId.systemDefault());
+        // 이미 LocalDateTime이므로 변환 불필요
 
         BigDecimal ltv30d = ltvMap.get("ltv30d");
         BigDecimal ltv90d = ltvMap.get("ltv90d");
@@ -279,8 +283,7 @@ public class CohortAnalysisService {
     /**
      * 빈 응답 생성 (데이터 없을 때)
      */
-    private CohortAnalysisResponse createEmptyResponse(Long activityId, String activityName, Instant startInstant) {
-        LocalDateTime startDate = LocalDateTime.ofInstant(startInstant, ZoneId.systemDefault());
+    private CohortAnalysisResponse createEmptyResponse(Long activityId, String activityName, LocalDateTime startDate) {
         return new CohortAnalysisResponse(
                 "activity-" + activityId,
                 activityName,

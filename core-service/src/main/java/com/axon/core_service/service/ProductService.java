@@ -1,11 +1,17 @@
 package com.axon.core_service.service;
 
-import com.axon.core_service.domain.product.Product;
+import  com.axon.core_service.domain.product.Product;
 import com.axon.core_service.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -15,18 +21,29 @@ public class ProductService {
     /**
      * Decrements the stock quantity of the specified product by one.
      *
-     * @param productId the identifier of the product whose stock will be decremented
+     * @param stockDecreases the identifier of the product whose stock will be decremented
      * @throws IllegalArgumentException if no product exists with the given id
      */
     @Transactional
-    public void decreaseStock(Long productId, Integer quantity) {
-        // 1. 비관적 락을 걸고 상품 정보를 조회합니다.
-        Product product = productRepository.findByIdWithPessimisticLock(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId)); // TODO: Custom Exception으로 변경
+    public void decreaseStockBatch(Map<Long, Integer> stockDecreases) {
+        if (stockDecreases.isEmpty()) {
+            return;
+        }
 
-        // 2. Product 엔티티 내부에 있는 재고 감소 메소드를 호출합니다.
-        product.decreaseStock(quantity);
+        log.info("Decreasing stock for {} products", stockDecreases.size());
 
-        // 3. @Transactional 어노테이션에 의해, 메소드가 종료될 때 변경된 내용이 DB에 자동으로 저장(UPDATE)됩니다.
+        // 1. 해당 상품들을 비관적 락으로 조회
+        List<Product> products = productRepository.findByIdInWithPessimisticLock(new ArrayList<>(stockDecreases.keySet()));
+
+        // 2. 각 상품의 재고 감소
+        for (Product product : products) {
+            Integer decreaseAmount = stockDecreases.get(product.getId());
+            if (decreaseAmount != null) {
+                product.decreaseStock(decreaseAmount);
+            }
+        }
+
+        // 3. Dirty Checking으로 자동 UPDATE
+        log.info("Stock decreased for {} products", products.size());
     }
 }
