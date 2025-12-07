@@ -78,10 +78,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/v1/behavior/events").permitAll() // Behavior tracking (frontend JS)
-                        .requestMatchers("/api/v1/test/**").permitAll() // Test endpoints (!prod only)
+                        .requestMatchers("/api/v1/behavior/events", "/entry/api/v1/behavior/events").permitAll() // Behavior tracking (frontend JS)
+                        .requestMatchers("/api/v1/test/**", "/entry/api/v1/test/**").permitAll() // Test endpoints (!prod only)
                         .requestMatchers("/actuator/health").permitAll() // Health checks
-                        .requestMatchers("/api/v1/entries").authenticated() // FCFS entry endpoint
+                        .requestMatchers("/api/v1/entries", "/entry/api/v1/entries").authenticated() // FCFS entry endpoint
+                        .requestMatchers("/api/v1/payments/**", "/entry/api/v1/payments/**").authenticated() // Payment endpoints
                         .anyRequest().permitAll()) // Allow other requests
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

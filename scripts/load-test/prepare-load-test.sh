@@ -141,12 +141,13 @@ $MYSQL_CMD_BASE -e "DELETE FROM users WHERE id BETWEEN $USER_ID_START AND $USER_
 if [ $BRONZE_COUNT -gt 0 ]; then
   echo "   생성 중: BRONZE $BRONZE_COUNT 명..."
   $MYSQL_CMD_BASE << EOF
-INSERT INTO users (id, name, email, grade, created_at, updated_at)
+INSERT INTO users (id, name, email, grade, role, created_at, updated_at)
 SELECT
     n as id,
     CONCAT('test_bronze_', n) as name,
     CONCAT('bronze_', n, '@test.com') as email,
     'BRONZE' as grade,
+    'USER' as role,
     NOW() as created_at,
     NOW() as updated_at
 FROM (
@@ -165,12 +166,13 @@ fi
 if [ $SILVER_COUNT -gt 0 ]; then
   echo "   생성 중: SILVER $SILVER_COUNT 명..."
   $MYSQL_CMD_BASE << EOF
-INSERT INTO users (id, name, email, grade, created_at, updated_at)
+INSERT INTO users (id, name, email, grade, role, created_at, updated_at)
 SELECT
     n as id,
     CONCAT('test_silver_', n) as name,
     CONCAT('silver_', n, '@test.com') as email,
     'SILVER' as grade,
+    'USER' as role,
     NOW() as created_at,
     NOW() as updated_at
 FROM (
@@ -189,12 +191,13 @@ fi
 if [ $GOLD_COUNT -gt 0 ]; then
   echo "   생성 중: GOLD $GOLD_COUNT 명..."
   $MYSQL_CMD_BASE << EOF
-INSERT INTO users (id, name, email, grade, created_at, updated_at)
+INSERT INTO users (id, name, email, grade, role, created_at, updated_at)
 SELECT
     n as id,
     CONCAT('test_gold_', n) as name,
     CONCAT('gold_', n, '@test.com') as email,
     'GOLD' as grade,
+    'USER' as role,
     NOW() as created_at,
     NOW() as updated_at
 FROM (
