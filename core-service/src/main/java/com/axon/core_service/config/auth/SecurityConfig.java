@@ -79,9 +79,11 @@ public class SecurityConfig {
                                                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/naver")))
                                 .logout(logout -> logout.logoutSuccessUrl("/"))
                                 .oauth2Login(oauth2 -> oauth2
+                                                .loginPage("/oauth2/authorization/naver")
                                                 .userInfoEndpoint(userInfo -> userInfo
                                                                 .userService(customOAuth2UserService))
-                                                .successHandler(oAuth2AuthenticationSuccessHandler))
+                                                .successHandler(oAuth2AuthenticationSuccessHandler)
+                                                .failureHandler(new SimpleUrlAuthenticationFailureHandler("/")))
                                 .addFilterAfter(jwtAuthenticationFilter, OAuth2LoginAuthenticationFilter.class);
                 return http.build();
         }
