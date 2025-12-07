@@ -26,9 +26,8 @@ public class WebController {
      */
     @GetMapping("/")
     public String index() {
-        log.info("Serving welcomepage.html");
-        return "mainshop";
-        // TO-DO: 로그아웃 이후 임시 대피처 재정의 필요
+        log.info("Redirecting to /mainshop");
+        return "redirect:/mainshop";
     }
 
     /**

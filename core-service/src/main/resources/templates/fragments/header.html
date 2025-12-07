@@ -20,11 +20,13 @@
                 <!-- Authenticated Users -->
                 <th:block sec:authorize="isAuthenticated()">
                     <span class="text-gray-300">
-                        <span th:text="${#authentication.principal.displayName}" class="font-bold text-white">User</span>님 환영합니다
+                        <span th:text="${#authentication.principal.displayName}"
+                            class="font-bold text-white">User</span>님 환영합니다
                     </span>
-                    
+
                     <!-- Admin Only -->
-                    <a sec:authorize="hasRole('ADMIN')" href="/admin" class="hover:text-yellow-300 text-yellow-400 font-bold flex items-center gap-1">
+                    <a sec:authorize="hasRole('ADMIN')" href="/admin"
+                        class="hover:text-yellow-300 text-yellow-400 font-bold flex items-center gap-1">
                         <i class="fa-solid fa-user-shield"></i> 관리자
                     </a>
 
@@ -64,16 +66,17 @@
         <div class="max-w-[1200px] mx-auto px-4 flex items-center">
             <a href="/mainshop" class="py-3 px-4 text-sm font-bold border-b-2 border-black">전체</a>
             <a href="/events" class="py-3 px-4 text-sm font-bold text-accent hover:text-black transition-colors">이벤트</a>
-            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">패션</a>
-            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">뷰티</a>
-            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">라이프</a>
-            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">테크</a>
-            <a href="#" class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">푸드</a>
-            <div class="ml-auto py-3 px-4 text-sm font-bold text-danger cursor-pointer hover:opacity-80">
-                타임세일
-            </div>
+            <a href="/mainshop?category=TECH"
+                class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">테크</a>
+            <a href="/mainshop?category=FOOD"
+                class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">푸드</a>
+            <a href="/mainshop?category=FASHION"
+                class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">패션</a>
+            <a href="/mainshop?category=HOME"
+                class="py-3 px-4 text-sm font-bold text-dark-gray hover:text-accent transition-colors">홈/리빙</a>
         </div>
     </div>
+</div>
 </div>
 
 </html>

@@ -15,10 +15,10 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "product_name", nullable = false)
     private String productName;
 
-    @Column(nullable = false)
+    @Column(name = "stock", nullable = false)
     private Long stock; // 재고 수량
 
     @Column(name = "price", nullable = false)
@@ -26,6 +26,15 @@ public class Product {
 
     @Column(name = "category")
     private String category; // 제품 카테고리 (e.g., "Electronics", "Fashion")
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "brand")
+    private String brand;
+
+    @Column(name = "discount_rate")
+    private Integer discountRate;
 
     // @Version
     /**
@@ -37,10 +46,17 @@ public class Product {
      * @param category    the product category
      */
     public Product(String productName, Long stock, java.math.BigDecimal price, String category) {
+        this(productName, stock, price, category, null, null);
+    }
+
+    public Product(String productName, Long stock, java.math.BigDecimal price, String category, String brand,
+            Integer discountRate) {
         this.productName = productName;
         this.stock = stock;
         this.price = price;
         this.category = category;
+        this.brand = brand;
+        this.discountRate = discountRate;
     }
 
     /**

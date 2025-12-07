@@ -2,16 +2,10 @@ package com.axon.core_service.controller;
 
 import com.axon.core_service.domain.campaignactivity.CampaignActivity;
 import com.axon.core_service.domain.dto.campaignactivity.filter.FilterDetail;
+import com.axon.core_service.domain.product.Product;
 import com.axon.core_service.exception.CampaignActivityNotFoundException;
 import com.axon.core_service.repository.CampaignActivityRepository;
-import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import com.axon.core_service.repository.ProductRepository;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -22,34 +16,117 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
 @Controller
 @RequiredArgsConstructor
 @Slf4j
 public class StoreController {
 
     private final CampaignActivityRepository campaignActivityRepository;
+    private final ProductRepository productRepository;
 
     @GetMapping("/mainshop")
-    public String mainshop(Model model) {
-        // Keep mock products for now as requested only for events
-        model.addAttribute("rankings", MockDataGenerator.generateProducts(5, "Tech"));
-        model.addAttribute("techDeals", MockDataGenerator.generateProducts(4, "Tech"));
-        model.addAttribute("foodDeals", MockDataGenerator.generateProducts(4, "Food"));
-        model.addAttribute("homeDeals", MockDataGenerator.generateProducts(4, "Home"));
+    public String mainshop(@RequestParam(required = false) String category, Model model) {
+        List<Product> allProducts = productRepository.findAll();
+        List<ProductDisplayDto> allDtos = allProducts.stream()
+                .map(this::convertToProductDto)
+                .collect(Collectors.toList());
+
+        // 메인 배너/랭킹용 (특정 상품 노출: 1, 16, 31, 46, 40)
+        List<Long> rankingIds = List.of(1L, 16L, 31L, 46L, 40L);
+        List<ProductDisplayDto> rankings = allDtos.stream()
+                .filter(p -> rankingIds.contains(p.getId()))
+                .sorted((p1, p2) -> {
+                    // Maintain the order of rankingIds
+                    return Integer.compare(rankingIds.indexOf(p1.getId()), rankingIds.indexOf(p2.getId()));
+                })
+                .collect(Collectors.toList());
+        model.addAttribute("rankings", rankings);
+
+        // 카테고리별 상품 리스트
+        if (category != null && !category.isEmpty()) {
+            // 카테고리 필터링 된 리스트
+            List<ProductDisplayDto> filtered = allDtos.stream()
+                    .filter(p -> category.equalsIgnoreCase(p.getCategory()))
+                    .collect(Collectors.toList());
+            model.addAttribute("categoryProducts", filtered);
+            model.addAttribute("selectedCategory", category);
+        } else {
+            // 전체 보기 (섹션별 노출)
+            model.addAttribute("techDeals", filterDtoByCategory(allDtos, "TECH"));
+            model.addAttribute("foodDeals", filterDtoByCategory(allDtos, "FOOD"));
+            model.addAttribute("homeDeals", filterDtoByCategory(allDtos, "HOME"));
+            model.addAttribute("fashionDeals", filterDtoByCategory(allDtos, "FASHION"));
+        }
+
         return "mainshop";
+    }
+
+    private List<ProductDisplayDto> filterDtoByCategory(List<ProductDisplayDto> list, String category) {
+        return list.stream()
+                .filter(p -> category.equalsIgnoreCase(p.getCategory()))
+                .limit(4)
+                .collect(Collectors.toList());
+    }
+
+    private ProductDisplayDto convertToProductDto(Product product) {
+        NumberFormat currency = NumberFormat.getInstance(Locale.KOREA);
+
+        BigDecimal originalPrice = product.getPrice();
+        BigDecimal sellingPrice = originalPrice;
+
+        if (product.getDiscountRate() != null && product.getDiscountRate() > 0) {
+            BigDecimal discount = originalPrice.multiply(BigDecimal.valueOf(product.getDiscountRate()))
+                    .divide(BigDecimal.valueOf(100));
+            sellingPrice = originalPrice.subtract(discount);
+        }
+
+        String priceStr = currency.format(sellingPrice);
+        String originalPriceStr = currency.format(originalPrice);
+
+        // Handle image path: assume DB has filename, prepend static path
+        String imagePath = product.getImageUrl();
+        if (imagePath != null && !imagePath.startsWith("/image/product/")) {
+            // If it's just a filename, add the prefix
+            if (!imagePath.startsWith("/")) {
+                imagePath = "/image/product/" + imagePath;
+            }
+        }
+
+        return ProductDisplayDto.builder()
+                .id(product.getId())
+                .name(product.getProductName())
+                .brand(product.getBrand() != null ? product.getBrand() : "SKU STORE") // Default brand
+                .price(priceStr)
+                .originalPrice(originalPriceStr)
+                .discountRate(product.getDiscountRate() != null ? product.getDiscountRate() : 0)
+                .imageUrl(imagePath)
+                .category(product.getCategory())
+                .reviewCount(100) // Mock review count
+                .build();
     }
 
     @GetMapping("/product/{id}")
     public String productDetail(@PathVariable Long id, Model model) {
-        model.addAttribute("product", MockDataGenerator.generateSingleProduct(id));
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+
+        model.addAttribute("product", convertToProductDto(product));
         return "product/detail";
     }
 
     @GetMapping("/checkout")
     public String checkout(@RequestParam Long productId, Model model) {
-        // Keep mock product for checkout for now
-        ProductDisplayDto product = MockDataGenerator.generateSingleProduct(productId);
-        model.addAttribute("product", product);
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+
+        model.addAttribute("product", convertToProductDto(product));
         return "checkout";
     }
 
@@ -64,10 +141,10 @@ public class StoreController {
                         return convertToDto(activity);
                     } catch (Exception e) {
                         log.warn("Failed to convert CampaignActivity id={}: {}", activity.getId(), e.getMessage());
-                        return null;  // Skip broken data
+                        return null; // Skip broken data
                     }
                 })
-                .filter(dto -> dto != null)  // Remove nulls
+                .filter(dto -> dto != null) // Remove nulls
                 .collect(Collectors.toList());
 
         // Separate FCFS and Raffle activities
@@ -75,7 +152,7 @@ public class StoreController {
 
         // Keep mocks for other sections if empty or just empty them
         model.addAttribute("raffleCampaignActivities", new ArrayList<>());
-        model.addAttribute("coupons", MockDataGenerator.generateCoupons(3)); // Keep mock coupons
+        model.addAttribute("coupons", new ArrayList<>());
 
         return "campaign-activities";
     }
@@ -123,23 +200,6 @@ public class StoreController {
                 .build();
     }
 
-    // --- Mock Data Support ---
-
-    @Getter
-    @Builder
-    public static class ProductDisplayDto {
-        private Long id;
-        private String brand;
-        private String name;
-        private String price; // Formatted string
-        private String originalPrice;
-        private int discountRate;
-        private String imageUrl;
-        private String category;
-        private boolean isSoldOut;
-        private int reviewCount;
-    }
-
     @Getter
     @Builder
     public static class CampaignActivityDisplayDto {
@@ -157,91 +217,17 @@ public class StoreController {
         private Long productId;
     }
 
-    static class MockDataGenerator {
-        private static final Random random = new Random();
-        private static final NumberFormat currency = NumberFormat.getInstance(Locale.KOREA);
-
-        // Generic, diverse brands
-        private static final String[] BRANDS = { "Axon Essentials", "Urban Tech", "Fresh Farm", "Nordic Home",
-                "Pure Beauty", "Daily Fit", "Green Life" };
-
-        // Categories and their specific items
-        private static final String[] TECH_ITEMS = { "Wireless Mouse", "Mechanical Keyboard", "4K Monitor",
-                "Noise Cancelling Headphones", "Smart Watch", "Tablet Stand" };
-        private static final String[] FOOD_ITEMS = { "Premium Steak Kit", "Organic Salad Mix", "Cold Brew Coffee",
-                "Protein Bar Box", "Sparkling Water", "Fresh Strawberries" };
-        private static final String[] HOME_ITEMS = { "Aroma Diffuser", "Soft Cotton Towel", "Mood Lamp",
-                "Ceramic Mug Set", "Memory Foam Pillow" };
-        private static final String[] FASHION_ITEMS = { "Basic T-Shirt", "Wide Slacks", "Oversized Hoodie",
-                "Canvas Tote Bag", "Denim Jacket", "Running Shoes" };
-
-        public static List<ProductDisplayDto> generateProducts(int count, String category) {
-            return IntStream.range(0, count)
-                    .mapToObj(i -> generateSingleProduct((long) i, category))
-                    .collect(Collectors.toList());
-        }
-
-        public static ProductDisplayDto generateSingleProduct(Long id) {
-            // Randomly pick a category for general
-            String[] categories = { "Tech", "Food", "Home", "Fashion" };
-            return generateSingleProduct(id, categories[random.nextInt(categories.length)]);
-        }
-
-        private static ProductDisplayDto generateSingleProduct(Long id, String category) {
-            String name;
-            String brand = BRANDS[random.nextInt(BRANDS.length)];
-
-            switch (category) {
-                case "Tech":
-                    name = TECH_ITEMS[random.nextInt(TECH_ITEMS.length)];
-                    brand = "Urban Tech"; // Force tech brand
-                    break;
-                case "Food":
-                    name = FOOD_ITEMS[random.nextInt(FOOD_ITEMS.length)];
-                    brand = "Fresh Farm";
-                    break;
-                case "Home":
-                    name = HOME_ITEMS[random.nextInt(HOME_ITEMS.length)];
-                    brand = "Nordic Home";
-                    break;
-                default: // Fashion
-                    name = FASHION_ITEMS[random.nextInt(FASHION_ITEMS.length)];
-                    brand = "Axon Essentials";
-                    break;
-            }
-
-            int priceVal = (random.nextInt(90) + 5) * 1000; // 5,000 ~ 95,000
-            int discount = random.nextInt(30);
-            int originalPriceVal = (int) (priceVal * (1.0 + discount / 100.0));
-
-            String fullName = String.format("[%s] %s", brand, name);
-
-            // Placeholder images with category text
-            String imageUrl = "https://placehold.co/400x533/333/FFF?text=" + name.replaceAll(" ", "+");
-
-            return ProductDisplayDto.builder()
-                    .id(id)
-                    .brand(brand)
-                    .name(fullName)
-                    .price(currency.format(priceVal))
-                    .originalPrice(currency.format(originalPriceVal))
-                    .discountRate(discount)
-                    .imageUrl(imageUrl)
-                    .category(category)
-                    .reviewCount(random.nextInt(500))
-                    .isSoldOut(random.nextBoolean() && random.nextBoolean())
-                    .build();
-        }
-
-        public static List<CampaignActivityDisplayDto> generateCoupons(int count) {
-            return IntStream.range(0, count)
-                    .mapToObj(i -> CampaignActivityDisplayDto.builder()
-                            .id((long) (i + 100))
-                            .title("Special Coupon " + (i + 1))
-                            .description("Get " + ((i + 1) * 10) + "% off")
-                            .imageUrl("ticket")
-                            .build())
-                    .collect(Collectors.toList());
-        }
+    @Getter
+    @Builder
+    public static class ProductDisplayDto {
+        private Long id;
+        private String name;
+        private String brand;
+        private String price; // Selling price
+        private String originalPrice; // Original price (if discounted)
+        private int discountRate;
+        private String imageUrl;
+        private String category;
+        private int reviewCount;
     }
 }
