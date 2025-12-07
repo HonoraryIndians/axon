@@ -8,19 +8,19 @@ import lombok.Data;
 public class PaymentPrepareResponse {
     private boolean success;
     private String message;
-    private String ApprovalToken;
+    private String approvalToken;
 
     public static PaymentPrepareResponse success(String message, String approvalToken) {
         return PaymentPrepareResponse.builder()
                 .success(true)
-                .ApprovalToken(approvalToken)
+                .approvalToken(approvalToken)
                 .message(message).build();
     }
 
     public static PaymentPrepareResponse failure(String message) {
         return PaymentPrepareResponse.builder()
                 .success(false)
-                .ApprovalToken(null)
+                .approvalToken(null)
                 .message(message).build();
     }
 

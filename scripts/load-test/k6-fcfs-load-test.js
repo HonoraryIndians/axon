@@ -39,7 +39,7 @@ const USE_TOKEN_FILE = __ENV.USE_TOKEN_FILE !== 'false'; // 기본값: true
 const SCENARIO = __ENV.SCENARIO || 'spike';
 
 // JWT 토큰 파일 (미리 발급된 토큰)
-const TOKEN_FILE_PATH = __ENV.TOKEN_FILE_PATH || './scripts/load-test/jwt-tokens.json';
+const TOKEN_FILE_PATH = __ENV.TOKEN_FILE_PATH || './jwt-tokens.json';
 let PRE_GENERATED_TOKENS = {};
 
 // 토큰 파일 로드 시도
@@ -428,9 +428,21 @@ function reserveWithJWT(data, userId) {
 // =========================================================================
 // 결제 승인 (DB 저장) - Prepare -> Confirm
 // =========================================================================
-function confirmPayment(data, userId, reservationToken) {
+function confirmPayment(data, userId, reservationTokeng
   let token = data.tokens && data.tokens[userId] ? data.tokens[userId] : null;
-  if (!token) return; 
+
+  // 토큰 없으면 실시간 발급
+  if (!token) {
+    const tokenRes = http.get(
+      `${data.coreServiceUrl}/test/auth/token?userId=${userId}`,
+      { tags: { name: 'jwt_token_realtime_payment' } }
+    );
+    if (tokenRes.status !== 200) {
+      console.error(`Failed to get JWT token for payment (user ${userId}): ${tokenRes.status}`);
+      return;
+    }
+    token = tokenRes.body;
+  }
 
   // 1. Payment Prepare (2차 토큰 발급)
   const preparePayload = JSON.stringify({
@@ -458,8 +470,10 @@ function confirmPayment(data, userId, reservationToken) {
   let approvalToken = null;
   try {
       const json = prepareRes.json();
-      if (json && json.data) {
-          approvalToken = json.data; // PaymentPrepareResponse 구조 확인 필요 (data 필드에 토큰?)
+      if (json && json.approvalToken) {
+          approvalToken = json.approvalToken;
+      } else if (json && json.ApprovalToken) { // Fallback for old API
+          approvalToken = json.ApprovalToken;
       }
   } catch (e) {
       console.error(`Failed to parse prepare response for user ${userId}`, e);
