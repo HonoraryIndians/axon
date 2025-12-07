@@ -7,10 +7,15 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 
 @Entity
-@Table(name = "purchases")
+@Table(name = "purchases", indexes = {
+        @Index(name = "idx_purchase_activity_lookup", columnList = "campaign_activity_id, purchase_type, purchase_at"),
+        @Index(name = "idx_purchase_user_history", columnList = "user_id, purchase_at")
+})
 @Getter
 @NoArgsConstructor
 public class Purchase {
@@ -38,7 +43,7 @@ public class Purchase {
     private Integer quantity;
 
     @Column(name = "purchase_at", nullable = false)
-    private Instant purchaseAt;
+    private LocalDateTime purchaseAt;
 
     @Builder
     public Purchase(Long userId, Long productId, Long campaignActivityId,
@@ -49,7 +54,9 @@ public class Purchase {
         this.purchaseType = Objects.requireNonNull(purchaseType, "purchaseType must not be null");
         this.price = Objects.requireNonNull(price, "price must not be null");
         this.quantity = quantity != null ? quantity : 1;
-        this.purchaseAt = purchasedAt != null ? purchasedAt : Instant.now();
+        this.purchaseAt = purchasedAt != null
+            ? LocalDateTime.ofInstant(purchasedAt, ZoneId.of("Asia/Seoul"))
+            : LocalDateTime.now();
 
         // CAMPAIGN 타입이면 campaignActivityId 필수
         if (purchaseType == PurchaseType.CAMPAIGNACTIVITY) {

@@ -2,7 +2,7 @@ package com.axon.core_service.domain.dto.campaignactivityentry;
 
 import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntry;
 import com.axon.core_service.domain.campaignactivityentry.CampaignActivityEntryStatus;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,8 +14,8 @@ public class CampaignActivityEntrySummary {
     private final Long userId;
     private final Long productId;
     private final CampaignActivityEntryStatus status;
-    private final Instant requestedAt;
-    private final Instant processedAt;
+    private final LocalDateTime requestedAt;
+    private final LocalDateTime processedAt;
     private final String info;
 
     /**

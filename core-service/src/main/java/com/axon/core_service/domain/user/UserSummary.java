@@ -9,6 +9,8 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -30,10 +32,10 @@ public class UserSummary {
     private User user;
 
     @Column(name = "last_purchase_at")
-    private Instant lastPurchaseAt;
+    private LocalDateTime lastPurchaseAt;
 
     @Column(name = "last_login_at")
-    private Instant lastLoginAt;
+    private LocalDateTime lastLoginAt;
 
     /**
      * Create a UserSummary associated with the given User.
@@ -62,7 +64,9 @@ public class UserSummary {
      * @param occurredAt the Instant when the purchase occurred, or {@code null} to clear the value
      */
     public void updateLastPurchaseAt(Instant occurredAt) {
-        this.lastPurchaseAt = occurredAt;
+        this.lastPurchaseAt = occurredAt != null
+            ? LocalDateTime.ofInstant(occurredAt, ZoneId.of("Asia/Seoul"))
+            : null;
     }
 
     /**
@@ -71,6 +75,8 @@ public class UserSummary {
      * @param loggedInAt the timestamp of the login event; may be `null` to clear the stored last-login time
      */
     public void updateLastLoginAt(Instant loggedInAt) {
-        this.lastLoginAt = loggedInAt;
+        this.lastLoginAt = loggedInAt != null
+            ? LocalDateTime.ofInstant(loggedInAt, ZoneId.of("Asia/Seoul"))
+            : null;
     }
 }

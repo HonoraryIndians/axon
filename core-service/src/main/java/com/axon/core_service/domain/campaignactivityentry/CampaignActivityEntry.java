@@ -14,6 +14,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,10 +45,10 @@ public class CampaignActivityEntry extends BaseTimeEntity {
     private Long userId;
 
     @Column(name = "requested_at", nullable = false)
-    private Instant requestedAt;
+    private LocalDateTime requestedAt;
 
     @Column(name = "processed_at")
-    private Instant processedAt;
+    private LocalDateTime processedAt;
 
     @Column(name = "additional_data")
     private String info;
@@ -68,7 +70,7 @@ public class CampaignActivityEntry extends BaseTimeEntity {
         this.campaignActivity = campaignActivity;
         this.userId = userId;
         this.productId = productId;
-        this.requestedAt = requestedAt;
+        this.requestedAt = LocalDateTime.ofInstant(requestedAt, ZoneId.of("Asia/Seoul"));
         this.status = CampaignActivityEntryStatus.PENDING;
     }
 
@@ -103,14 +105,14 @@ public class CampaignActivityEntry extends BaseTimeEntity {
      * @param processedAt the processing timestamp to record
      */
     public void markProcessedAt(Instant processedAt) {
-        this.processedAt = processedAt;
+        this.processedAt = LocalDateTime.ofInstant(processedAt, ZoneId.of("Asia/Seoul"));
     }
 
     /**
      * Sets the processedAt timestamp to the current instant.
      */
     public void markProcessedNow() {
-        markProcessedAt(Instant.now());
+        this.processedAt = LocalDateTime.now();
     }
 
     /**

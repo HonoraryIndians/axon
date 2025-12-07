@@ -6,6 +6,7 @@ import com.axon.core_service.domain.purchase.Purchase;
 import com.axon.core_service.repository.CampaignActivityRepository;
 import com.axon.core_service.repository.LTVBatchRepository;
 import com.axon.core_service.repository.PurchaseRepository;
+import com.axon.core_service.service.CohortAnalysisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
@@ -29,6 +29,7 @@ public class CohortLtvBatchService {
     private final CampaignActivityRepository campaignActivityRepository;
     private final PurchaseRepository purchaseRepository;
     private final LTVBatchRepository ltvBatchRepository;
+    private final CohortAnalysisService cohortAnalysisService;
 
     /**
      * 배치 작업 실행 (매월 1일 새벽 3시)
@@ -47,39 +48,82 @@ public class CohortLtvBatchService {
 
         log.info("Found {} activities to process", activityIds.size());
 
+        java.util.List<LTVBatch> batchBuffer = new java.util.ArrayList<>();
+        final int BATCH_SIZE = 50;
+
         for (Long activityId : activityIds) {
             try {
-                processActivityCohort(activityId, now);
+                LTVBatch stat = processActivityCohort(activityId, now);
+                if (stat != null) {
+                    batchBuffer.add(stat);
+                }
+
+                if (batchBuffer.size() >= BATCH_SIZE) {
+                    ltvBatchRepository.saveAll(batchBuffer);
+                    ltvBatchRepository.flush();
+                    batchBuffer.clear();
+                    log.debug("Flushed batch of {} records", BATCH_SIZE);
+                }
             } catch (Exception e) {
                 log.error("Failed to process activity {}: {}", activityId, e.getMessage(), e);
             }
+        }
+
+        if (!batchBuffer.isEmpty()) {
+            ltvBatchRepository.saveAll(batchBuffer);
+            ltvBatchRepository.flush();
+            log.debug("Flushed remaining {} records", batchBuffer.size());
         }
 
         log.info("Monthly cohort LTV batch job completed");
     }
 
     /**
-     * 특정 캠페인 활동의 코호트 통계 처리
+     * 특정 캠페인 활동의 코호트 통계 처리 (증분 업데이트)
+     * - 매월 1개의 새로운 row만 INSERT
+     * - 이전 달 데이터를 재활용하여 누적 계산
      */
-    private void processActivityCohort(Long activityId, LocalDateTime collectedAt) {
+    private LTVBatch processActivityCohort(Long activityId, LocalDateTime collectedAt) {
         CampaignActivity activity = campaignActivityRepository.findById(activityId)
                 .orElseThrow(() -> new IllegalArgumentException("Activity not found: " + activityId));
 
         LocalDateTime cohortStartDate = activity.getStartDate();
-        Instant startInstant = cohortStartDate.atZone(ZoneId.systemDefault()).toInstant();
 
-        log.info("Processing cohort for activity {}: {}", activityId, activity.getName());
+        // 1. 기존 통계 조회
+        List<LTVBatch> existingStats = ltvBatchRepository
+                .findByCampaignActivityIdOrderByMonthOffsetAsc(activityId);
 
-        // 1. 첫 구매 고객 조회 (코호트 정의)
+        // 2. 마지막 month_offset 찾기
+        int lastOffset = existingStats.stream()
+                .mapToInt(LTVBatch::getMonthOffset)
+                .max()
+                .orElse(-1);
+
+        int newOffset = lastOffset + 1;
+
+        // 3. 조기 종료 조건
+        if (newOffset >= 12) {
+            log.debug("Activity {} already has 12 months of data", activityId);
+            return null;
+        }
+
+        // 해당 월이 아직 도래하지 않았다면 계산 안 함
+        LocalDateTime newMonthEnd = cohortStartDate.plusMonths(newOffset + 1);
+        if (newMonthEnd.isAfter(collectedAt)) {
+            log.debug("Activity {} month {} not yet reached", activityId, newOffset);
+            return null;
+        }
+
+        // 4. 코호트 정의 (첫 구매 고객 목록) - 전체 기간
         List<Purchase> firstPurchases = purchaseRepository.findFirstPurchasesByActivityAndPeriod(
                 activityId,
-                startInstant,
-                Instant.now()
+                cohortStartDate,
+                LocalDateTime.now()
         );
 
         if (firstPurchases.isEmpty()) {
             log.warn("No first purchases found for activity {}", activityId);
-            return;
+            return null;
         }
 
         List<Long> cohortUserIds = firstPurchases.stream()
@@ -90,49 +134,105 @@ public class CohortLtvBatchService {
         int cohortSize = cohortUserIds.size();
         BigDecimal avgCac = calculateAvgCac(activity.getBudget(), cohortSize);
 
-        log.info("Cohort size: {} customers, Avg CAC: {}", cohortSize, avgCac);
-
-        // 2. 해당 고객들의 모든 구매 이력 조회
-        List<Purchase> allPurchases = purchaseRepository.findByUserIdIn(cohortUserIds);
-
-        // 3. 12개월간 월별 통계 계산 및 저장
-        for (int monthOffset = 0; monthOffset < 12; monthOffset++) {
-            LocalDateTime monthStart = cohortStartDate.plusMonths(monthOffset);
-            LocalDateTime monthEnd = cohortStartDate.plusMonths(monthOffset + 1);
-
-            // 현재 시점을 넘어선 미래 월은 건너뛰기
-            if (monthStart.isAfter(LocalDateTime.now())) {
-                break;
-            }
-
-            LTVBatch stat = calculateMonthlyStats(
+        // 5. 통계 계산 (증분 or 전체)
+        LTVBatch newStat;
+        if (newOffset == 0) {
+            // 첫 달: 전체 계산
+            newStat = calculateFullStats(
                     activity,
-                    monthOffset,
+                    newOffset,
+                    collectedAt,
+                    cohortStartDate,
+                    cohortSize,
+                    avgCac,
+                    cohortUserIds,
+                    firstPurchases
+            );
+        } else {
+            // 2달 이후: 증분 계산
+            LTVBatch prevStat = existingStats.get(existingStats.size() - 1);
+            newStat = calculateIncrementalStats(
+                    activity,
+                    newOffset,
                     collectedAt,
                     cohortStartDate,
                     cohortSize,
                     avgCac,
                     cohortUserIds,
                     firstPurchases,
-                    allPurchases,
-                    monthStart,
-                    monthEnd
+                    prevStat
             );
-
-            // UPSERT: 기존 데이터 있으면 삭제 후 재생성
-            ltvBatchRepository
-                    .findByCampaignActivityIdAndMonthOffset(activityId, monthOffset)
-                    .ifPresent(ltvBatchRepository::delete);
-
-            ltvBatchRepository.save(stat);
-            log.debug("Saved stats for activity {} month {}: LTV={}", activityId, monthOffset, stat.getLtvCumulative());
         }
+
+        log.info("Calculated stats for activity {} month {}", activityId, newOffset);
+        return newStat;
     }
 
     /**
-     * 월별 통계 계산
+     * 전체 통계 계산 (offset = 0일 때)
      */
-    private LTVBatch calculateMonthlyStats(
+    private LTVBatch calculateFullStats(
+            CampaignActivity activity,
+            int monthOffset,
+            LocalDateTime collectedAt,
+            LocalDateTime cohortStartDate,
+            int cohortSize,
+            BigDecimal avgCac,
+            List<Long> cohortUserIds,
+            List<Purchase> firstPurchases
+    ) {
+        LocalDateTime monthStart = cohortStartDate.plusMonths(monthOffset);
+        LocalDateTime monthEnd = cohortStartDate.plusMonths(monthOffset + 1);
+
+        // 해당 고객들의 모든 구매 이력 조회
+        List<Purchase> allPurchases = purchaseRepository.findByUserIdIn(cohortUserIds);
+
+        // 월별 증분 데이터 (해당 월에만 발생)
+        BigDecimal monthlyRevenue = BigDecimal.ZERO;
+        int monthlyOrders = 0;
+        Set<Long> activeUsersSet = new HashSet<>();
+
+        for (Purchase purchase : allPurchases) {
+            if ((purchase.getPurchaseAt().isAfter(monthStart) || purchase.getPurchaseAt().equals(monthStart))
+                    && purchase.getPurchaseAt().isBefore(monthEnd)) {
+                BigDecimal purchaseValue = purchase.getPrice().multiply(BigDecimal.valueOf(purchase.getQuantity()));
+                monthlyRevenue = monthlyRevenue.add(purchaseValue);
+                monthlyOrders++;
+                activeUsersSet.add(purchase.getUserId());
+            }
+        }
+
+        // 누적 LTV (코호트 시작 ~ 현재 월 종료)
+        BigDecimal ltvCumulative = BigDecimal.ZERO;
+        for (Purchase purchase : allPurchases) {
+            if (purchase.getPurchaseAt().isBefore(monthEnd)) {
+                BigDecimal purchaseValue = purchase.getPrice().multiply(BigDecimal.valueOf(purchase.getQuantity()));
+                ltvCumulative = ltvCumulative.add(purchaseValue);
+            }
+        }
+
+        return buildLTVBatch(
+                activity,
+                monthOffset,
+                collectedAt,
+                cohortStartDate,
+                cohortSize,
+                avgCac,
+                cohortUserIds,
+                allPurchases,
+                ltvCumulative,
+                monthlyRevenue,
+                monthlyOrders,
+                activeUsersSet.size()
+        );
+    }
+
+    /**
+     * 증분 통계 계산 (offset > 0일 때)
+     * - 이전 달 누적 데이터 재활용
+     * - 이번 달 증분만 계산
+     */
+    private LTVBatch calculateIncrementalStats(
             CampaignActivity activity,
             int monthOffset,
             LocalDateTime collectedAt,
@@ -141,57 +241,72 @@ public class CohortLtvBatchService {
             BigDecimal avgCac,
             List<Long> cohortUserIds,
             List<Purchase> firstPurchases,
-            List<Purchase> allPurchases,
-            LocalDateTime monthStart,
-            LocalDateTime monthEnd
+            LTVBatch prevStat
     ) {
-        Instant cohortStartInstant = cohortStartDate.atZone(ZoneId.systemDefault()).toInstant();
-        Instant monthStartInstant = monthStart.atZone(ZoneId.systemDefault()).toInstant();
-        Instant monthEndInstant = monthEnd.atZone(ZoneId.systemDefault()).toInstant();
+        LocalDateTime monthStart = cohortStartDate.plusMonths(monthOffset);
+        LocalDateTime monthEnd = cohortStartDate.plusMonths(monthOffset + 1);
 
-        // 첫 구매 시점 매핑
-        Map<Long, Instant> userFirstPurchase = firstPurchases.stream()
-                .collect(Collectors.toMap(
-                        Purchase::getUserId,
-                        Purchase::getPurchaseAt,
-                        (a, b) -> a.isBefore(b) ? a : b
-                ));
+        // 이번 달 구매 데이터만 조회 (증분)
+        List<Purchase> monthlyPurchases = purchaseRepository.findByCampaignActivityIdAndPeriod(
+                activity.getId(),
+                monthStart,
+                monthEnd
+        );
 
-        // 누적 LTV (코호트 시작 ~ 현재 월 종료까지)
-        BigDecimal ltvCumulative = BigDecimal.ZERO;
-        Set<Long> activeUsersSet = new HashSet<>();
-        int cumulativeOrders = 0;
-
-        for (Purchase purchase : allPurchases) {
-            Instant firstPurchaseTime = userFirstPurchase.get(purchase.getUserId());
-            if (firstPurchaseTime == null) continue;
-
-            // 현재 월 종료 시점 이전 구매만 포함
-            if (purchase.getPurchaseAt().isBefore(monthEndInstant)) {
-                BigDecimal purchaseValue = purchase.getPrice().multiply(BigDecimal.valueOf(purchase.getQuantity()));
-                ltvCumulative = ltvCumulative.add(purchaseValue);
-                cumulativeOrders++;
-
-                // 해당 월에 구매한 고객 (월별 증분)
-                if (purchase.getPurchaseAt().isAfter(monthStartInstant) || purchase.getPurchaseAt().equals(monthStartInstant)) {
-                    activeUsersSet.add(purchase.getUserId());
-                }
-            }
-        }
-
-        // 해당 월 매출 (증분)
+        // 월별 증분 데이터
         BigDecimal monthlyRevenue = BigDecimal.ZERO;
         int monthlyOrders = 0;
+        Set<Long> activeUsersSet = new HashSet<>();
 
-        for (Purchase purchase : allPurchases) {
-            if ((purchase.getPurchaseAt().isAfter(monthStartInstant) || purchase.getPurchaseAt().equals(monthStartInstant))
-                    && purchase.getPurchaseAt().isBefore(monthEndInstant)) {
+        for (Purchase purchase : monthlyPurchases) {
+            // 코호트 고객인지 확인
+            if (cohortUserIds.contains(purchase.getUserId())) {
                 BigDecimal purchaseValue = purchase.getPrice().multiply(BigDecimal.valueOf(purchase.getQuantity()));
                 monthlyRevenue = monthlyRevenue.add(purchaseValue);
                 monthlyOrders++;
+                activeUsersSet.add(purchase.getUserId());
             }
         }
 
+        // 누적 LTV = 이전 달 누적 + 이번 달 증분
+        BigDecimal ltvCumulative = prevStat.getLtvCumulative().add(monthlyRevenue);
+
+        // 재구매 분석 (전체 조회 필요)
+        List<Purchase> allPurchases = purchaseRepository.findByUserIdIn(cohortUserIds);
+
+        return buildLTVBatch(
+                activity,
+                monthOffset,
+                collectedAt,
+                cohortStartDate,
+                cohortSize,
+                avgCac,
+                cohortUserIds,
+                allPurchases,
+                ltvCumulative,
+                monthlyRevenue,
+                monthlyOrders,
+                activeUsersSet.size()
+        );
+    }
+
+    /**
+     * LTVBatch 엔티티 생성 (공통 로직)
+     */
+    private LTVBatch buildLTVBatch(
+            CampaignActivity activity,
+            int monthOffset,
+            LocalDateTime collectedAt,
+            LocalDateTime cohortStartDate,
+            int cohortSize,
+            BigDecimal avgCac,
+            List<Long> cohortUserIds,
+            List<Purchase> allPurchases,
+            BigDecimal ltvCumulative,
+            BigDecimal monthlyRevenue,
+            int monthlyOrders,
+            int activeUsers
+    ) {
         // LTV/CAC 비율
         BigDecimal ltvCacRatio = avgCac.compareTo(BigDecimal.ZERO) > 0
                 ? ltvCumulative.divide(avgCac.multiply(BigDecimal.valueOf(cohortSize)), 2, RoundingMode.HALF_UP)
@@ -202,29 +317,11 @@ public class CohortLtvBatchService {
         BigDecimal cumulativeProfit = ltvCumulative.subtract(campaignBudget);
         boolean isBreakEven = cumulativeProfit.compareTo(BigDecimal.ZERO) >= 0;
 
-        // 재구매 분석 (누적)
-        Map<Long, Long> purchaseCountByUser = allPurchases.stream()
-                .filter(p -> {
-                    Instant firstTime = userFirstPurchase.get(p.getUserId());
-                    return firstTime != null && p.getPurchaseAt().isBefore(monthEndInstant);
-                })
-                .collect(Collectors.groupingBy(Purchase::getUserId, Collectors.counting()));
-
-        long repeatCustomers = purchaseCountByUser.values().stream()
-                .filter(count -> count > 1)
-                .count();
-
-        BigDecimal repeatRate = cohortSize > 0
-                ? BigDecimal.valueOf(repeatCustomers).divide(BigDecimal.valueOf(cohortSize), 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))
-                : BigDecimal.ZERO;
-
-        BigDecimal avgFrequency = cohortSize > 0
-                ? BigDecimal.valueOf(cumulativeOrders).divide(BigDecimal.valueOf(cohortSize), 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-
-        BigDecimal avgOrderValue = cumulativeOrders > 0
-                ? ltvCumulative.divide(BigDecimal.valueOf(cumulativeOrders), 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        // 재구매 분석 (CohortAnalysisService 재활용)
+        Map<String, Object> repeatMetrics = cohortAnalysisService.analyzeRepeatPurchases(cohortUserIds, allPurchases);
+        BigDecimal repeatRate = BigDecimal.valueOf((Double) repeatMetrics.get("repeatPurchaseRate"));
+        BigDecimal avgFrequency = BigDecimal.valueOf((Double) repeatMetrics.get("avgPurchaseFrequency"));
+        BigDecimal avgOrderValue = (BigDecimal) repeatMetrics.get("avgOrderValue");
 
         return LTVBatch.builder()
                 .campaignActivity(activity)
@@ -239,7 +336,7 @@ public class CohortLtvBatchService {
                 .isBreakEven(isBreakEven)
                 .monthlyRevenue(monthlyRevenue)
                 .monthlyOrders(monthlyOrders)
-                .activeUsers(activeUsersSet.size())
+                .activeUsers(activeUsers)
                 .repeatPurchaseRate(repeatRate)
                 .avgPurchaseFrequency(avgFrequency)
                 .avgOrderValue(avgOrderValue)

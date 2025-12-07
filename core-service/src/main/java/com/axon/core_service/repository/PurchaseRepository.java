@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
@@ -38,8 +38,8 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
            "ORDER BY p.purchaseAt ASC")
     List<Purchase> findByCampaignActivityIdAndPeriod(
             @Param("activityId") Long activityId,
-            @Param("startDate") Instant startDate,
-            @Param("endDate") Instant endDate
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
     );
 
     /**
@@ -59,8 +59,8 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
            nativeQuery = true)
     List<Purchase> findFirstPurchasesByActivityAndPeriod(
             @Param("activityId") Long activityId,
-            @Param("startDate") Instant startDate,
-            @Param("endDate") Instant endDate
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
     );
 
     /**
