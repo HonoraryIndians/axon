@@ -82,11 +82,13 @@ public class ReservationTokenService {
         String token = generateDeterministicToken(payload.getUserId(), payload.getCampaignActivityId());
         String redisKey = TOKEN_PREFIX + token;
 
-        // 안전장치
-        if(!redisTemplate.hasKey(redisKey)) {
-            redisTemplate.opsForValue().set(redisKey, payload, TOKEN_TTL_MINUTES, TimeUnit.MINUTES);
-            log.info("1차 토큰 신규 발급: userId={}, campaignActivityId={}, token={}...", payload.getUserId(), payload.getCampaignActivityId(), token.substring(0, Math.min(10, token.length())));
-        }
+        log.error("DEBUG: issueToken CALLED! User={}, Key={}", payload.getUserId(), redisKey);
+
+        // 무조건 저장 및 TTL 갱신 (덮어쓰기)
+        redisTemplate.opsForValue().set(redisKey, payload, TOKEN_TTL_MINUTES, TimeUnit.MINUTES);
+        
+        log.error("DEBUG: Redis SET COMPLETE! User={}, Key={}", payload.getUserId(), redisKey);
+        log.info("1차 토큰 발급/갱신: userId={}, campaignActivityId={}, token={}...", payload.getUserId(), payload.getCampaignActivityId(), token.substring(0, Math.min(10, token.length())));
 
         return token;
     }
@@ -94,7 +96,9 @@ public class ReservationTokenService {
     // 1차 토큰 유효성 확인
     public boolean isReservationTokenValid(String reservationToken) {
         String redisKey = TOKEN_PREFIX + reservationToken;
-        return redisTemplate.hasKey(redisKey);
+        boolean exists = redisTemplate.hasKey(redisKey);
+        log.error("DEBUG: isReservationTokenValid CALLED! Key={}, Exists={}", redisKey, exists);
+        return exists;
     }
 
     // 2차 토큰 생성 또는 refresh

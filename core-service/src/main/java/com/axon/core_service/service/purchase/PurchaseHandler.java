@@ -120,7 +120,7 @@ public class PurchaseHandler {
             });
 
             // 3. CampaignActivityApproved 이벤트 발행 (트랜잭션 외부)
-            List<CampaignActivityApprovedEvent> events = purchases.stream()
+            List<CampaignActivityApprovedEvent>     events = purchases.stream()
                     .filter(p -> p.campaignActivityId() != null)
                     .map(p -> new CampaignActivityApprovedEvent(
                             p.campaignId(),

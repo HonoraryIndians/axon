@@ -1,0 +1,16 @@
+OK
+Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.
+1765097591.731556 [0 192.100.228.255:57368] "GET" "campaign:1:meta"
+1765097591.733642 [0 192.100.228.255:57368] "GET" "RESERVATION_TOKEN:OTk5OToxOmE2NjNjY2YyNDY2YTM4YzY0NWUwOWM4NGYxYjcxNTc5ZDcwYjIyZDBkZjQ4N2M2YjcxODk5ZGJkZWE0MzY2MTk"
+1765097591.734927 [0 192.100.228.255:57368] "SADD" "campaign:1:users" "9999"
+1765097591.735760 [0 192.100.228.255:57368] "INCR" "campaign:1:counter"
+1765097591.738280 [0 192.100.228.255:57368] "SET" "RESERVATION_TOKEN:OTk5OToxOmE2NjNjY2YyNDY2YTM4YzY0NWUwOWM4NGYxYjcxNTc5ZDcwYjIyZDBkZjQ4N2M2YjcxODk5ZGJkZWE0MzY2MTk" "{\"@class\":\"com.axon.entry_service.dto.Payment.ReservationTokenPayload\",\"userId\":9999,\"campaignActivityId\":1,\"productId\":1,\"campaignActivityType\":\"FIRST_COME_FIRST_SERVE\",\"quantity\":1}" "EX" "300"
+1765097593.719471 [0 127.0.0.1:52024] "AUTH" "(redacted)"
+1765097593.719787 [0 127.0.0.1:52024] "ping"
+1765097593.720952 [0 127.0.0.1:52038] "AUTH" "(redacted)"
+1765097593.721054 [0 127.0.0.1:52038] "ping"
+1765097598.726961 [0 127.0.0.1:42936] "AUTH" "(redacted)"
+1765097598.726976 [0 127.0.0.1:42930] "AUTH" "(redacted)"
+1765097598.727058 [0 127.0.0.1:42930] "ping"
+1765097598.727371 [0 127.0.0.1:42936] "ping"
+command terminated with exit code 124
