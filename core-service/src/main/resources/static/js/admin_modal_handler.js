@@ -828,7 +828,7 @@ window.adminModalHandler = {
                 if (res.ok) {
                     alert('캠페인이 성공적으로 생성되었습니다!');
                     closeModal();
-                    // Optionally refresh the campaign list if needed, or just let the user continue
+                    location.reload();
                 } else {
                     const errorText = await res.text();
                     alert('캠페인 생성 실패: ' + errorText);

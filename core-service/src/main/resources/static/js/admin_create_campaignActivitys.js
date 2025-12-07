@@ -309,7 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (response.ok) {
                     alert("캠페인 활동이 성공적으로 생성되었습니다.");
-                    window.location.href = "/admin_board";
+                    window.location.href = "/admin/campaigns";
                 } else {
                     const errorText = await response.text();
                     console.log(errorText);

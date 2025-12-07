@@ -31,5 +31,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.id IN :ids")
     List<Product> findByIdInWithPessimisticLock(@Param("ids") List<Long> ids);
 
-    java.util.List<Product> findByProductNameContaining(String productName);
+    List<Product> findByProductNameContaining(String productName);
+
+    List<Product> findByCategory(String category);
 }

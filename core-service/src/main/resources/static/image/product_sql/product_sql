@@ -1,0 +1,68 @@
+-- [Products] Tech
+INSERT INTO products (id, product_name, price, stock, category, image_url, brand, discount_rate) VALUES
+(1, '랩탑 프로 14', 1200000, 100, 'TECH', '/image/product/tech_1.jpg', 'PINEAPPLE', 15),
+(2, '무산 이어폰 X', 89000, 200, 'TECH', '/image/product/tech_2.jpg', 'SoundPro', 0),
+(3, 'AX 헤드셋 G7', 950000, 50, 'TECH', '/image/product/tech_3.jpg', 'GalaxyTech', 10),
+(4, '[가성비] L7 Headset Black Light"', 350000, 30, 'TECH', '/image/product/tech_4.jpg', 'EXO', 5),
+(5, '파인애플 워치 A4', 120000, 150, 'TECH', '/image/product/tech_5.jpg', 'PINEAPPLE', 0),
+(6, '랩탑 에어 12', 250000, 80, 'TECH', '/image/product/tech_6.jpg', 'PINEAPPLE', 20),
+(7, '고경량 White 노이즈 캔슬링 헤드셋', 55000, 120, 'TECH', '/image/product/tech_7.jpg', 'SoundWave', 0),
+(8, '파인애플폰 14', 600000, 40, 'TECH', '/image/product/tech_8.jpg', 'PINEAPPLE', 10),
+(9, 'Gravity 랩탑 G5 pro', 180000, 60, 'TECH', '/image/product/tech_9.jpg', 'SameSung', 15),
+(10, 'PApod pro 1', 320000, 25, 'TECH', '/image/product/tech_10.jpg', 'PINEAPPLE', 5),
+(11, '게이밍 잠옷', 45000, 15, 'TECH', '/image/product/tech_11.jpg', '이상한게이밍', 0),
+(12, '한성 듀얼 모니터 세트', 500000, 20, 'TECH', '/image/product/tech_12.jpg', '한성', 25),
+(13, '고품질 유선 헤드셋', 80000, 100, 'TECH', '/image/product/tech_13.jpg', 'AID', 0),
+(14, 'AX PAD 정품', 220000, 35, 'TECH', '/image/product/tech_14.jpg', 'AX', 10),
+(15, 'Equal Lap, 노트북 ', 35000, 300, 'TECH', '/image/product/tech_15.jpg', 'Equal Lap', 0);
+-- [Products] Food
+INSERT INTO products (id, product_name, price, stock, category, image_url, brand, discount_rate) VALUES
+(16, 'Premium Beef Steak', 45000, 50, 'FOOD', '/image/product/food_1.jpg', 'FreshFarm', 0),
+(17, '신선식품 샐러드', 12000, 100, 'FOOD', '/image/product/food_2.jpg', 'GreenLife', 10),
+(18, '과일 팬케이크 세트', 25000, 80, 'FOOD', '/image/product/food_3.jpg', 'BigPancake', 0),
+(19, '생 과일 스무디', 18000, 60, 'FOOD', '/image/product/food_4.jpg', 'FruitLover', 5),
+(20, '냉동 햄버거 세트', 35000, 30, 'FOOD', '/image/product/food_5.jpg', 'HAM&FRY', 0),
+(21, '건전한 파스타', 15000, 120, 'FOOD', '/image/product/food_6.jpg', 'PNP FOOD', 20),
+(22, '치즈 시즈닝 샐러드', 28000, 40, 'FOOD', '/image/product/food_7.jpg', 'CHHHESEBAR', 0),
+(23, '머스타드를 겯들인 샐러드 세트', 16000, 50, 'FOOD', '/image/product/food_8.jpg', 'GreenNYellow', 0),
+(24, '불고기버거세트', 8000, 200, 'FOOD', '/image/product/food_9.jpg', 'MACNCHESSE', 10),
+(25, '구이용 연어(손질됨)', 22000, 70, 'FOOD', '/image/product/food_10.jpg', 'FishFestival', 5),
+(26, '채소 볶음밥 팩', 30000, 90, 'FOOD', '/image/product/food_11.jpg', 'MuscleUp', 15),
+(27, '섹시푸드 햄버거', 18000, 60, 'FOOD', '/image/product/food_12.jpg', 'SexyFood', 0),
+(28, '그릴 치킨', 14000, 100, 'FOOD', '/image/product/food_13.jpg', 'GREEEL', 0),
+(29, '토마토햄버거 세트', 26000, 40, 'FOOD', '/image/product/food_14.jpg', 'HK FOOD', 0),
+(30, '펜네 파스타 밀키트', 20000, 80, 'FOOD', '/image/product/food_15.jpg', '파스타친구', 10);
+-- [Products] Fashion
+INSERT INTO products (id, product_name, price, stock, category, image_url, brand, discount_rate) VALUES
+(31, '편백나무 옷걸이 10개 세트', 25000, 200, 'FASHION', '/image/product/fashion_1.jpg', 'BasicWear', 0),
+(32, '갈색 구두 [와이셔츠 2개 이벤트]', 89000, 50, 'FASHION', '/image/product/fashion_2.jpg', 'DenimCo', 20),
+(33, '반팔 티셔츠 1+1', 55000, 60, 'FASHION', '/image/product/fashion_3.jpg', 'SunnyStyle', 10),
+(34, 'Running Shoes', 110000, 40, 'FASHION', '/image/product/fashion_4.jpg', 'RunFast', 0),
+(35, '나이스 운동화', 150000, 30, 'FASHION', '/image/product/fashion_5.jpg', 'Nice', 5),
+(36, 'Nice Skyblue Edition', 45000, 80, 'FASHION', '/image/product/fashion_6.jpg', 'Nice', 0),
+(37, '단정한 단화', 220000, 20, 'FASHION', '/image/product/fashion_7.jpg', 'WarmUp', 30),
+(38, 'Blue shirt', 75000, 70, 'FASHION', '/image/product/fashion_8.jpg', 'StreetWalk', 0),
+(39, 'Winter Warming Set', 49000, 100, 'FASHION', '/image/product/fashion_9.jpg', 'ComfyHood', 10),
+(40, 'Nice air 쿠션 ', 52000, 60, 'FASHION', '/image/product/fashion_10.jpg', 'nice', 0),
+(41, '정장 세트', 180000, 150, 'FASHION', '/image/product/fashion_11.jpg', 'HeadWarm', 0),
+(42, 'Black T-shirt', 35000, 50, 'FASHION', '/image/product/fashion_12.jpg', 'BlackLover', 15),
+(43, '레이블 Black&White 운동화', 42000, 80, 'FASHION', '/image/product/fashion_13.jpg', '레이블', 0),
+(44, '후드티', 38000, 70, 'FASHION', '/image/product/fashion_14.jpg', 'YELLOWHOOD', 0),
+(45, 'Red 선글라스', 95000, 40, 'FASHION', '/image/product/fashion_15.jpg', 'SunHater', 10);
+-- [Products] Home
+INSERT INTO products (id, product_name, price, stock, category, image_url, brand, discount_rate) VALUES
+(46, 'Modern Sofa', 450000, 10, 'HOME', '/image/product/home_1.jpg', 'CozyHome', 10),
+(47, '가죽 소파', 85000, 30, 'HOME', '/image/product/home_2.jpg', 'SOFar', 0),
+(48, '더블 그레이 침대', 35000, 60, 'HOME', '/image/product/home_3.jpg', 'LightUp', 5),
+(49, '화이트 보드', 22000, 40, 'HOME', '/image/product/home_4.jpg', 'GreenSpace', 0),
+(50, 'Soft Rug', 55000, 50, 'HOME', '/image/product/home_5.jpg', 'SoftTouch', 0),
+(51, 'LGEE 벽걸이 TV', 28000, 40, 'HOME', '/image/product/home_6.jpg', 'LGEE', 0),
+(52, '4인용 소파 (Black)', 32000, 50, 'HOME', '/image/product/home_7.jpg', 'TimeKeeper', 0),
+(53, '(소) 데스크 화분', 15000, 100, 'HOME', '/image/product/home_8.jpg', 'ComfortZone', 20),
+(54, '쇼파 테이블', 65000, 30, 'HOME', '/image/product/home_9.jpg', 'SleepWell', 10),
+(55, '데코용 커피빈 그림', 89000, 40, 'HOME', '/image/product/home_10.jpg', 'ChefChoice', 15),
+(56, '야외용 랜턴', 12000, 120, 'HOME', '/image/product/home_11.jpg', 'LANDING', 0),
+(57, '가정용 식탁', 18000, 80, 'HOME', '/image/product/home_12.jpg', 'AromaTherapy', 0),
+(58, '업뮤용 테이블', 14000, 100, 'HOME', '/image/product/home_13.jpg', 'OrganizeIt', 5),
+(59, '4인용 의자와 다과테이블', 16000, 60, 'HOME', '/image/product/home_14.jpg', 'Memories', 0),
+(60, '50인치 벽걸이 TV', 25000, 50, 'HOME', '/image/product/home_15.jpg', 'WorkSmart', 0);
