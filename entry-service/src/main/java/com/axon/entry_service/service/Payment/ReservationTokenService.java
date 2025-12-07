@@ -82,6 +82,7 @@ public class ReservationTokenService {
         String token = generateDeterministicToken(payload.getUserId(), payload.getCampaignActivityId());
         String redisKey = TOKEN_PREFIX + token;
 
+        log.error("DEBUG_TOKEN_SET: [{}] len={} hash={}", token, token.length(), token.hashCode());
         log.error("DEBUG: issueToken CALLED! User={}, Key={}", payload.getUserId(), redisKey);
 
         // 무조건 저장 및 TTL 갱신 (덮어쓰기)
@@ -127,6 +128,8 @@ public class ReservationTokenService {
 
     // 1차 토큰 조회
     public Optional<ReservationTokenPayload> getPayloadFromToken(String token) {
+        log.error("DEBUG_TOKEN_GET: [{}] len={} hash={}", token, token.length(), token.hashCode());
+        
         String redisKey = TOKEN_PREFIX + token;
         Object payload = redisTemplate.opsForValue().get(redisKey);
         String substring = token.substring(0, Math.min(10, token.length()));

@@ -426,20 +426,59 @@ function reserveWithJWT(data, userId) {
 }
 
 // =========================================================================
-// 결제 승인 (DB 저장)
+// 결제 승인 (DB 저장) - Prepare -> Confirm
 // =========================================================================
 function confirmPayment(data, userId, reservationToken) {
-  console.log(`Confirming payment for user ${userId} with token ${reservationToken.substring(0, 10)}...`);
   let token = data.tokens && data.tokens[userId] ? data.tokens[userId] : null;
   if (!token) return; 
 
-  const payload = JSON.stringify({
+  // 1. Payment Prepare (2차 토큰 발급)
+  const preparePayload = JSON.stringify({
     reservationToken: reservationToken
   });
 
-  const res = http.post(
+  const prepareRes = http.post(
+    `${data.entryServiceUrl}/entry/api/v1/payments/prepare`,
+    preparePayload,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      tags: { name: 'payment_prepare' },
+      timeout: '10s',
+    }
+  );
+
+  if (prepareRes.status !== 200) {
+      console.error(`Payment prepare failed for user ${userId}: ${prepareRes.status}`, prepareRes.body);
+      return;
+  }
+
+  let approvalToken = null;
+  try {
+      const json = prepareRes.json();
+      if (json && json.data) {
+          approvalToken = json.data; // PaymentPrepareResponse 구조 확인 필요 (data 필드에 토큰?)
+      }
+  } catch (e) {
+      console.error(`Failed to parse prepare response for user ${userId}`, e);
+      return;
+  }
+
+  if (!approvalToken) {
+      console.error(`No approvalToken for user ${userId}`);
+      return;
+  }
+
+  // 2. Payment Confirm (최종 승인)
+  const confirmPayload = JSON.stringify({
+    reservationToken: approvalToken // 2차 토큰 사용
+  });
+
+  const confirmRes = http.post(
     `${data.entryServiceUrl}/entry/api/v1/payments/confirm`,
-    payload,
+    confirmPayload,
     {
       headers: {
         'Content-Type': 'application/json',
@@ -450,11 +489,11 @@ function confirmPayment(data, userId, reservationToken) {
     }
   );
 
-  if (res.status !== 200) {
-      console.error(`Payment confirm failed for user ${userId}: ${res.status}`, res.body);
+  if (confirmRes.status !== 200) {
+      console.error(`Payment confirm failed for user ${userId}: ${confirmRes.status}`, confirmRes.body);
   }
 
-  check(res, {
+  check(confirmRes, {
     'payment confirm success (200)': (r) => r.status === 200,
   });
 }
