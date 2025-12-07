@@ -428,7 +428,7 @@ function reserveWithJWT(data, userId) {
 // =========================================================================
 // 결제 승인 (DB 저장) - Prepare -> Confirm
 // =========================================================================
-function confirmPayment(data, userId, reservationTokeng
+function confirmPayment(data, userId, reservationToken) {
   let token = data.tokens && data.tokens[userId] ? data.tokens[userId] : null;
 
   // 토큰 없으면 실시간 발급
