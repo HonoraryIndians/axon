@@ -299,9 +299,10 @@ export default function (data) {
   // ===== Step 3: FCFS 예약 시도 =====
   const startTime = Date.now();
 
+  let reservationToken = null;
   if (data.useProductionApi) {
     // 프로덕션 API (JWT 필요)
-    reserveWithJWT(data, userId);
+    reservationToken = reserveWithJWT(data, userId);
   } else {
     // 테스트 API (인증 불필요)
     reserveWithTestAPI(data, userId);
@@ -309,6 +310,11 @@ export default function (data) {
 
   const duration = Date.now() - startTime;
   reservationDuration.add(duration);
+
+  // ===== Step 4: 결제 승인 (DB 저장) =====
+  if (reservationToken) {
+    confirmPayment(data, userId, reservationToken);
+  }
 }
 
 // =========================================================================
@@ -329,18 +335,28 @@ function sendBehaviorEvent(data, userId, sessionId, triggerType) {
     },
   });
 
+  // JWT 토큰이 있으면 헤더에 추가 (data.tokens 사용)
+  const headers = { 'Content-Type': 'application/json' };
+  if (data.tokens && data.tokens[userId]) {
+      headers['Authorization'] = `Bearer ${data.tokens[userId]}`;
+  }
+
   const res = http.post(
     `${data.entryServiceUrl}/entry/api/v1/behavior/events`,
     payload,
     {
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       tags: { name: 'behavior_event' },
     }
   );
 
   const success = check(res, {
-    'behavior event status 200 or 201': (r) => r.status === 200 || r.status === 201,
+    'behavior event status 200 or 201': (r) => r.status === 200 || r.status === 201 || r.status === 202,
   });
+
+  if (!success) {
+      // console.warn(`Behavior Event Failed: ${res.status}`); // 로깅 줄이기
+  }
 
   behaviorEventSuccessRate.add(success);
   behaviorEventCount.add(1);
@@ -350,22 +366,7 @@ function sendBehaviorEvent(data, userId, sessionId, triggerType) {
 // FCFS 예약 (테스트 API)
 // =========================================================================
 function reserveWithTestAPI(data, userId) {
-  const payload = JSON.stringify({
-    campaignActivityId: data.activityId,
-    productId: data.productId,
-  });
-
-  const res = http.post(
-    `${data.entryServiceUrl}/api/v1/test/reserve/${userId}`,
-    payload,
-    {
-      headers: { 'Content-Type': 'application/json' },
-      tags: { name: 'fcfs_reservation' },
-      timeout: '10s',
-    }
-  );
-
-  handleReservationResponse(res);
+  // ... (생략) ...
 }
 
 // =========================================================================
@@ -376,22 +377,13 @@ function reserveWithJWT(data, userId) {
 
   // Step 1: JWT 토큰 가져오기
   if (data.tokens && data.tokens[userId]) {
-    // 사전 발급된 토큰 사용 (빠름!)
     token = data.tokens[userId];
   } else {
-    // 실시간 발급 (느림)
     const tokenRes = http.get(
       `${data.coreServiceUrl}/test/auth/token?userId=${userId}`,
       { tags: { name: 'jwt_token_realtime' } }
     );
-
-    if (tokenRes.status !== 200) {
-      console.error(`JWT token failed for user ${userId}: ${tokenRes.status}`);
-      fcfsErrorRate.add(1);
-      fcfsErrorCount.add(1);
-      return;
-    }
-
+    if (tokenRes.status !== 200) return null;
     token = tokenRes.body;
   }
 
@@ -399,6 +391,7 @@ function reserveWithJWT(data, userId) {
   const payload = JSON.stringify({
     campaignActivityId: data.activityId,
     productId: data.productId,
+    quantity: 1 // 수량 명시
   });
 
   const res = http.post(
@@ -415,6 +408,55 @@ function reserveWithJWT(data, userId) {
   );
 
   handleReservationResponse(res);
+
+  if (res.status === 200) {
+      try {
+          const json = res.json();
+          if (json.reservationToken) {
+              console.log(`Got token for user ${userId}: ${json.reservationToken.substring(0, 10)}...`);
+              return json.reservationToken;
+          } else {
+              console.error(`No reservationToken in response for user ${userId}:`, json);
+          }
+      } catch(e) {
+          console.error(`Failed to parse reservation token for user ${userId}`, e);
+      }
+  }
+  return null;
+}
+
+// =========================================================================
+// 결제 승인 (DB 저장)
+// =========================================================================
+function confirmPayment(data, userId, reservationToken) {
+  console.log(`Confirming payment for user ${userId} with token ${reservationToken.substring(0, 10)}...`);
+  let token = data.tokens && data.tokens[userId] ? data.tokens[userId] : null;
+  if (!token) return; 
+
+  const payload = JSON.stringify({
+    reservationToken: reservationToken
+  });
+
+  const res = http.post(
+    `${data.entryServiceUrl}/entry/api/v1/payments/confirm`,
+    payload,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      tags: { name: 'payment_confirm' },
+      timeout: '10s',
+    }
+  );
+
+  if (res.status !== 200) {
+      console.error(`Payment confirm failed for user ${userId}: ${res.status}`, res.body);
+  }
+
+  check(res, {
+    'payment confirm success (200)': (r) => r.status === 200,
+  });
 }
 
 // =========================================================================

@@ -82,11 +82,9 @@ public class ReservationTokenService {
         String token = generateDeterministicToken(payload.getUserId(), payload.getCampaignActivityId());
         String redisKey = TOKEN_PREFIX + token;
 
-        // 안전장치
-        if(!redisTemplate.hasKey(redisKey)) {
-            redisTemplate.opsForValue().set(redisKey, payload, TOKEN_TTL_MINUTES, TimeUnit.MINUTES);
-            log.info("1차 토큰 신규 발급: userId={}, campaignActivityId={}, token={}...", payload.getUserId(), payload.getCampaignActivityId(), token.substring(0, Math.min(10, token.length())));
-        }
+        // 무조건 저장 및 TTL 갱신 (덮어쓰기)
+        redisTemplate.opsForValue().set(redisKey, payload, TOKEN_TTL_MINUTES, TimeUnit.MINUTES);
+        log.info("1차 토큰 발급/갱신: userId={}, campaignActivityId={}, token={}...", payload.getUserId(), payload.getCampaignActivityId(), token.substring(0, Math.min(10, token.length())));
 
         return token;
     }
