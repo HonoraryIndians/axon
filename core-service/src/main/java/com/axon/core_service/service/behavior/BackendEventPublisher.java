@@ -45,7 +45,7 @@ public class BackendEventPublisher {
 
         UserBehaviorEventMessage message = adapter.toPurchaseEvent(event);
 
-        kafkaTemplate.send(KafkaTopics.EVENT_RAW, message).whenComplete((result, ex) -> {
+        kafkaTemplate.send(KafkaTopics.COMMERCE_EVENT, message).whenComplete((result, ex) -> {
             if (ex != null) {
                 log.error("Failed to publish backend purchase event for userId={} activityId={}",
                         event.userId(), event.campaignActivityId(), ex);
@@ -71,7 +71,7 @@ public class BackendEventPublisher {
 
         UserBehaviorEventMessage message = adapter.toLoginEvent(event);
 
-        kafkaTemplate.send(KafkaTopics.EVENT_RAW, message).whenComplete((result, ex) -> {
+        kafkaTemplate.send(KafkaTopics.BEHAVIOR_EVENT, message).whenComplete((result, ex) -> {
             if (ex != null) {
                 log.error("Failed to publish backend login event for userId={}",
                         event.userId(), ex);

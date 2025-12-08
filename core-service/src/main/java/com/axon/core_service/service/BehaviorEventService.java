@@ -87,7 +87,7 @@ public class BehaviorEventService {
 
         // For multiple trigger types, query with OR condition
         SearchResponse<Void> response = elasticsearchClient.search(s -> s
-                .index("behavior-events")
+                .index("axon.event.*")
                 .size(0)
                 .query(q -> q.bool(b -> b
                         .filter(buildPageUrlFilter(activityId))
@@ -130,7 +130,7 @@ public class BehaviorEventService {
      */
     public java.util.Map<Long, java.util.Map<String, Long>> getCampaignStats(Long campaignId, LocalDateTime start, LocalDateTime end) throws IOException {
         SearchResponse<Void> response = elasticsearchClient.search(s -> s
-                .index("behavior-events")
+                .index("axon.event.*")
                 .size(0) // No documents, only aggregations
                 .query(q -> q.bool(b -> b
                         .filter(f -> f.term(t -> t.field("properties.campaignId").value(campaignId)))
@@ -190,7 +190,7 @@ public class BehaviorEventService {
         }
 
         SearchResponse<Void> response = elasticsearchClient.search(s -> s
-                .index("behavior-events")
+                .index("axon.event.*")
                 .size(0)
                 .query(q -> q.bool(b -> b
                         .filter(buildMultiActivityUrlFilter(activityIds))
@@ -238,7 +238,7 @@ public class BehaviorEventService {
      */
     public java.util.Map<Long, java.util.Map<String, Long>> getAllCampaignStats(LocalDateTime start, LocalDateTime end) throws IOException {
         SearchResponse<Void> response = elasticsearchClient.search(s -> s
-                .index("behavior-events")
+                .index("axon.event.*")
                 .size(0)
                 .query(q -> q.bool(b -> b
                         .filter(buildTimeRangeFilter(start, end))
@@ -279,7 +279,7 @@ public class BehaviorEventService {
             throws IOException {
         // ES 쿼리 실행 로직
         SearchResponse<Void> response = elasticsearchClient.search(s -> s
-                .index("behavior-events") // Fixed: removed wildcard
+                .index("axon.event.*") // Fixed: search all separated indices
                 .size(0)
                 .query(q -> q.bool(b -> b
                         .filter(buildPageUrlFilter(activityId))

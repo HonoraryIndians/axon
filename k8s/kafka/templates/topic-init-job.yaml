@@ -53,10 +53,13 @@ spec:
           }
 
           # Axon CDP Topics
-          # 1. Raw Events (High throughput, 3 partitions)
-          create_topic "axon.event.raw" 3 3
+          # 1. Behavior Events (High throughput: View, Click, Login)
+          create_topic "axon.event.behavior" 3 3
 
-          # 2. Command Events (Critical, 3 partitions)
+          # 2. Commerce Events (Critical: Purchase, Approved)
+          create_topic "axon.event.commerce" 3 3
+
+          # 3. Command Events (Critical, 3 partitions)
           create_topic "axon.campaign-activity.command" 3 3
 
           # 3. Kubernetes Logs (Fluent Bit → Kafka → ES)

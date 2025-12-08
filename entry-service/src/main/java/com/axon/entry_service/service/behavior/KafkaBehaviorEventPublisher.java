@@ -18,9 +18,9 @@ public class KafkaBehaviorEventPublisher implements BehaviorEventPublisher {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     /**
-     * Publish the given user behavior event to the raw Kafka topic.
+     * Publish the given user behavior event to the behavior Kafka topic.
      *
-     * Maps the event to a transport message and sends it to Kafka topic {@code KafkaTopics.EVENT_RAW}.
+     * Maps the event to a transport message and sends it to Kafka topic {@code KafkaTopics.BEHAVIOR_EVENT}.
      * On send completion, logs an error with the event ID and trigger type if publishing fails,
      * or logs the topic and offset when publishing succeeds.
      *
@@ -30,7 +30,7 @@ public class KafkaBehaviorEventPublisher implements BehaviorEventPublisher {
     public void publish(UserBehaviorEvent event) {
         UserBehaviorEventMessage message = mapToMessage(event);
         log.info("publishing behavior event");
-        kafkaTemplate.send(KafkaTopics.EVENT_RAW, message).whenComplete((result, ex) -> {
+        kafkaTemplate.send(KafkaTopics.BEHAVIOR_EVENT, message).whenComplete((result, ex) -> {
             if (ex != null) {
                 log.error("Failed to publish behavior event. eventId={} triggerType={}",
                         event.getEventId(), event.getTriggerType(), ex);

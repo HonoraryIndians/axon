@@ -8,8 +8,12 @@ public final class KafkaTopics {
     private KafkaTopics() {
     }
 
+    public static final String BEHAVIOR_EVENT = "axon.event.behavior";
+    public static final String COMMERCE_EVENT = "axon.event.commerce";
+
+    @Deprecated
     public static final String EVENT_RAW = "axon.event.raw";
     public static final String CAMPAIGN_ACTIVITY_COMMAND = "axon.campaign-activity.command";
-    public static final String CAMPAIGN_ACTIVITY_LOG = "axon.campaign-activity.log";
+    @Deprecated
     public static final String USER_LOGIN = "axon.user.login";
 }
