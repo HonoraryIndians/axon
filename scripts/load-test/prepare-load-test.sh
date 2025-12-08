@@ -157,7 +157,8 @@ export MYSQL_PWD="$DB_PASS"
 MYSQL_CMD_BASE="mysql -h$DB_HOST -P$DB_PORT -u$DB_USER $DB_NAME"
 
 # 기존 테스트 유저 삭제
-$MYSQL_CMD_BASE -e "DELETE FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END;" 2>/dev/null
+$MYSQL_CMD_BASE -e "DELETE FROM user_summary WHERE user_id BETWEEN $USER_ID_START AND $USER_ID_END;"
+$MYSQL_CMD_BASE -e "DELETE FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END;"
 
 # BRONZE 유저 생성 (
 if [ $BRONZE_COUNT -gt 0 ]; then
@@ -235,6 +236,15 @@ EOF
 fi
 
 echo "   ✅ MySQL 유저 생성 완료"
+
+# UserSummary 생성 (User와 1:1 필수 관계)
+echo "   생성 중: UserSummary..."
+$MYSQL_CMD_BASE << EOF
+INSERT INTO user_summary (user_id, last_login_at, last_purchase_at)
+SELECT id, NULL, NULL FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END
+ON DUPLICATE KEY UPDATE user_id=user_id;
+EOF
+echo "   ✅ UserSummary 생성 완료"
 echo ""
 
 # ============================================================================

@@ -168,8 +168,14 @@ public class CampaignActivityEntryService {
             toSave.add(entry);
 
             // 구매 관련 활동이면 이벤트 준비
-            if (status == CampaignActivityEntryStatus.APPROVED
-                    && activity.getActivityType().isPurchaseRelated()) {
+            boolean isApproved = (status == CampaignActivityEntryStatus.APPROVED);
+            boolean isPurchaseRelated = activity.getActivityType().isPurchaseRelated();
+            
+            log.debug("Checking event condition: userId={}, status={}, type={}, isApproved={}, isPurchaseRelated={}", 
+                    dto.getUserId(), status, activity.getActivityType(), isApproved, isPurchaseRelated);
+
+            if (isApproved && isPurchaseRelated) {
+                log.debug("Adding purchase event for userId={}", dto.getUserId());
                 purchaseEvents.add(new PurchaseInfoDto(
                         activity.getCampaignId(),
                         activity.getId(),
