@@ -64,6 +64,17 @@ public class WebController {
     }
 
     /**
+     * Serve the coupon management board.
+     *
+     * @return the view name "admin_coupons"
+     */
+    @GetMapping("/admin/coupons")
+    public String adminCoupons() {
+        log.info("Serving admin_coupons.html");
+        return "admin_coupons";
+    }
+
+    /**
      * Serve the system monitoring page.
      *
      * @return the view name "admin_monitoring"

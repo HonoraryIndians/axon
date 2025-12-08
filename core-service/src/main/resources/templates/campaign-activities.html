@@ -9,6 +9,7 @@
 <body>
     <div layout:fragment="content" class="w-full">
 
+
         <!-- Event Hero Banner -->
         <div
             class="h-[300px] bg-accent text-white flex flex-col items-center justify-center text-center mb-16 relative overflow-hidden">
@@ -121,37 +122,356 @@
             </div>
 
             <!-- 3. Coupon Zone -->
-            <div>
+            <div id="coupon-section" th:if="${not #lists.isEmpty(coupons)}">
                 <div class="flex justify-between items-end mb-6 border-b-2 border-black pb-4">
-                    <h3 class="text-2xl font-extrabold text-black">쿠폰 존</h3>
+                    <div class="flex items-baseline gap-2">
+                        <h3 class="text-2xl font-extrabold text-black">쿠폰 존</h3>
+                        <span class="text-sm font-bold text-gray-500" th:text="'총 ' + ${#lists.size(coupons)} + '개'">총
+                            3개</span>
+                    </div>
+
+                    <!-- Sorting Dropdown -->
+                    <div class="relative">
+                        <select id="coupon-sort"
+                            class="appearance-none bg-transparent border-none text-sm font-bold text-gray-700 pr-6 focus:outline-none cursor-pointer text-right">
+                            <option value="default">기본순</option>
+                            <option value="discount">할인율 높은순</option>
+                            <option value="name">이름순</option>
+                        </select>
+                        <i
+                            class="ph-bold ph-caret-down absolute right-0 top-1/2 transform -translate-y-1/2 text-gray-700 pointer-events-none"></i>
+                    </div>
                 </div>
-                <div class="grid grid-cols-3 gap-6">
-                    <div
-                        class="border border-[#ddd] p-6 rounded-sm text-center hover:border-black transition-colors cursor-pointer">
-                        <div class="text-3xl font-black text-accent mb-2">20%</div>
-                        <h5 class="font-bold text-lg mb-2">신규회원 환영 쿠폰</h5>
-                        <p class="text-xs text-gray mb-4">최대 5만원 할인</p>
-                        <button class="w-full h-10 bg-black text-white text-sm font-bold">다운로드</button>
+
+                <style>
+                    .issued-coupon {
+                        position: relative;
+                        pointer-events: none;
+                    }
+
+                    .issued-coupon .coupon-content-wrapper {
+                        filter: grayscale(100%) opacity(0.6) blur(2px);
+                    }
+
+                    .issued-coupon::after {
+                        content: '이미 받은 쿠폰입니다';
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: rgba(0, 0, 0, 0.85);
+                        /* Slightly darker for contrast */
+                        color: white;
+                        padding: 10px 20px;
+                        border-radius: 4px;
+                        font-weight: bold;
+                        font-size: 15px;
+                        z-index: 10;
+                        white-space: nowrap;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                    }
+                </style>
+
+                <div id="coupon-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div th:each="coupon, stat : ${coupons}"
+                        class="coupon-item border border-[#ddd] p-6 rounded-sm text-center hover:border-black transition-colors cursor-pointer relative bg-white group flex flex-col items-center justify-between min-h-[220px]"
+                        th:data-name="${coupon.title}"
+                        th:data-discount="${coupon.couponDiscountRate != null ? coupon.couponDiscountRate : 0}"
+                        th:data-id="${coupon.id}" th:data-product-id="${coupon.productId}"
+                        th:data-coupon-id="${coupon.couponId}" th:style="${stat.index >= 6} ? 'display: none;' : ''"
+                        th:classappend="${(stat.index >= 6 ? 'hidden-coupon ' : '') + (#lists.contains(issuedCouponIds, coupon.couponId) ? 'issued-coupon' : '')}">
+
+                        <div class="w-full coupon-content-wrapper">
+                            <!-- Discount Badge -->
+                            <div class="mb-4">
+                                <span th:if="${coupon.couponDiscountRate != null}"
+                                    class="text-4xl font-black text-accent tracking-tighter"
+                                    th:text="${coupon.couponDiscountRate} + '%'">20%</span>
+                                <span th:if="${coupon.couponDiscountAmount != null}"
+                                    class="text-4xl font-black text-black tracking-tighter"
+                                    th:text="${#numbers.formatInteger(coupon.couponDiscountAmount, 0, 'COMMA')} + '원'">5,000원</span>
+                            </div>
+
+                            <!-- Swapped: Title (Activity Name) as main, Coupon Name as sub -->
+                            <h5 class="font-bold text-lg mb-2 break-keep leading-tight" th:text="${coupon.title}">이벤트 이름
+                            </h5>
+                            <p class="text-xs text-gray-500 mb-6 bg-gray-50 px-2 py-1 rounded-sm inline-block"
+                                th:text="${coupon.couponName}">쿠폰 이름</p>
+                        </div>
+
+                        <button th:if="${#lists.contains(issuedCouponIds, coupon.couponId)}" disabled
+                            class="w-full h-10 bg-gray-400 text-white text-sm font-bold cursor-not-allowed rounded-sm flex items-center justify-center gap-2">
+                            <span>발급 완료</span>
+                        </button>
+
+                        <button th:unless="${#lists.contains(issuedCouponIds, coupon.couponId)}"
+                            th:onclick="openCouponModal([[${coupon.id}]], [[${coupon.couponName}]], [[${coupon.filters}]])"
+                            class="w-full h-10 bg-black text-white text-sm font-bold hover:bg-accent transition-colors rounded-sm flex items-center justify-center gap-2">
+                            <span>다운로드</span>
+                            <i class="ph-bold ph-download-simple"></i>
+                        </button>
                     </div>
-                    <div
-                        class="border border-[#ddd] p-6 rounded-sm text-center hover:border-black transition-colors cursor-pointer">
-                        <div class="text-3xl font-black text-black mb-2">5,000원</div>
-                        <h5 class="font-bold text-lg mb-2">배송비 지원 쿠폰</h5>
-                        <p class="text-xs text-gray mb-4">3만원 이상 구매 시</p>
-                        <button class="w-full h-10 bg-black text-white text-sm font-bold">다운로드</button>
-                    </div>
-                    <div
-                        class="border border-[#ddd] p-6 rounded-sm text-center hover:border-black transition-colors cursor-pointer">
-                        <div class="text-3xl font-black text-black mb-2">10%</div>
-                        <h5 class="font-bold text-lg mb-2">주말 쇼핑 쿠폰</h5>
-                        <p class="text-xs text-gray mb-4">토/일요일 사용 가능</p>
-                        <button class="w-full h-10 bg-black text-white text-sm font-bold">다운로드</button>
+                </div>
+
+                <!-- Load More Button for Coupons -->
+                <div class="mt-8 text-center" id="load-more-coupons-container" th:if="${coupons.size() > 6}">
+                    <button onclick="loadMoreCoupons()"
+                        class="px-8 py-3 border border-gray-300 bg-white text-gray-500 font-bold hover:border-black hover:text-black transition-colors rounded-full text-sm">
+                        더보기 <i class="ph-bold ph-caret-down ml-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Coupon Modal -->
+            <div id="coupon-modal" class="fixed inset-0 z-[9999] hidden" role="dialog" aria-modal="true">
+                <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm"
+                    onclick="closeCouponModal()"></div>
+                <div class="fixed inset-0 z-[10000] overflow-y-auto pointer-events-none">
+                    <div class="flex min-h-full items-center justify-center p-4 text-center pointer-events-auto">
+                        <div
+                            class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-md">
+
+                            <!-- Header -->
+                            <div
+                                class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                                <h3 class="text-lg font-bold text-gray-900" id="coupon-modal-title">쿠폰 발급</h3>
+                                <button onclick="closeCouponModal()" class="text-gray-400 hover:text-gray-500">
+                                    <i class="ph-bold ph-x text-xl"></i>
+                                </button>
+                            </div>
+
+                            <!-- Body -->
+                            <div class="px-6 py-6">
+                                <div class="mb-6 text-center">
+                                    <div
+                                        class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-accent mb-4">
+                                        <i class="ph-fill ph-ticket text-3xl"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold mb-1" id="coupon-modal-name">쿠폰 이름</h4>
+                                    <p class="text-sm text-gray-500">발급 받으시려면 아래 조건을 만족해야 합니다.</p>
+                                </div>
+
+                                <!-- Conditions List -->
+                                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                                    <h5
+                                        class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1">
+                                        <i class="ph-fill ph-check-circle"></i> 발급 조건
+                                    </h5>
+                                    <ul id="coupon-modal-conditions" class="space-y-3 text-sm">
+                                        <!-- Dynamic content -->
+                                    </ul>
+                                </div>
+
+                                <!-- Message Container -->
+                                <div id="coupon-modal-message"
+                                    class="hidden mb-4 p-3 rounded text-sm text-center font-bold"></div>
+
+                                <button id="issue-coupon-btn"
+                                    class="w-full h-12 bg-accent text-white font-bold rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                                    <span>쿠폰 발급받기</span>
+                                    <i class="ph-bold ph-download-simple"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
         </div>
     </div>
+
+    <th:block layout:fragment="script">
+        <script src="/js/common.js"></script>
+        <script th:inline="javascript">
+            // Environment-aware configuration
+            window.isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            window.ENTRY_SERVICE_BASE = window.isLocal ? 'http://localhost:8081' : '';
+            window.issuedCouponIds = [[${ issuedCouponIds }]] || [];
+
+            let currentCouponId = null;
+
+            function openCouponModal(id, name, filters) {
+                // Check if already issued
+                const card = document.querySelector(`[data-id="${id}"]`);
+                if (card && card.classList.contains('issued-coupon')) return;
+
+                currentCouponId = id;
+                document.getElementById('coupon-modal-name').innerText = name;
+
+                const list = document.getElementById('coupon-modal-conditions');
+                list.innerHTML = '';
+
+                if (!filters || filters.length === 0) {
+                    list.innerHTML = '<li class="text-gray-400 text-center py-2">별도의 조건이 없습니다.</li>';
+                } else {
+                    filters.forEach(filter => {
+                        const li = document.createElement('li');
+                        li.className = "flex items-start gap-2 text-gray-700";
+                        li.innerHTML = `<i class="ph-bold ph-dot text-gray-300 mt-1.5 text-xs shrink-0"></i> <span>${common.formatCondition(filter)}</span>`;
+                        list.appendChild(li);
+                    });
+                }
+
+                document.getElementById('coupon-modal').classList.remove('hidden');
+                document.getElementById('coupon-modal-message').classList.add('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeCouponModal() {
+                document.getElementById('coupon-modal').classList.add('hidden');
+                document.body.style.overflow = '';
+                currentCouponId = null;
+
+                // Reset Modal Button State for next use (though usually re-opened for different coupon)
+                const btn = document.getElementById('issue-coupon-btn');
+                btn.disabled = false;
+                btn.innerHTML = '<span>쿠폰 발급받기</span><i class="ph-bold ph-download-simple"></i>';
+                btn.classList.add('bg-accent', 'hover:bg-blue-600');
+                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            }
+
+            document.getElementById('issue-coupon-btn').addEventListener('click', async function () {
+                if (!currentCouponId) return;
+
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> 처리 중...';
+
+                const accessToken = common.getCookie('accessToken');
+                if (!accessToken) {
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/oauth2/authorization/naver'; // Adjust login URL as needed
+                    return;
+                }
+
+                try {
+                    const payload = {
+                        campaignActivityId: parseInt(currentCouponId),
+                        campaignActivityType: 'COUPON',
+                        productId: parseInt(document.querySelector(`[data-id="${currentCouponId}"]`).getAttribute('data-coupon-id')) || null
+                    };
+
+                    const response = await fetch(window.ENTRY_SERVICE_BASE + '/entry/api/v1/entries/coupon', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + accessToken,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.reservationToken) {
+                        const msgDiv = document.getElementById('coupon-modal-message');
+                        msgDiv.textContent = '쿠폰이 성공적으로 발급되었습니다!';
+                        msgDiv.className = 'mb-4 p-3 rounded text-sm text-center font-bold bg-green-100 text-green-700';
+                        msgDiv.classList.remove('hidden');
+
+                        // 1. Disable Issue Button
+                        btn.disabled = true;
+                        btn.innerHTML = '발급 완료';
+                        btn.classList.remove('bg-accent', 'hover:bg-blue-600');
+                        btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+
+                        // 2. Mark Coupon Card in List as Issued
+                        const card = document.querySelector(`[data-id="${currentCouponId}"]`);
+                        if (card) {
+                            card.classList.add('issued-coupon');
+                            // Replace download button text
+                            const cardBtn = card.querySelector('button');
+                            if (cardBtn) {
+                                cardBtn.innerHTML = '발급 완료';
+                                cardBtn.disabled = true;
+                            }
+                        }
+
+                        // 3. Do NOT Close Modal (User must close manually)
+                        // setTimeout remove
+
+                    } else {
+                        // Use result.reason as per backend contract (PaymentConfirmationResponse)
+                        throw new Error(result.reason || result.message || '쿠폰 발급 실패');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    const msgDiv = document.getElementById('coupon-modal-message');
+                    msgDiv.textContent = e.message || '시스템 오류가 발생했습니다.';
+                    msgDiv.className = 'mb-4 p-3 rounded text-sm text-center font-bold bg-red-100 text-red-700';
+                    msgDiv.classList.remove('hidden');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+
+            // Coupon Logic: Sort & Load More
+            function loadMoreCoupons() {
+                const hiddenCoupons = Array.from(document.querySelectorAll('.hidden-coupon'));
+                const toShow = hiddenCoupons.slice(0, 6); // Show 6 more at a time
+
+                toShow.forEach(card => {
+                    card.style.display = '';
+                    card.classList.remove('hidden-coupon');
+                    card.animate([
+                        { opacity: 0, transform: 'translateY(10px)' },
+                        { opacity: 1, transform: 'translateY(0)' }
+                    ], { duration: 300, easing: 'ease-out', fill: 'forwards' });
+                });
+
+                if (document.querySelectorAll('.hidden-coupon').length === 0) {
+                    document.getElementById('load-more-coupons-container').style.display = 'none';
+                }
+            }
+
+            document.getElementById('coupon-sort').addEventListener('change', function (e) {
+                const sortValue = e.target.value;
+                const grid = document.getElementById('coupon-grid');
+                const items = Array.from(document.querySelectorAll('.coupon-item'));
+
+                items.sort((a, b) => {
+                    if (sortValue === 'discount') {
+                        const da = parseFloat(a.getAttribute('data-discount')) || 0;
+                        const db = parseFloat(b.getAttribute('data-discount')) || 0;
+                        return db - da; // Descending
+                    } else if (sortValue === 'name') {
+                        const na = a.getAttribute('data-name');
+                        const nb = b.getAttribute('data-name');
+                        return na.localeCompare(nb);
+                    } else {
+                        // Default order (DOM order reset?) - ideally we'd have index
+                        // For now, let's just sort by ID or keep as is if efficient mapping done
+                        // Simplest default behavior: Refresh page or just sort by Title as fallback
+                        return 0;
+                    }
+                });
+
+                // Re-append to grid
+                items.forEach(item => grid.appendChild(item));
+
+                // Reset Visibility Logic (keep current shown count or reset to 6? User usually expects reset or keep)
+                // Let's keep it simple: Reset to show 6
+                items.forEach((item, index) => {
+                    if (index < 6) {
+                        item.style.display = '';
+                        item.classList.remove('hidden-coupon');
+                    } else {
+                        item.style.display = 'none';
+                        item.classList.add('hidden-coupon');
+                    }
+                });
+
+                // Reset Load More Button
+                const loadMore = document.getElementById('load-more-coupons-container');
+                if (items.length > 6) {
+                    loadMore.style.display = 'block';
+                } else {
+                    if (loadMore) loadMore.style.display = 'none';
+                }
+            });
+        </script>
+    </th:block>
 </body>
 
 </html>

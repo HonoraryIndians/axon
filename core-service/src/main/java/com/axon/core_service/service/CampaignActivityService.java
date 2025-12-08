@@ -9,9 +9,9 @@ import com.axon.core_service.domain.product.Product;
 import com.axon.core_service.repository.CampaignActivityEntryRepository;
 import com.axon.core_service.repository.CampaignActivityRepository;
 import com.axon.core_service.repository.CampaignRepository;
-import java.util.List;
-
+import com.axon.core_service.repository.CouponRepository;
 import com.axon.core_service.repository.ProductRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -26,6 +26,7 @@ public class CampaignActivityService {
     private final CampaignActivityRepository campaignActivityRepository;
     private final CampaignActivityEntryRepository campaignActivityEntryRepository;
     private final ProductRepository productRepository;
+    private final CouponRepository couponRepository;
     private final StringRedisTemplate redisTemplate;
 
     /**
@@ -42,9 +43,18 @@ public class CampaignActivityService {
     public CampaignActivityResponse createCampaignActivity(Long campaignId, CampaignActivityRequest request) {
         Campaign campaign = findCampaign(campaignId);
         Product product = null;
-        if (request.getProductId() != null) {
-            product = findProduct(request.getProductId());
+        com.axon.core_service.domain.coupon.Coupon coupon = null;
+
+        if (request.getActivityType() == com.axon.messaging.CampaignActivityType.COUPON) {
+            if (request.getCouponId() != null) {
+                coupon = findCoupon(request.getCouponId());
+            }
+        } else {
+            if (request.getProductId() != null) {
+                product = findProduct(request.getProductId());
+            }
         }
+
         CampaignActivity campaignActivity = CampaignActivity.builder()
                 .campaign(campaign)
                 .name(request.getName())
@@ -57,6 +67,7 @@ public class CampaignActivityService {
                 .price(request.getPrice())
                 .quantity(request.getQuantity())
                 .product(product)
+                .coupon(coupon)
                 .imageUrl(request.getImageUrl())
                 .budget(request.getBudget())
                 .build();
@@ -104,12 +115,20 @@ public class CampaignActivityService {
             campaignActivity.setFilters(request.getFilters());
         }
 
-        // Update Product Info
-        Product newProduct = null;
-        if (request.getProductId() != null) {
-            newProduct = findProduct(request.getProductId());
+        // Update Product/Coupon Info
+        if (request.getActivityType() == com.axon.messaging.CampaignActivityType.COUPON) {
+            com.axon.core_service.domain.coupon.Coupon newCoupon = null;
+            if (request.getCouponId() != null) {
+                newCoupon = findCoupon(request.getCouponId());
+            }
+            campaignActivity.updateCouponInfo(newCoupon);
+        } else {
+            Product newProduct = null;
+            if (request.getProductId() != null) {
+                newProduct = findProduct(request.getProductId());
+            }
+            campaignActivity.updateProductInfo(newProduct, request.getPrice(), request.getQuantity());
         }
-        campaignActivity.updateProductInfo(newProduct, request.getPrice(), request.getQuantity());
 
         // Update Image URL
         campaignActivity.updateImageUrl(request.getImageUrl());
@@ -244,6 +263,11 @@ public class CampaignActivityService {
     private CampaignActivity findCampaignActivity(Long id) {
         return campaignActivityRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("campaign activity not found: " + id));
+    }
+
+    private com.axon.core_service.domain.coupon.Coupon findCoupon(Long id) {
+        return couponRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("coupon not found: " + id));
     }
 
     /**

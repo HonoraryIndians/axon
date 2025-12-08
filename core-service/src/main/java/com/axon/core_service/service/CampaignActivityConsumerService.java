@@ -88,7 +88,7 @@ public class CampaignActivityConsumerService {
 
         log.info("Processing Micro batch: {} messages", messages.size());
 
-        // 2. 타입별로 그룹핑 (FCFS 등)
+        // 2. 타입별로 그룹핑 (FCFS, Coupon)
         Map<CampaignActivityType, List<CampaignActivityKafkaProducerDto>> groupedByType =
                 messages.stream()
                         .collect(Collectors.groupingBy(

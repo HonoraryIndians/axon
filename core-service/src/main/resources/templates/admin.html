@@ -10,7 +10,7 @@
     <link rel="stylesheet" th:href="@{/css/admin_board.css}" />
 </head>
 <section class="flex flex-col h-screen bg-gray-50">
-    
+
     <!-- Split View Container -->
     <div class="flex flex-1 overflow-hidden">
         <!-- Left Sidebar: Campaign List -->
@@ -42,10 +42,16 @@
                                 class="px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-xs">진행중</span>
                         </div>
                     </div>
-                    <button id="create-activity-btn"
-                        class="btn-primary text-sm px-4 py-2 rounded bg-black text-white hover:bg-gray-800 transition-colors shadow-sm">
-                        <i class="fa-solid fa-plus mr-2"></i> 새 활동 만들기
-                    </button>
+                    <div class="flex items-center">
+                        <button id="create-activity-btn"
+                            class="btn-primary text-sm px-4 py-2 rounded bg-black text-white hover:bg-gray-800 transition-colors shadow-sm">
+                            <i class="fa-solid fa-plus mr-2"></i> 새 활동 만들기
+                        </button>
+                        <a href="/admin/coupons"
+                            class="btn-primary text-sm px-4 py-2 rounded bg-black text-white hover:bg-gray-800 transition-colors shadow-sm ml-3 flex items-center">
+                            <i class="fa-solid fa-ticket mr-2"></i> 쿠폰 리스트
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Stats Summary (Optional) -->

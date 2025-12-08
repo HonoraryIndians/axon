@@ -102,8 +102,8 @@
                             <input type="text" id="activityName" class="form-input" placeholder="예: 선착순 100명 커피 쿠폰 증정">
                         </div>
 
-                        <!-- Image Upload -->
-                        <div>
+                        <!-- Image Upload (Visible only for FCFS) -->
+                        <div id="image-upload-section">
                             <label class="form-label">대표 이미지</label>
                             <div class="flex flex-col gap-4">
                                 <div
@@ -355,14 +355,16 @@
                 </div>
 
 
-                <!-- Product Selection -->
+                <!-- 4. Product/Coupon Selection -->
                 <div class="section-card">
                     <h2 class="section-title">
                         <span
                             class="bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">4</span>
-                        상품 정보
+                        <span id="section-4-title">상품 정보</span>
                     </h2>
-                    <div class="space-y-5">
+
+                    <!-- Product Info Section -->
+                    <div id="product-info-container" class="space-y-5">
                         <div>
                             <label class="form-label">연동 상품</label>
                             <div class="flex gap-2 mb-2">
@@ -411,11 +413,34 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Coupon Info Section (Hidden by default) -->
+                    <div id="coupon-info-container" class="space-y-5 hidden">
+                        <div>
+                            <label class="form-label">연동 쿠폰</label>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="selectedCouponName"
+                                    class="form-input bg-gray-50 cursor-not-allowed flex-1" placeholder="쿠폰을 선택해주세요"
+                                    readonly>
+                                <input type="hidden" id="selectedCouponId">
+                                <!-- Will be mapped to productId on submit -->
+                                <button type="button" id="openCouponSearchBtn"
+                                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shrink-0">
+                                    쿠폰 검색
+                                </button>
+                            </div>
+                            <div class="mt-2 text-right">
+                                <a href="/admin/coupons" target="_blank" class="text-sm text-blue-600 hover:underline">
+                                    <i class="fa-solid fa-plus-circle mr-1"></i> 새 쿠폰 만들기
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Right Column: Preview (4 cols) -->
-            <div class="lg:col-span-4">
+            <div class="lg:col-span-4" id="preview-section">
                 <div class="sticky top-8 space-y-8">
 
                     <!-- Preview Header -->
@@ -522,6 +547,38 @@
                     <ul id="productSearchResults" class="divide-y divide-gray-100">
                         <!-- Search Results will be populated here -->
                         <li class="p-4 text-center text-gray-500 text-sm">검색 결과가 없습니다.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coupon Search Modal -->
+    <div id="couponSearchModal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-purple-50">
+                <h3 class="font-bold text-lg text-purple-900">쿠폰 검색</h3>
+                <button type="button" id="closeCouponSearchBtn" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <!-- Search Filter Input -->
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="couponSearchInput" class="form-input" placeholder="쿠폰 이름을 검색하세요">
+                    <button type="button" id="couponSearchActionBtn"
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                        검색
+                    </button>
+                </div>
+
+                <div class="p-3 bg-gray-50 rounded text-sm text-gray-600 mb-4">
+                    <i class="fa-solid fa-info-circle mr-1"></i> 목록에서 연결할 쿠폰을 선택해주세요.
+                </div>
+                <div class="h-64 overflow-y-auto border border-gray-100 rounded-lg">
+                    <ul id="couponSearchResults" class="divide-y divide-gray-100">
+                        <!-- Dynamic Lists -->
                     </ul>
                 </div>
             </div>

@@ -2,6 +2,7 @@ package com.axon.core_service.domain.campaignactivity;
 
 import com.axon.core_service.domain.campaign.Campaign;
 import com.axon.core_service.domain.common.BaseTimeEntity;
+import com.axon.core_service.domain.coupon.Coupon;
 import com.axon.core_service.domain.dto.campaignactivity.CampaignActivityStatus;
 import com.axon.core_service.domain.dto.campaignactivity.filter.FilterDetail;
 import com.axon.core_service.domain.dto.campaignactivity.filter.converter.FilterDetailConverter;
@@ -47,6 +48,10 @@ public class CampaignActivity extends BaseTimeEntity {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coupon_id")
+    private Coupon coupon;
+
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -78,7 +83,7 @@ public class CampaignActivity extends BaseTimeEntity {
     private Integer quantity;
 
     @Column(name = "budget", precision = 12, scale = 2)
-    private BigDecimal budget;  // Activity-specific marketing budget for ROAS calculation
+    private BigDecimal budget; // Activity-specific marketing budget for ROAS calculation
 
     @Column(name = "image_url")
     private String imageUrl;
@@ -86,37 +91,40 @@ public class CampaignActivity extends BaseTimeEntity {
     /**
      * Constructs a CampaignActivity with the specified association and attributes.
      *
-     * @param campaign   the owning Campaign (may be null until associated)
-     * @param name       the activity's display name
-     * @param limitCount maximum allowed count for the activity, or {@code null} for no limit
-     * @param status     initial lifecycle status of the activity
-     * @param startDate  activity start date and time (inclusive)
-     * @param endDate    activity end date and time (inclusive)
+     * @param campaign     the owning Campaign (may be null until associated)
+     * @param name         the activity's display name
+     * @param limitCount   maximum allowed count for the activity, or {@code null}
+     *                     for no limit
+     * @param status       initial lifecycle status of the activity
+     * @param startDate    activity start date and time (inclusive)
+     * @param endDate      activity end date and time (inclusive)
      * @param activityType type categorizing the activity
-     * @param filters    list of filter rules applied to the activity (may be null or empty)
-     * @param price      product price for this activity
-     * @param quantity   available quantity
-     * @param budget     marketing budget allocated for this activity
+     * @param filters      list of filter rules applied to the activity (may be null
+     *                     or empty)
+     * @param price        product price for this activity
+     * @param quantity     available quantity
+     * @param budget       marketing budget allocated for this activity
      * @param filters      list of filter rules applied to the activity (may be null
      *                     or empty)
      */
     @Builder
     public CampaignActivity(Campaign campaign,
-                            Product product,
-                            String name,
-                            Integer limitCount,
-                            CampaignActivityStatus status,
-                            LocalDateTime startDate,
-                            LocalDateTime endDate,
-                            CampaignActivityType activityType,
-                            List<FilterDetail> filters,
-                            BigDecimal price,
-                            Integer quantity,
-                            BigDecimal budget,
-                            String imageUrl
-                            ) {
+            Product product,
+            String name,
+            Integer limitCount,
+            CampaignActivityStatus status,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            CampaignActivityType activityType,
+            List<FilterDetail> filters,
+            BigDecimal price,
+            Integer quantity,
+            BigDecimal budget,
+            String imageUrl,
+            com.axon.core_service.domain.coupon.Coupon coupon) {
         this.campaign = campaign;
         this.product = product;
+        this.coupon = coupon;
         this.name = name;
         this.limitCount = limitCount;
         this.status = status;
@@ -187,8 +195,16 @@ public class CampaignActivity extends BaseTimeEntity {
 
     public void updateProductInfo(Product product, BigDecimal price, Integer quantity) {
         this.product = product;
+        this.coupon = null; // Clear coupon if switching to product
         this.price = price;
         this.quantity = quantity;
+    }
+
+    public void updateCouponInfo(com.axon.core_service.domain.coupon.Coupon coupon) {
+        this.coupon = coupon;
+        this.product = null; // Clear product if switching to coupon
+        this.price = BigDecimal.ZERO;
+        this.quantity = 0;
     }
 
     public void updateActivityType(CampaignActivityType activityType) {

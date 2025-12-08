@@ -29,13 +29,17 @@ public class CampaignActivityMetaService {
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
-     * Retrieves the CampaignActivityMeta for the given campaign activity ID and stores it in the cache.
+     * Retrieves the CampaignActivityMeta for the given campaign activity ID and
+     * stores it in the cache.
      *
-     * Attempts to return a cached meta if present; otherwise fetches the campaign activity, derives
-     * validation-phase flags, constructs the meta, caches it (5-minute TTL), and returns it.
+     * Attempts to return a cached meta if present; otherwise fetches the campaign
+     * activity, derives
+     * validation-phase flags, constructs the meta, caches it (5-minute TTL), and
+     * returns it.
      *
      * @param campaignActivityId the campaign activity identifier
-     * @return the CampaignActivityMeta for the specified campaign activity, or `null` if the activity is not found
+     * @return the CampaignActivityMeta for the specified campaign activity, or
+     *         `null` if the activity is not found
      */
     public CampaignActivityMeta getMeta(Long campaignActivityId) {
         Objects.requireNonNull(campaignActivityId, "campaignActivityId must not be null");
@@ -59,12 +63,17 @@ public class CampaignActivityMetaService {
         List<Map<String, Object>> filters = response.filters();
         boolean hasFastValidation = false;
         boolean hasHeavyValidation = false;
-        if(filters != null) {
-            for(Map<String, Object> filter : filters) {
+        if (filters != null) {
+            for (Map<String, Object> filter : filters) {
                 String phase = (String) filter.get("phase");
-                if("FAST".equals(phase)) {hasFastValidation = true;}
-                else if("HEAVY".equals(phase)) {hasHeavyValidation = true;}
-                if(hasFastValidation && hasHeavyValidation) {break;}
+                if ("FAST".equals(phase)) {
+                    hasFastValidation = true;
+                } else if ("HEAVY".equals(phase)) {
+                    hasHeavyValidation = true;
+                }
+                if (hasFastValidation && hasHeavyValidation) {
+                    break;
+                }
             }
         }
 
@@ -79,8 +88,8 @@ public class CampaignActivityMetaService {
                 hasFastValidation,
                 hasHeavyValidation,
                 response.productId(),
-                response.activityType()
-        );
+                response.couponId(),
+                response.activityType());
 
         try {
             redisTemplate.opsForValue()
@@ -95,18 +104,22 @@ public class CampaignActivityMetaService {
     /**
      * Remove the cached CampaignActivityMeta for the given campaign activity ID.
      *
-     * @param campaignActivityId the campaign activity identifier whose cached meta will be removed
+     * @param campaignActivityId the campaign activity identifier whose cached meta
+     *                           will be removed
      */
     public void evictMeta(Long campaignActivityId) {
         redisTemplate.delete(metaCacheKey(campaignActivityId));
     }
 
     /**
-     * Fetches the campaign activity summary from the external campaign API for the given campaign activity ID.
+     * Fetches the campaign activity summary from the external campaign API for the
+     * given campaign activity ID.
      *
      * @param campaignActivityId the campaign activity identifier to retrieve
-     * @return the CampaignActivitySummaryResponse for the requested ID, or `null` if the external service returns 404 (not found)
-     * @throws IllegalStateException if the request fails for reasons other than a 404 Not Found
+     * @return the CampaignActivitySummaryResponse for the requested ID, or `null`
+     *         if the external service returns 404 (not found)
+     * @throws IllegalStateException if the request fails for reasons other than a
+     *                               404 Not Found
      */
     private CampaignActivitySummaryResponse fetchCampaignActivity(Long campaignActivityId) {
         try {

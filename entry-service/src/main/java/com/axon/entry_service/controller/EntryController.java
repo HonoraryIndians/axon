@@ -4,6 +4,7 @@ import com.axon.entry_service.domain.CampaignActivityMeta;
 import com.axon.entry_service.domain.CampaignActivityStatus;
 import com.axon.entry_service.domain.ReservationResult;
 import com.axon.entry_service.domain.ReservationStatus;
+import com.axon.entry_service.dto.CouponRequestDto;
 import com.axon.entry_service.dto.EntryRequestDto;
 import com.axon.entry_service.dto.Payment.PaymentConfirmationResponse;
 import com.axon.entry_service.dto.Payment.ReservationTokenPayload;
@@ -27,13 +28,68 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/entry/api/v1/entries")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")  // Same-origin via Ingress, wildcard for flexibility
+@CrossOrigin(origins = "*") // Same-origin via Ingress, wildcard for flexibility
 public class EntryController {
     private final EntryReservationService reservationService;
     private final CampaignActivityMetaService campaignActivityMetaService;
     private final CoreValidationService coreValidationService;
     private final FastValidationService fastValidationService;
     private final ReservationTokenService reservationTokenService;
+    private final CouponEntryService couponEntryService;
+
+    @PostMapping("/coupon")
+    public ResponseEntity<?> issueCoupon(@RequestBody EntryRequestDto requestDto,
+            @RequestHeader("Authorization") String token,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        long campaignActivityId = requestDto.getCampaignActivityId();
+        long userId = Long.parseLong(userDetails.getUsername());
+        CampaignActivityMeta meta = campaignActivityMetaService.getMeta(campaignActivityId);
+        if (meta == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        if (!meta.isParticipatableTime(Instant.now())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(PaymentConfirmationResponse.failure(ReservationResult.error(), "쿠폰 발급 기간이 아닙니다."));
+        }
+
+        if (meta.status() != CampaignActivityStatus.ACTIVE) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(PaymentConfirmationResponse.failure(ReservationResult.error(), "해당 쿠폰은 발급 대상이 아닙니다."));
+        }
+
+        // 빠른 검증 (Redis)
+        if (meta.hasFastValidation()) {
+            try {
+                fastValidationService.fastValidation(userId, meta);
+            } catch (FastValidationException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(PaymentConfirmationResponse.failure(ReservationResult.error(), e.getMessage()));
+            }
+        }
+        // 무거운 검증 (Core API)
+        if (meta.hasHeavyValidation()) {
+            ValidationResponse response = coreValidationService.isEligible(token, campaignActivityId);
+            if (!response.isEligible()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                        PaymentConfirmationResponse.failure(ReservationResult.error(), response.getErrorMessage()));
+            }
+        }
+
+        // 상품(쿠폰) 정보 일치 여부 검증
+        if (meta.couponId() != null && !meta.couponId().equals(requestDto.getProductId())) {
+            log.warn("요청 중에 쿠폰 정보가 일치하지 않는 요청이 있습니다. Meta CouponId {} || Request ProductId {}", meta.couponId(),
+                    requestDto.getProductId());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(PaymentConfirmationResponse.failure(ReservationResult.error(), "쿠폰 정보가 일치하지 않습니다."));
+        }
+
+        CouponRequestDto payload = new CouponRequestDto(userId, meta.id(), meta.couponId(), meta.campaignActivityType());
+
+        // 쿠폰 발급 이벤트 발행 (Kafka)
+        couponEntryService.publishCouponIssue(payload);
+
+        return ResponseEntity.ok(PaymentConfirmationResponse.success("COUPON_ISSUED"));
+    }
 
     /**
      * Processes an entry creation request: validates eligibility, attempts an
@@ -148,4 +204,5 @@ public class EntryController {
         String reservationToken = reservationTokenService.issueToken(tokenPayload);
         return ResponseEntity.ok(PaymentConfirmationResponse.success(reservationToken));
     }
+
 }
