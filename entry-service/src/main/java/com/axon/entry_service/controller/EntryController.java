@@ -96,8 +96,8 @@ public class EntryController {
             log.info("재결제 시나리오: 기존 1차 토큰 재사용, userId={}, campaignActivityId={}, token={}...", userId,
                     campaignActivityId, deterministicToken.substring(0, Math.min(10, deterministicToken.length())));
 
-            // 검증 스킵, 기존 토큰 그대로 반환
-            return ResponseEntity.ok(PaymentConfirmationResponse.success(deterministicToken));
+            // 검증 스킵, 기존 토큰 그대로 반환 (isRetry=true)
+            return ResponseEntity.ok(PaymentConfirmationResponse.successWithRetry(deterministicToken));
         }
 
         // 빠른 검증

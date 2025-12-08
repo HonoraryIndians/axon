@@ -73,6 +73,7 @@ const fcfsSuccessCount = new Counter('fcfs_success_count');
 const fcfsSoldOutCount = new Counter('fcfs_sold_out_count');
 const fcfsConflictCount = new Counter('fcfs_conflict_count');
 const fcfsErrorCount = new Counter('fcfs_error_count');
+const fcfsRetryCount = new Counter('fcfs_retry_count');  // 재결제 시나리오
 
 const behaviorEventSuccessRate = new Rate('behavior_event_success_rate');
 const behaviorEventCount = new Counter('behavior_event_count');
@@ -407,7 +408,7 @@ function reserveWithJWT(data, userId) {
     }
   );
 
-  handleReservationResponse(res);
+  handleReservationResponse(res, userId);
 
   if (res.status === 200) {
       try {
@@ -515,11 +516,28 @@ function confirmPayment(data, userId, reservationToken) {
 // =========================================================================
 // 예약 응답 처리
 // =========================================================================
-function handleReservationResponse(res) {
+function handleReservationResponse(res, userId) {
   if (res.status === 200) {
     // ✅ 성공 (reservationToken 받음)
-    fcfsSuccessRate.add(1);
-    fcfsSuccessCount.add(1);
+    // isRetry 필드 확인해서 신규/재시도 구분
+    let isRetry = false;
+    try {
+      const json = res.json();
+      isRetry = json.isRetry === true;
+    } catch(e) {
+      // 파싱 실패 시 신규로 간주
+    }
+
+    if (isRetry) {
+      // 재결제 시나리오 (토큰 재사용)
+      fcfsRetryCount.add(1);
+      // console.log(`🔄 User ${userId}: Retry with existing token`);
+    } else {
+      // 신규 예약 성공
+      fcfsSuccessRate.add(1);
+      fcfsSuccessCount.add(1);
+      // console.log(`✅ User ${userId}: New reservation success`);
+    }
 
   } else if (res.status === 410) {
     // 마감 (SOLD_OUT)
@@ -555,8 +573,9 @@ export function teardown(data) {
   console.log('='.repeat(70));
   console.log('📊 Final Metrics Summary:');
   console.log('   - Check k6 output above for detailed metrics');
-  console.log('   - Expected: fcfs_success_count ≈ 100 (exactly!)');
-  console.log('   - Expected: fcfs_conflict_count = 0 (no duplicates!)');
+  console.log('   - fcfs_success_count: 신규 예약 성공 (should = limitCount)');
+  console.log('   - fcfs_retry_count: 재결제 시나리오 (토큰 재사용)');
+  console.log('   - fcfs_conflict_count: 중복 참여 (should = 0)');
   console.log('='.repeat(70));
   console.log('🔍 Next Steps:');
   console.log('   1. Verify Redis counter:');

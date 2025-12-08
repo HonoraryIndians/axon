@@ -14,12 +14,23 @@ public class PaymentConfirmationResponse {
     private ReservationResult reservationResult;
     private String reservationToken;
     private String reason;
+    private Boolean isRetry;  // 재결제 시나리오 여부
 
     public static PaymentConfirmationResponse success(String reservationToken) {
         return PaymentConfirmationResponse.builder()
                 .reservationResult(ReservationResult.success(null))
                 .reservationToken(reservationToken)
                 .reason(null)
+                .isRetry(false)  // 신규 예약
+                .build();
+    }
+
+    public static PaymentConfirmationResponse successWithRetry(String reservationToken) {
+        return PaymentConfirmationResponse.builder()
+                .reservationResult(ReservationResult.success(null))
+                .reservationToken(reservationToken)
+                .reason(null)
+                .isRetry(true)  // 재결제 시나리오
                 .build();
     }
 

@@ -108,18 +108,40 @@ echo "🧹 Step 1/5: Redis 초기화..."
 
 if [ "$REDIS_MODE" == "docker" ]; then
     echo "   Docker 모드로 실행..."
+
+    # 캠페인 관련 키 삭제 (meta 포함!)
     docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" DEL \
       "campaign:${ACTIVITY_ID}:users" \
       "campaign:${ACTIVITY_ID}:counter" \
+      "campaign:${ACTIVITY_ID}:meta" \
       > /dev/null 2>&1
+
+    # 토큰 키 삭제 (SCAN + DEL)
+    echo "   토큰 키 정리 중..."
+    docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" --scan --pattern "RESERVATION_TOKEN:*" | \
+      xargs -r -I{} docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" DEL {} > /dev/null 2>&1 || true
+
+    docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" --scan --pattern "PAYMENT_APPROVED_TOKEN:*" | \
+      xargs -r -I{} docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" DEL {} > /dev/null 2>&1 || true
 else
     echo "   K8s 모드로 실행..."
     # Pod 이름 동적 조회
     REDIS_POD=$(kubectl get pods -l app.kubernetes.io/name=redis -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "axon-redis-master-0")
+
+    # 캠페인 관련 키 삭제 (meta 포함!)
     kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" DEL \
       "campaign:${ACTIVITY_ID}:users" \
       "campaign:${ACTIVITY_ID}:counter" \
+      "campaign:${ACTIVITY_ID}:meta" \
       > /dev/null 2>&1
+
+    # 토큰 키 삭제 (SCAN + DEL)
+    echo "   토큰 키 정리 중..."
+    kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" --scan --pattern "RESERVATION_TOKEN:*" | \
+      xargs -r -I{} kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" DEL {} > /dev/null 2>&1 || true
+
+    kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" --scan --pattern "PAYMENT_APPROVED_TOKEN:*" | \
+      xargs -r -I{} kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" DEL {} > /dev/null 2>&1 || true
 fi
 
 echo "   ✅ Redis 초기화 완료"
@@ -137,7 +159,7 @@ MYSQL_CMD_BASE="mysql -h$DB_HOST -P$DB_PORT -u$DB_USER $DB_NAME"
 # 기존 테스트 유저 삭제
 $MYSQL_CMD_BASE -e "DELETE FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END;" 2>/dev/null
 
-# BRONZE 유저 생성 (60%)
+# BRONZE 유저 생성 (
 if [ $BRONZE_COUNT -gt 0 ]; then
   echo "   생성 중: BRONZE $BRONZE_COUNT 명..."
   $MYSQL_CMD_BASE << EOF

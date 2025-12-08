@@ -43,7 +43,7 @@ public class BackendEventPublisher {
         // 1. Publish to Behavior Events (Elasticsearch)
         UserBehaviorEventMessage message = adapter.toApprovedEvent(event);
 
-        kafkaTemplate.send(KafkaTopics.EVENT_RAW, message).whenComplete((result, ex) -> {
+        kafkaTemplate.send(KafkaTopics.BEHAVIOR_EVENT, message).whenComplete((result, ex) -> {
             if (ex != null) {
                 log.error("Failed to publish backend APPROVED event for userId={} activityId={}",
                         event.userId(), event.campaignActivityId(), ex);

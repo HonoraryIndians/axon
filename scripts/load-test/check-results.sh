@@ -15,13 +15,13 @@ echo ""
 
 # 1. Redis 카운터 (FCFS 성공 카운트)
 echo "🔴 Redis Counter (FCFS success count):"
-REDIS_COUNT=$(kubectl exec axon-redis-master-0 -- redis-cli -a axon1234 GET "campaignActivity:${ACTIVITY_ID}:counter" 2>/dev/null | tr -d '\r\n')
+REDIS_COUNT=$(kubectl exec axon-redis-master-0 -- redis-cli -a axon1234 GET "campaign:${ACTIVITY_ID}:counter" 2>/dev/null | tr -d '\r\n')
 echo "   $REDIS_COUNT"
 
 # 2. Redis Set 크기 (중복 없는 참여자 수)
 echo ""
 echo "🔴 Redis Set Size (unique participants):"
-REDIS_SET_SIZE=$(kubectl exec axon-redis-master-0 -- redis-cli -a axon1234 SCARD "campaignActivity:${ACTIVITY_ID}:participants" 2>/dev/null | tr -d '\r\n')
+REDIS_SET_SIZE=$(kubectl exec axon-redis-master-0 -- redis-cli -a axon1234 SCARD "campaign:${ACTIVITY_ID}:users" 2>/dev/null | tr -d '\r\n')
 echo "   $REDIS_SET_SIZE"
 
 # 3. DB Entry 카운트 (실제 저장된 수)
