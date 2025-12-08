@@ -67,6 +67,7 @@ public class TestReservationController {
                                 true, // hasFastValidation
                                 false, // hasHeavyValidation
                                 request.getProductId(), // productId
+                                null, // couponId (test only)
                                 CampaignActivityType.FIRST_COME_FIRST_SERVE // campaignActivityType
                 );
 

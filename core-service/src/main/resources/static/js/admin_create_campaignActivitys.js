@@ -71,6 +71,157 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    // --- Dynamic Form Logic ---
+    const imageUploadSection = document.getElementById("image-upload-section");
+    const previewSection = document.getElementById("preview-section"); // From HTML update
+
+    // Product vs Coupon Containers
+    const productInfoContainer = document.getElementById("product-info-container");
+    const couponInfoContainer = document.getElementById("coupon-info-container");
+    const section4Title = document.getElementById("section-4-title");
+
+    // Elements to Clear
+    const productInputs = [
+        document.getElementById("selectedProductId"),
+        document.getElementById("selectedProductName"),
+        document.getElementById("salePrice"),
+        document.getElementById("saleQuantity")
+    ];
+    const couponInputs = [
+        document.getElementById("selectedCouponId"),
+        document.getElementById("selectedCouponName")
+    ];
+
+    function toggleActivityTypeUI(type) {
+        if (type === "COUPON") {
+            // Show Coupon UI
+            if (imageUploadSection) imageUploadSection.classList.add("hidden");
+            if (previewSection) previewSection.classList.add("hidden");
+
+            productInfoContainer.classList.add("hidden");
+            couponInfoContainer.classList.remove("hidden");
+            section4Title.textContent = "쿠폰 정보";
+
+            // Clear Product Info
+            productInputs.forEach(input => {
+                if (input) {
+                    input.value = "";
+                    if (input.tagName === 'SPAN') input.textContent = "-";
+                }
+            });
+            document.getElementById('productStock').textContent = '-';
+            document.getElementById('productOriginalPrice').textContent = '-';
+            document.getElementById('productInfo').classList.add('hidden');
+
+        } else {
+            // Show FCFS/Default UI
+            if (imageUploadSection) imageUploadSection.classList.remove("hidden");
+            if (previewSection) previewSection.classList.remove("hidden");
+
+            couponInfoContainer.classList.add("hidden");
+            productInfoContainer.classList.remove("hidden");
+            section4Title.textContent = "상품 정보";
+
+            // Clear Coupon Info
+            couponInputs.forEach(input => {
+                if (input) input.value = "";
+            });
+        }
+    }
+
+    // --- Coupon Search Logic ---
+    const couponSearchModal = document.getElementById("couponSearchModal");
+    const openCouponSearchBtn = document.getElementById("openCouponSearchBtn");
+    const closeCouponSearchBtn = document.getElementById("closeCouponSearchBtn");
+    const couponSearchResults = document.getElementById("couponSearchResults");
+    const couponSearchInput = document.getElementById("couponSearchInput");
+    const couponSearchActionBtn = document.getElementById("couponSearchActionBtn");
+
+    let loadedCoupons = []; // Cache loaded coupons
+
+    if (openCouponSearchBtn) {
+        openCouponSearchBtn.addEventListener("click", () => {
+            couponSearchModal.classList.remove("hidden");
+            if (couponSearchInput) couponSearchInput.value = ''; // Clear search
+            fetchAndRenderCoupons();
+        });
+    }
+
+    if (closeCouponSearchBtn) {
+        closeCouponSearchBtn.addEventListener("click", () => {
+            couponSearchModal.classList.add("hidden");
+        });
+    }
+
+    // Search Action
+    if (couponSearchActionBtn && couponSearchInput) {
+        couponSearchActionBtn.addEventListener("click", () => {
+            renderCouponList(couponSearchInput.value);
+        });
+        couponSearchInput.addEventListener("keyup", (e) => {
+            if (e.key === "Enter") {
+                renderCouponList(couponSearchInput.value);
+            }
+        });
+    }
+
+    // Close on background click
+    if (couponSearchModal) {
+        couponSearchModal.addEventListener('click', (e) => {
+            if (e.target === couponSearchModal) {
+                couponSearchModal.classList.add('hidden');
+            }
+        });
+    }
+
+    function fetchAndRenderCoupons() {
+        fetch('/api/coupons')
+            .then(res => res.json())
+            .then(coupons => {
+                loadedCoupons = coupons;
+                renderCouponList();
+            })
+            .catch(err => {
+                console.error("Error fetching coupons:", err);
+                couponSearchResults.innerHTML = '<li class="p-4 text-center text-red-500">쿠폰 목록을 불러오지 못했습니다.</li>';
+            });
+    }
+
+    function renderCouponList(query = "") {
+        couponSearchResults.innerHTML = '';
+        const filtered = loadedCoupons.filter(c => c.couponName.toLowerCase().includes(query.toLowerCase()));
+
+        if (filtered.length === 0) {
+            couponSearchResults.innerHTML = '<li class="p-4 text-center text-gray-500">검색 결과가 없습니다.</li>';
+            return;
+        }
+
+        filtered.forEach(coupon => {
+            const li = document.createElement('li');
+            li.className = 'p-4 hover:bg-gray-50 cursor-pointer flex justify-between items-center transition-colors';
+
+            let benefit = '';
+            if (coupon.discountAmount) benefit = `${Number(coupon.discountAmount).toLocaleString()}원 할인`;
+            else if (coupon.discountRate) benefit = `${coupon.discountRate}% 할인`;
+
+            li.innerHTML = `
+                <div>
+                    <div class="font-medium text-gray-900">${coupon.couponName}</div>
+                    <div class="text-xs text-gray-500">${benefit} | ${new Date(coupon.startDate).toLocaleDateString()} ~ ${new Date(coupon.endDate).toLocaleDateString()}</div>
+                </div>
+                <button type="button" class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-bold">선택</button>
+            `;
+
+            li.addEventListener('click', () => {
+                document.getElementById('selectedCouponId').value = coupon.id;
+                document.getElementById('selectedCouponName').value = coupon.couponName;
+                couponSearchModal.classList.add('hidden');
+            });
+
+            couponSearchResults.appendChild(li);
+        });
+    }
+
     // --- Basic Logic ---
     function loadCampaigns() {
         fetch("/api/v1/campaign")
@@ -94,7 +245,10 @@ document.addEventListener("DOMContentLoaded", () => {
         button.addEventListener("click", () => {
             selectableTypes.forEach(btn => btn.classList.remove("selected"));
             button.classList.add("selected");
-            activityTypeInput.value = button.dataset.type;
+            const type = button.dataset.type;
+            activityTypeInput.value = type;
+
+            toggleActivityTypeUI(type); // Trigger toggle logic
             updateBasicPreview();
         });
     });
@@ -141,6 +295,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     function updateBasicPreview() {
+        if (inputs.type?.value === 'COUPON') return; // Skip preview update for Coupon
+
         const name = inputs.name?.value || "활동 이름";
         const limit = inputs.limit?.value ? `${inputs.limit.value}명` : "00명";
         const type = inputs.type?.value || "FIRST_COME_FIRST_SERVE";
@@ -253,9 +409,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const startDate = document.getElementById("startDate").value;
             const endDate = document.getElementById("endDate").value;
             const limitCount = document.getElementById("limitCountInput").value;
+
+            // Product or Coupon Data handling
             const productId = document.getElementById("selectedProductId").value;
             const salePrice = document.getElementById("salePrice").value;
             const saleQuantity = document.getElementById("saleQuantity").value;
+            const couponId = document.getElementById("selectedCouponId").value;
+
             const budget = document.getElementById("budgetInput").value;
 
             if (!campaignId || !name || !type || !startDate || !endDate || !limitCount) {
@@ -268,15 +428,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // Product Validation
-            if (productId) {
-                if (!salePrice || parseInt(salePrice) < 0) {
-                    alert("상품 판매 가격은 0원 이상이어야 합니다.");
+            // Validation Per Type
+            let finalProductId = null;
+            let finalCouponId = null;
+            let finalPrice = 0;
+            let finalQuantity = 0;
+
+            if (type === 'COUPON') {
+                if (!couponId) {
+                    alert("연동할 쿠폰을 선택해주세요.");
                     return;
                 }
-                if (!saleQuantity || parseInt(saleQuantity) <= 0) {
-                    alert("상품 판매 수량은 1개 이상이어야 합니다.");
-                    return;
+                finalCouponId = parseInt(couponId);
+                // Price and Quantity are 0 for types other than FCFS usually, or handled differently.
+                // Request mandates 0
+            } else {
+                if (productId) {
+                    finalProductId = parseInt(productId);
+                    if (!salePrice || parseInt(salePrice) < 0) {
+                        alert("상품 판매 가격은 0원 이상이어야 합니다.");
+                        return;
+                    }
+                    if (!saleQuantity || parseInt(saleQuantity) <= 0) {
+                        alert("상품 판매 수량은 1개 이상이어야 합니다.");
+                        return;
+                    }
+                    finalPrice = parseInt(salePrice);
+                    finalQuantity = parseInt(saleQuantity);
                 }
             }
 
@@ -292,10 +470,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 endDate: endDate,
                 limitCount: parseInt(limitCount),
                 filters: filters,
-                imageUrl: uploadedImageUrl,
-                productId: productId ? parseInt(productId) : null,
-                price: salePrice ? parseInt(salePrice) : 0,
-                quantity: saleQuantity ? parseInt(saleQuantity) : 0,
+                imageUrl: (type === 'COUPON') ? null : uploadedImageUrl, // No image for coupon
+                productId: finalProductId,
+                couponId: finalCouponId,
+                price: finalPrice,
+                quantity: finalQuantity,
                 budget: budget ? parseInt(budget) : 0,
                 status: "DRAFT"
             };

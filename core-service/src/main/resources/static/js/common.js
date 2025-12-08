@@ -143,4 +143,7 @@ const common = (() => {
     };
 })();
 
+// Expose to window
+window.common = common;
+
 document.addEventListener('DOMContentLoaded', common.initTooltips);
