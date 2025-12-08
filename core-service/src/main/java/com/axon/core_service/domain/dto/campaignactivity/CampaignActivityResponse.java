@@ -15,6 +15,7 @@ public class CampaignActivityResponse {
     private final Long id;
     private final Long campaignId;
     private final Long productId;
+    private final Long couponId;
     private final String name;
     private final Integer limitCount;
     private final CampaignActivityStatus status;
@@ -27,6 +28,7 @@ public class CampaignActivityResponse {
     private final String imageUrl;
 
     private final String productName;
+    private final String couponName;
     private final Integer originalPrice;
     private final Integer price;
     private final Integer quantity;
@@ -60,8 +62,11 @@ public class CampaignActivityResponse {
                 .id(campaignActivity.getId())
                 .campaignId(campaignActivity.getCampaignId())
                 .productId(campaignActivity.getProductId())
+                .couponId(campaignActivity.getCoupon() != null ? campaignActivity.getCoupon().getId() : null)
                 .productName(
                         campaignActivity.getProduct() != null ? campaignActivity.getProduct().getProductName() : null)
+                .couponName(
+                        campaignActivity.getCoupon() != null ? campaignActivity.getCoupon().getCouponName() : null)
                 .originalPrice(
                         campaignActivity.getProduct() != null ? campaignActivity.getProduct().getPrice().intValue()
                                 : null)

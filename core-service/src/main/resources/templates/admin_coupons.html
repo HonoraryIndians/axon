@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+    th:replace="fragments/layout :: layout('Axon 관리자 - 쿠폰 관리', 'bg-white text-neutral-900', ~{::head/content()}, ~{::section}, 'coupons')">
+
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+        crossorigin="anonymous"></script>
+</head>
+<section class="flex flex-col h-screen bg-gray-50">
+    <div class="flex-1 flex flex-col min-w-0 bg-white">
+        <!-- Header -->
+        <div class="px-8 py-6 border-b border-gray-200 bg-white">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <a href="/admin/campaigns" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa-solid fa-arrow-left text-xl"></i>
+                    </a>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 mb-1">쿠폰 관리</h1>
+                        <p class="text-sm text-gray-500">생성된 쿠폰 목록을 조회하고 관리합니다.</p>
+                    </div>
+                </div>
+                <button id="create-coupon-btn"
+                    class="btn-primary text-sm px-4 py-2 rounded bg-black text-white hover:bg-gray-800 transition-colors shadow-sm">
+                    <i class="fa-solid fa-plus mr-2"></i> 새 쿠폰 만들기
+                </button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-8">
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 font-medium">
+                        <tr>
+                            <th class="py-3 px-4">쿠폰 이름</th>
+                            <th class="py-3 px-4">유형</th>
+                            <th class="py-3 px-4">할인/혜택</th>
+                            <th class="py-3 px-4">유효기간</th>
+                            <th class="py-3 px-4">생성일</th>
+                            <th class="py-3 px-4 w-10"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="coupon-list-body" class="divide-y divide-gray-100">
+                        <!-- Placeholder Row -->
+                        <tr>
+                            <td colspan="7" class="py-10 text-center text-gray-400">
+                                등록된 쿠폰이 없습니다.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Coupon Creation/Edit Modal -->
+            <div id="create-coupon-modal"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <h3 id="modal-title" class="font-bold text-lg text-gray-800">새 쿠폰 만들기</h3>
+                        <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <form id="create-coupon-form">
+                            <input type="hidden" id="couponId" value="">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">쿠폰 이름 <span
+                                        class="text-red-500">*</span></label>
+                                <input type="text" id="couponName"
+                                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                    placeholder="예: 봄맞이 특별 할인">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div id="discount-amount-group">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">할인 금액 (원)</label>
+                                    <input type="number" id="discountAmount"
+                                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                        placeholder="예: 5000">
+                                </div>
+                                <div id="discount-rate-group">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">할인율 (%)</label>
+                                    <input type="number" id="discountRate"
+                                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                        placeholder="예: 10">
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">* 할인 금액과 할인율 중 하나만 입력하세요.</p>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">최소 주문 금액 (선택)</label>
+                                <input type="number" id="minOrderAmount"
+                                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                    placeholder="예: 30000">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">적용 가능 카테고리 (선택)</label>
+                                <select id="targetCategory"
+                                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black bg-white">
+                                    <option value="">모든 상품</option>
+                                    <option value="TECH">TECH</option>
+                                    <option value="FASHION">FASHION</option>
+                                    <option value="HOME">HOME</option>
+                                    <option value="FOOD">FOOD</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">시작 날짜 <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="datetime-local" id="startDate"
+                                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">종료 날짜 <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="datetime-local" id="endDate"
+                                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+                        <button id="cancel-create-btn"
+                            class="px-4 py-2 bg-white border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">취소</button>
+                        <button id="save-coupon-btn"
+                            class="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800">생성하기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="/js/admin_coupons.js"></script>
+</section>
+
+</html>
