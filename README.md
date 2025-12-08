@@ -90,7 +90,7 @@ graph TD
 - Thymeleaf, Chart.js, TailwindCSS, Vanilla JS
 
 **AI/ML**:
-- Gemini 1.5 Pro (Marketing Intelligence)
+- Gemini 2.0 Flash (Marketing Intelligence)
 
 ---
 
@@ -366,7 +366,7 @@ graph TD
 - Thymeleaf, Chart.js, TailwindCSS, Vanilla JS
 
 **AI/ML**:
-- Gemini 1.5 Pro
+- Gemini 2.0 Flash
 
 ---
 
