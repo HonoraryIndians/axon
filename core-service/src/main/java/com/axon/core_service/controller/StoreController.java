@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +32,11 @@ public class StoreController {
 
     private final CampaignActivityRepository campaignActivityRepository;
     private final ProductRepository productRepository;
+    private final com.axon.core_service.repository.UserCouponRepository userCouponRepository;
+    private final com.axon.core_service.config.auth.JwtTokenProvider jwtTokenProvider;
+
+    @org.springframework.beans.factory.annotation.Value("${axon.entry-service-url}")
+    private String entryServiceUrl;
 
     @GetMapping("/mainshop")
     public String mainshop(@RequestParam(required = false) String category, Model model) {
@@ -131,9 +138,11 @@ public class StoreController {
     }
 
     @GetMapping("/events")
-    public String getCampaignActivities(Model model) {
+    public String getCampaignActivities(
+            @org.springframework.web.bind.annotation.CookieValue(value = "accessToken", required = false) String accessToken,
+            Model model) {
         // Fetch real campaign activities (skip broken data)
-        List<CampaignActivityDisplayDto> realActivities = campaignActivityRepository
+        List<CampaignActivityDisplayDto> allActivities = campaignActivityRepository
                 .findAllByStatus(com.axon.core_service.domain.dto.campaignactivity.CampaignActivityStatus.ACTIVE)
                 .stream()
                 .map(activity -> {
@@ -147,12 +156,44 @@ public class StoreController {
                 .filter(dto -> dto != null) // Remove nulls
                 .collect(Collectors.toList());
 
-        // Separate FCFS and Raffle activities
-        model.addAttribute("fcfsCampaignActivities", realActivities);
+        // Separate FCFS and Coupon activities
+        List<CampaignActivityDisplayDto> fcfsActivities = allActivities.stream()
+                .filter(a -> a.getActivityType() != com.axon.messaging.CampaignActivityType.COUPON)
+                .collect(Collectors.toList());
 
-        // Keep mocks for other sections if empty or just empty them
-        model.addAttribute("raffleCampaignActivities", new ArrayList<>());
-        model.addAttribute("coupons", new ArrayList<>());
+        List<CampaignActivityDisplayDto> couponActivities = allActivities.stream()
+                .filter(a -> a.getActivityType() == com.axon.messaging.CampaignActivityType.COUPON)
+                .collect(Collectors.toList());
+
+        // Check for issued coupons (if user is logged in)
+        List<Long> issuedCouponIds = new ArrayList<>();
+        if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
+            try {
+                org.springframework.security.core.Authentication auth = jwtTokenProvider.getAuthentication(accessToken);
+                Object principal = auth.getPrincipal();
+
+                Long userId = null;
+                if (principal instanceof com.axon.core_service.domain.user.CustomOAuth2User) {
+                    userId = ((com.axon.core_service.domain.user.CustomOAuth2User) principal).getUserId();
+                } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                    // Fallback if typical UserDetails
+                    userId = Long.parseLong(
+                            ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername());
+                }
+
+                if (userId != null) {
+                    issuedCouponIds = userCouponRepository.findAllCouponIdsByUserId(userId);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch issued coupons from access token", e);
+            }
+        }
+
+        model.addAttribute("fcfsCampaignActivities", fcfsActivities);
+        model.addAttribute("raffleCampaignActivities", new ArrayList<>()); // Placeholder for now
+        model.addAttribute("coupons", couponActivities);
+        model.addAttribute("entryServiceUrl", entryServiceUrl);
+        model.addAttribute("issuedCouponIds", issuedCouponIds);
 
         return "campaign-activities";
     }
@@ -184,10 +225,24 @@ public class StoreController {
                 : activity.getPrice();
         String originalPriceStr = currency.format(originalPrice);
 
+        // Coupon Mapping
+        String couponName = null;
+        BigDecimal couponDiscountAmount = null;
+        Integer couponDiscountRate = null;
+
+        if (activity.getActivityType() == com.axon.messaging.CampaignActivityType.COUPON
+                && activity.getCoupon() != null) {
+            couponName = activity.getCoupon().getCouponName();
+            couponDiscountAmount = activity.getCoupon().getDiscountAmount();
+            couponDiscountRate = activity.getCoupon().getDiscountRate();
+        }
+
         return CampaignActivityDisplayDto.builder()
                 .id(activity.getId())
                 .title(activity.getName())
-                .description("선착순 한정 판매") // Generic description
+                .description(activity.getActivityType() == com.axon.messaging.CampaignActivityType.COUPON
+                        ? "쿠폰 다운로드 이벤트"
+                        : "선착순 한정 판매")
                 .price(priceStr)
                 .originalPrice(originalPriceStr)
                 .limitCount(activity.getLimitCount() != null ? activity.getLimitCount() : 0)
@@ -197,6 +252,10 @@ public class StoreController {
                 .filters(activity.getFilters())
                 .activityType(activity.getActivityType())
                 .productId(activity.getProductId())
+                .couponId(activity.getCoupon() != null ? activity.getCoupon().getId() : null)
+                .couponName(couponName)
+                .couponDiscountAmount(couponDiscountAmount)
+                .couponDiscountRate(couponDiscountRate)
                 .build();
     }
 
@@ -215,6 +274,12 @@ public class StoreController {
         private List<FilterDetail> filters;
         private com.axon.messaging.CampaignActivityType activityType;
         private Long productId;
+        private Long couponId;
+
+        // Coupon specific fields
+        private String couponName;
+        private BigDecimal couponDiscountAmount;
+        private Integer couponDiscountRate;
     }
 
     @Getter

@@ -20,7 +20,7 @@ public class CohortLtvBatchScheduler {
      *
      * 수집 기간: 전달 1일 00:00:00 ~ 이번달 1일 00:00:00.000 이전
      */
-    @Scheduled(cron = "0 */1 * * * ?")
+    @Scheduled(cron = "0 0 3 1 * ?")
     public void runMonthlyCohortLtvBatch() {
         log.info("========== Monthly Cohort LTV Batch Started ==========");
         try {

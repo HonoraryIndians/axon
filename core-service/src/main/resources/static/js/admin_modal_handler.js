@@ -73,6 +73,17 @@ window.adminModalHandler = {
 
         if (!activityDetails || !campaigns) return;
 
+        // Determine initial visibility
+        const isCouponType = activityDetails.activityType === 'COUPON';
+
+        // Fix for name mapping issues (Backend Refactor support)
+        if (isCouponType && activityDetails.couponName) {
+            activityDetails.productName = activityDetails.couponName;
+        }
+        if (isCouponType && activityDetails.couponId) {
+            activityDetails.productId = activityDetails.couponId;
+        }
+
         const modalHtml = `
             <div id="edit-modal-backdrop" class="modal-backdrop">
                 <div class="modal-content large-modal" style="max-width: 900px; width: 95%;">
@@ -103,7 +114,7 @@ window.adminModalHandler = {
                                     </div>
 
                                     <!-- Image Upload -->
-                                    <div>
+                                    <div id="edit-image-upload-section" class="${isCouponType ? 'hidden' : ''}">
                                         <label class="form-label">대표 이미지</label>
                                         <div class="flex flex-col gap-4">
                                             <div class="w-full aspect-video bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 relative group max-w-md">
@@ -278,23 +289,25 @@ window.adminModalHandler = {
                                 </div>
                             </div>
 
-                            <!-- 4. Product Info -->
+                            <!-- 4. Product/Coupon Info -->
                             <div class="section-card">
                                 <h2 class="section-title">
                                     <span class="bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">4</span>
-                                    상품 정보
+                                    <span id="edit-section-4-title">${isCouponType ? '쿠폰 정보' : '상품 정보'}</span>
                                 </h2>
-                                <div class="space-y-5">
+                                
+                                <!-- Product Info Section -->
+                                <div id="edit-product-info-container" class="space-y-5 ${isCouponType ? 'hidden' : ''}">
                                     <div>
                                         <label class="form-label">연동 상품</label>
                                         <div class="flex gap-2 mb-2">
-                                            <input type="text" id="edit-selectedProductName" class="form-input bg-gray-50 cursor-not-allowed flex-1" placeholder="상품을 선택해주세요" readonly value="${activityDetails.productName || ''}">
-                                            <input type="hidden" id="edit-selectedProductId" value="${activityDetails.productId || ''}">
+                                            <input type="text" id="edit-selectedProductName" class="form-input bg-gray-50 cursor-not-allowed flex-1" placeholder="상품을 선택해주세요" readonly value="${(!isCouponType && activityDetails.productName) ? activityDetails.productName : ''}">
+                                            <input type="hidden" id="edit-selectedProductId" value="${(!isCouponType && activityDetails.productId) ? activityDetails.productId : ''}">
                                             <button type="button" id="edit-openProductSearchBtn" class="open-product-search-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shrink-0">
                                                 상품 검색
                                             </button>
                                         </div>
-                                        <div id="edit-productInfo" class="${activityDetails.productId ? '' : 'hidden'} p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm">
+                                        <div id="edit-productInfo" class="${(!isCouponType && activityDetails.productId) ? '' : 'hidden'} p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm">
                                             <div class="flex justify-between mb-1">
                                                 <span class="text-gray-500">정상가</span>
                                                 <span class="font-medium" id="edit-productOriginalPrice">${activityDetails.originalPrice || '-'}</span>
@@ -327,6 +340,25 @@ window.adminModalHandler = {
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Coupon Info Section -->
+                                <div id="edit-coupon-info-container" class="space-y-5 ${isCouponType ? '' : 'hidden'}">
+                                    <div>
+                                        <label class="form-label">연동 쿠폰</label>
+                                        <div class="flex gap-2 mb-2">
+                                            <input type="text" id="edit-selectedCouponName" class="form-input bg-gray-50 cursor-not-allowed flex-1" placeholder="쿠폰을 선택해주세요" readonly value="${(isCouponType && activityDetails.productName) ? activityDetails.productName : ''}">
+                                            <input type="hidden" id="edit-selectedCouponId" value="${(isCouponType && activityDetails.productId) ? activityDetails.productId : ''}">
+                                            <button type="button" id="edit-openCouponSearchBtn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shrink-0">
+                                                쿠폰 검색
+                                            </button>
+                                        </div>
+                                        <div class="mt-2 text-right">
+                                            <a href="/admin/coupons" target="_blank" class="text-sm text-blue-600 hover:underline">
+                                                <i class="fa-solid fa-plus-circle mr-1"></i> 새 쿠폰 만들기
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -336,7 +368,7 @@ window.adminModalHandler = {
                     </div>
                 </div>
 
-                <!-- Product Search Modal (Nested) -->
+                <!-- Product Search Modal -->
                 <div id="edit-productSearchModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[2050]">
                     <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
                         <div class="p-4 border-b border-gray-100 flex justify-between items-center">
@@ -354,6 +386,34 @@ window.adminModalHandler = {
                             </div>
                             <div class="h-64 overflow-y-auto border border-gray-100 rounded-lg">
                                 <ul id="edit-productSearchResults" class="divide-y divide-gray-100">
+                                    <li class="p-4 text-center text-gray-500 text-sm">검색 결과가 없습니다.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coupon Search Modal -->
+                <div id="edit-couponSearchModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-[2050]">
+                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-purple-50">
+                            <h3 class="font-bold text-lg text-purple-900">쿠폰 검색</h3>
+                            <button type="button" id="edit-closeCouponSearchBtn" class="text-gray-400 hover:text-gray-600">
+                                <i class="fa-solid fa-xmark text-xl"></i>
+                            </button>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex gap-2 mb-4">
+                                <input type="text" id="edit-couponSearchInput" class="form-input" placeholder="쿠폰 이름을 검색하세요">
+                                <button type="button" id="edit-couponSearchActionBtn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                                    검색
+                                </button>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded text-sm text-gray-600 mb-4">
+                                <i class="fa-solid fa-info-circle mr-1"></i> 목록에서 연결할 쿠폰을 선택해주세요.
+                            </div>
+                            <div class="h-64 overflow-y-auto border border-gray-100 rounded-lg">
+                                <ul id="edit-couponSearchResults" class="divide-y divide-gray-100">
                                     <li class="p-4 text-center text-gray-500 text-sm">검색 결과가 없습니다.</li>
                                 </ul>
                             </div>
@@ -388,6 +448,81 @@ window.adminModalHandler = {
             document.getElementById('edit-productInfo').classList.remove('hidden');
         });
 
+        // 2-1. Coupon Search Logic
+        const couponSearchModal = document.getElementById('edit-couponSearchModal');
+        const openCouponSearchBtn = document.getElementById('edit-openCouponSearchBtn');
+        const closeCouponSearchBtn = document.getElementById('edit-closeCouponSearchBtn');
+        const couponSearchResults = document.getElementById('edit-couponSearchResults');
+        const couponSearchInput = document.getElementById('edit-couponSearchInput');
+        const couponSearchActionBtn = document.getElementById('edit-couponSearchActionBtn');
+        let loadedCoupons = [];
+
+        if (openCouponSearchBtn) {
+            openCouponSearchBtn.addEventListener('click', () => {
+                couponSearchModal.classList.remove('hidden');
+                if (couponSearchInput) couponSearchInput.value = '';
+                fetchAndRenderCoupons();
+            });
+        }
+        if (closeCouponSearchBtn) {
+            closeCouponSearchBtn.addEventListener('click', () => couponSearchModal.classList.add('hidden'));
+        }
+
+        function fetchAndRenderCoupons() {
+            fetch('/api/coupons')
+                .then(res => res.json())
+                .then(coupons => {
+                    loadedCoupons = coupons;
+                    renderCouponList();
+                })
+                .catch(err => {
+                    console.error("Error fetching coupons:", err);
+                    couponSearchResults.innerHTML = '<li class="p-4 text-center text-red-500">쿠폰 목록을 불러오지 못했습니다.</li>';
+                });
+        }
+
+        function renderCouponList(query = "") {
+            couponSearchResults.innerHTML = '';
+            const filtered = loadedCoupons.filter(c => c.couponName.toLowerCase().includes(query.toLowerCase()));
+
+            if (filtered.length === 0) {
+                couponSearchResults.innerHTML = '<li class="p-4 text-center text-gray-500">검색 결과가 없습니다.</li>';
+                return;
+            }
+
+            filtered.forEach(coupon => {
+                const li = document.createElement('li');
+                li.className = 'p-4 hover:bg-gray-50 cursor-pointer flex justify-between items-center transition-colors';
+
+                let benefit = '';
+                if (coupon.discountAmount) benefit = `${Number(coupon.discountAmount).toLocaleString()}원 할인`;
+                else if (coupon.discountRate) benefit = `${coupon.discountRate}% 할인`;
+
+                li.innerHTML = `
+                    <div>
+                        <div class="font-medium text-gray-900">${coupon.couponName}</div>
+                        <div class="text-xs text-gray-500">${benefit} | ${new Date(coupon.startDate).toLocaleDateString()} ~ ${new Date(coupon.endDate).toLocaleDateString()}</div>
+                    </div>
+                    <button type="button" class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-bold">선택</button>
+                `;
+
+                li.addEventListener('click', () => {
+                    document.getElementById('edit-selectedCouponId').value = coupon.id;
+                    document.getElementById('edit-selectedCouponName').value = coupon.couponName;
+                    couponSearchModal.classList.add('hidden');
+                });
+
+                couponSearchResults.appendChild(li);
+            });
+        }
+
+        if (couponSearchActionBtn && couponSearchInput) {
+            couponSearchActionBtn.addEventListener("click", () => renderCouponList(couponSearchInput.value));
+            couponSearchInput.addEventListener("keyup", (e) => {
+                if (e.key === "Enter") renderCouponList(e.target.value);
+            });
+        }
+
         // 3. Filters
         FilterRegistry.initStaticFilters(modalBackdrop);
 
@@ -415,13 +550,63 @@ window.adminModalHandler = {
         const existingFilters = activityDetails.filters || [];
         FilterRegistry.populateAll(modalBackdrop, existingFilters);
 
-        // 5. Type Selection
+        // 5. Type Selection & Toggle Logic
         const activityTypeInput = document.getElementById('edit-activityTypeInput');
+        const productInfoContainer = document.getElementById("edit-product-info-container");
+        const couponInfoContainer = document.getElementById("edit-coupon-info-container");
+        const section4Title = document.getElementById("edit-section-4-title");
+        const imageUploadSection = document.getElementById("edit-image-upload-section");
+
+        // Elements to Clear
+        const productInputs = [
+            document.getElementById("edit-selectedProductId"),
+            document.getElementById("edit-selectedProductName"),
+            document.getElementById("edit-salePrice"),
+            document.getElementById("edit-saleQuantity")
+        ];
+        const couponInputs = [
+            document.getElementById("edit-selectedCouponId"),
+            document.getElementById("edit-selectedCouponName")
+        ];
+
+        function toggleActivityTypeUI(type) {
+            if (type === "COUPON") {
+                if (imageUploadSection) imageUploadSection.classList.add("hidden");
+                productInfoContainer.classList.add("hidden");
+                couponInfoContainer.classList.remove("hidden");
+                section4Title.textContent = "쿠폰 정보";
+
+                // Clear Product Info
+                productInputs.forEach(input => {
+                    if (input) {
+                        input.value = "";
+                        if (input.tagName === 'SPAN') input.textContent = "-";
+                    }
+                });
+                document.getElementById('edit-productStock').textContent = '-';
+                document.getElementById('edit-productOriginalPrice').textContent = '-';
+                document.getElementById('edit-productInfo').classList.add('hidden');
+
+            } else {
+                if (imageUploadSection) imageUploadSection.classList.remove("hidden");
+                couponInfoContainer.classList.add("hidden");
+                productInfoContainer.classList.remove("hidden");
+                section4Title.textContent = "상품 정보";
+
+                // Clear Coupon Info
+                couponInputs.forEach(input => {
+                    if (input) input.value = "";
+                });
+            }
+        }
+
         modalBackdrop.querySelectorAll('.campaign-type-card.selectable').forEach(button => {
             button.addEventListener('click', () => {
                 modalBackdrop.querySelectorAll('.campaign-type-card.selectable').forEach(btn => btn.classList.remove('selected'));
                 button.classList.add('selected');
-                activityTypeInput.value = button.dataset.type;
+                const type = button.dataset.type;
+                activityTypeInput.value = type;
+                toggleActivityTypeUI(type);
             });
         });
 
@@ -443,9 +628,11 @@ window.adminModalHandler = {
             const endDate = document.getElementById('edit-endDate').value;
             const limitCount = document.getElementById('edit-limitCountInput').value;
             const budget = document.getElementById('edit-budgetInput').value;
+
             const productId = document.getElementById('edit-selectedProductId').value;
             const salePrice = document.getElementById('edit-salePrice').value;
             const saleQuantity = document.getElementById('edit-saleQuantity').value;
+            const couponId = document.getElementById('edit-selectedCouponId').value;
 
             if (!name || !campaignId || !type || !startDate || !endDate || !limitCount) return alert('필수 항목 입력');
 
@@ -454,15 +641,30 @@ window.adminModalHandler = {
                 return;
             }
 
-            // Product Validation
-            if (productId) {
-                if (!salePrice || parseInt(salePrice) < 0) {
-                    alert("상품 판매 가격은 0원 이상이어야 합니다.");
+            let finalProductId = null;
+            let finalPrice = 0;
+            let finalQuantity = 0;
+
+            if (type === 'COUPON') {
+                if (!couponId) {
+                    alert("연동할 쿠폰을 선택해주세요.");
                     return;
                 }
-                if (!saleQuantity || parseInt(saleQuantity) <= 0) {
-                    alert("상품 판매 수량은 1개 이상이어야 합니다.");
-                    return;
+                finalProductId = parseInt(couponId);
+            } else {
+                // Product Validation
+                if (productId) {
+                    finalProductId = parseInt(productId);
+                    if (!salePrice || parseInt(salePrice) < 0) {
+                        alert("상품 판매 가격은 0원 이상이어야 합니다.");
+                        return;
+                    }
+                    if (!saleQuantity || parseInt(saleQuantity) <= 0) {
+                        alert("상품 판매 수량은 1개 이상이어야 합니다.");
+                        return;
+                    }
+                    finalPrice = parseInt(salePrice);
+                    finalQuantity = parseInt(saleQuantity);
                 }
             }
 
@@ -471,10 +673,13 @@ window.adminModalHandler = {
 
             const payload = {
                 name, campaignId: parseInt(campaignId), activityType: type, startDate: startDate + ':00', endDate: endDate + ':00',
-                limitCount: parseInt(limitCount), filters, imageUrl: uploadedImageUrl, status: activityDetails.status,
-                productId: productId ? parseInt(productId) : null,
-                price: salePrice ? parseInt(salePrice) : 0,
-                quantity: saleQuantity ? parseInt(saleQuantity) : 0,
+                limitCount: parseInt(limitCount), filters,
+                imageUrl: (type === 'COUPON') ? null : uploadedImageUrl,
+                status: activityDetails.status,
+                productId: (type === 'COUPON') ? null : finalProductId, // Set productId to null for COUPON type
+                couponId: (type === 'COUPON') ? finalProductId : null, // Send as couponId for COUPON type
+                price: finalPrice,
+                quantity: finalQuantity,
                 budget: budget ? parseInt(budget) : 0
             };
 

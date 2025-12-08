@@ -20,8 +20,8 @@ public record CampaignActivityMeta(
         boolean hasFastValidation,
         boolean hasHeavyValidation,
         Long productId,
-        CampaignActivityType campaignActivityType
-) {
+        Long couponId,
+        CampaignActivityType campaignActivityType) {
 
     public CampaignActivityMeta {
         Objects.requireNonNull(id, "campaignActivityId must not be null");
@@ -29,10 +29,14 @@ public record CampaignActivityMeta(
     }
 
     /**
-     * Determines whether the campaign activity is eligible for participation at the given instant.
+     * Determines whether the campaign activity is eligible for participation at the
+     * given instant.
      *
-     * @param now the reference instant used to evaluate eligibility (converted to the system default time zone)
-     * @return true if the activity's limit is greater than zero or unset, the status is active, the reference time is not before `startDate` (if set), and not after `endDate` (if set); false otherwise
+     * @param now the reference instant used to evaluate eligibility (converted to
+     *            the system default time zone)
+     * @return true if the activity's limit is greater than zero or unset, the
+     *         status is active, the reference time is not before `startDate` (if
+     *         set), and not after `endDate` (if set); false otherwise
      */
     public boolean isParticipatable(Instant now) {
         if (limitCount != null && limitCount <= 0) {
@@ -42,6 +46,10 @@ public record CampaignActivityMeta(
             return false;
         }
 
+        return isParticipatableTime(now);
+    }
+
+    public boolean isParticipatableTime(Instant now) {
         LocalDateTime current = LocalDateTime.ofInstant(now, ZoneId.systemDefault());
         if (startDate != null && current.isBefore(startDate)) {
             return false;

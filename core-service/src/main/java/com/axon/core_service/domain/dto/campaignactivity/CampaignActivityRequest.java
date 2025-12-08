@@ -48,6 +48,8 @@ public class CampaignActivityRequest {
 
     private Long productId;
 
+    private Long couponId;
+
     @NotNull
     private Integer quantity;
 
