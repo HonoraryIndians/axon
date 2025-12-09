@@ -19,10 +19,10 @@ spec:
             - containerPort: 8081
           resources:
             requests:
-              memory: "1Gi"
-              cpu: "300m"
-            limits:
               memory: "2Gi"
+              cpu: "550m"
+            limits:
+              memory: "2.5Gi"
               cpu: "800m"
           env:
             - name: JWT_SECRET

@@ -19,10 +19,10 @@ spec:
             - containerPort: 8080
           resources:
             requests:
-              memory: "1Gi"
-              cpu: "300m"
+              memory: "2Gi"
+              cpu: "550m"
             limits:
-              memory: "1536Mi"
+              memory: "2536Mi"
               cpu: "800m"
           env:
             - name: DB_PASSWORD
