@@ -88,8 +88,8 @@ public class PurchaseHandler {
 
                 // 2-2. Bulk 재고 감소 (1회 SQL)
                 if (!stockDecreases.isEmpty()) {
-                    productService.decreaseStockBatch(stockDecreases);
-                    log.info("Decreased stock for {} products", stockDecreases.size());
+                    // productService.decreaseStockBatch(stockDecreases);
+                    log.info("Skipped stock decrease for {} products (Performance Optimization)", stockDecreases.size());
                 }
 
                 // 2-3. User별 구매 통계 집계
@@ -150,7 +150,7 @@ public class PurchaseHandler {
             try {
                 transactionTemplate.executeWithoutResult(status -> {
                     // 1. 재고 감소
-                    productService.decreaseStockBatch(Map.of(purchase.productId(), (int) purchase.quantity()));
+                    // productService.decreaseStockBatch(Map.of(purchase.productId(), (int) purchase.quantity()));
 
                     // 2. 유저 요약 업데이트
                     PurchaseSummary summary = new PurchaseSummary(

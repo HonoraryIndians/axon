@@ -351,7 +351,7 @@ USER_COUNT=$($MYSQL_CMD_BASE -s -N -e "SELECT COUNT(*) FROM users WHERE id BETWE
 echo "   MySQL 유저: $USER_COUNT / $NUM_USERS"
 
 # JWT 토큰 수 확인
-TOKEN_COUNT=$(grep -c '"' "$TOKEN_FILE" || echo "0")
+TOKEN_COUNT=$(grep -o '"' "$TOKEN_FILE" | wc -l | tr -d ' ')
 TOKEN_COUNT=$((TOKEN_COUNT / 2))  # key:value이므로 2로 나눔
 echo "   JWT 토큰: $TOKEN_COUNT / $NUM_USERS"
 
@@ -370,29 +370,34 @@ echo "📦 Product 재고 검증 중..."
 
 # Campaign Activity의 limit_count 조회
 LIMIT_COUNT=$($MYSQL_CMD_BASE -s -N -e \
-  "SELECT limit_count FROM campaign_activities WHERE id = $ACTIVITY_ID;")
+  "SELECT limit_count FROM campaign_activities WHERE id = $ACTIVITY_ID;" | head -n 1)
+
+if [ -z "$LIMIT_COUNT" ]; then
+    LIMIT_COUNT=100 # 기본값
+fi
 
 # Product ID와 현재 재고 조회
 PRODUCT_ID=$($MYSQL_CMD_BASE -s -N -e \
-  "SELECT product_id FROM campaign_activities WHERE id = $ACTIVITY_ID;")
+  "SELECT product_id FROM campaign_activities WHERE id = $ACTIVITY_ID;" | head -n 1)
 
-CURRENT_STOCK=$($MYSQL_CMD_BASE -s -N -e \
-  "SELECT stock FROM products WHERE id = $PRODUCT_ID;")
+if [ -n "$PRODUCT_ID" ]; then
+    CURRENT_STOCK=$($MYSQL_CMD_BASE -s -N -e \
+      "SELECT stock FROM products WHERE id = $PRODUCT_ID;" | head -n 1)
 
-# 필요 재고 계산 (limit + 50% 버퍼 for 잠재적 over-booking)
-REQUIRED_STOCK=$((LIMIT_COUNT * 3 / 2))
+    # 필요 재고 계산 (limit + 50% 버퍼 for 잠재적 over-booking)
+    REQUIRED_STOCK=$((LIMIT_COUNT * 3 / 2))
 
-if [ "$CURRENT_STOCK" -lt "$REQUIRED_STOCK" ]; then
-  echo "   ⚠️  WARNING: Current stock ($CURRENT_STOCK) < Required ($REQUIRED_STOCK)"
-  echo "   Increasing product stock to $REQUIRED_STOCK..."
-  $MYSQL_CMD_BASE -e \
-    "UPDATE products SET stock = $REQUIRED_STOCK WHERE id = $PRODUCT_ID;"
-  echo "   ✅ Product stock updated to $REQUIRED_STOCK"
-else
-  echo "   ✅ Product stock sufficient: $CURRENT_STOCK >= $REQUIRED_STOCK"
+    if [ "$CURRENT_STOCK" -lt "$REQUIRED_STOCK" ]; then
+      echo "   ⚠️  WARNING: Current stock ($CURRENT_STOCK) < Required ($REQUIRED_STOCK)"
+      echo "   Increasing product stock to $REQUIRED_STOCK..."
+      $MYSQL_CMD_BASE -e \
+        "UPDATE products SET stock = $REQUIRED_STOCK WHERE id = $PRODUCT_ID;"
+      echo "   ✅ Product stock updated to $REQUIRED_STOCK"
+    else
+      echo "   ✅ Product stock sufficient: $CURRENT_STOCK >= $REQUIRED_STOCK"
+    fi
 fi
 
-echo ""
 if [ "$USER_COUNT" -eq "$NUM_USERS" ] && [ "$TOKEN_COUNT" -ge "$NUM_USERS" ]; then
   echo "   ✅ 검증 성공!"
 else
