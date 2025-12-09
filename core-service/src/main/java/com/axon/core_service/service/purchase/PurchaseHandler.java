@@ -136,8 +136,8 @@ public class PurchaseHandler {
                 log.info("Published {} campaign approval events", events.size());
             }
 
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            log.warn("Batch failed due to data integrity violation (likely duplicate). Retrying individually... Error: {}", e.getMessage());
+        } catch (org.springframework.dao.DataIntegrityViolationException | org.springframework.transaction.UnexpectedRollbackException e) {
+            log.warn("Batch failed due to transaction rollback (likely duplicate). Retrying individually... Error: {}", e.getMessage());
             retryIndividually(purchases);
         } catch (Exception e) {
             log.error("Error processing purchase batch: {}", e.getMessage(), e);
