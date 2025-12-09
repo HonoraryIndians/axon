@@ -59,10 +59,10 @@ spec:
               name: transport
           resources:
             requests:
-              cpu: "2000m"
+              cpu: "1000m"
               memory: "6Gi"
             limits:
-              cpu: "2000m"
+              cpu: "1000m"
               memory: "6Gi"
           volumeMounts:
             - name: data
