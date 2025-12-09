@@ -76,6 +76,7 @@ public class PurchaseHandler {
 
         log.info("Processing Purchase batch: {} purchases", purchases.size());
 
+        boolean needRetry = false;
         try {
             // 2. 전체를 하나의 트랜잭션으로 실행
             transactionTemplate.executeWithoutResult(status -> {
@@ -137,11 +138,15 @@ public class PurchaseHandler {
             }
 
         } catch (org.springframework.dao.DataIntegrityViolationException | org.springframework.transaction.UnexpectedRollbackException e) {
-            log.warn("Batch failed due to transaction rollback (likely duplicate). Retrying individually... Error: {}", e.getMessage());
-            retryIndividually(purchases);
+            log.warn("Batch failed due to transaction rollback (likely duplicate). Marking for individual retry... Error: {}", e.getMessage());
+            needRetry = true;
         } catch (Exception e) {
             log.error("Error processing purchase batch: {}", e.getMessage(), e);
             throw e; // 예외 전파
+        }
+
+        if (needRetry) {
+            retryIndividually(purchases);
         }
     }
 
