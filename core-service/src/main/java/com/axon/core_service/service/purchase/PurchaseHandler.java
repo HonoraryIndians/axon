@@ -78,50 +78,47 @@ public class PurchaseHandler {
 
         boolean needRetry = false;
         try {
-            // 2. 전체를 하나의 트랜잭션으로 실행
-            transactionTemplate.executeWithoutResult(status -> {
-                // 2-1. Product별 재고 감소량 집계
-                Map<Long, Integer> stockDecreases = purchases.stream()
-                        .collect(Collectors.groupingBy(
-                                PurchaseInfoDto::productId,
-                                Collectors.summingInt(PurchaseInfoDto::quantity)
-                        ));
+            // 2-1. Product별 재고 감소량 집계
+            Map<Long, Integer> stockDecreases = purchases.stream()
+                    .collect(Collectors.groupingBy(
+                            PurchaseInfoDto::productId,
+                            Collectors.summingInt(PurchaseInfoDto::quantity)
+                    ));
 
-                // 2-2. Bulk 재고 감소 (1회 SQL)
-                if (!stockDecreases.isEmpty()) {
-                    // productService.decreaseStockBatch(stockDecreases);
-                    log.info("Skipped stock decrease for {} products (Performance Optimization)", stockDecreases.size());
-                }
+            // 2-2. Bulk 재고 감소 (1회 SQL)
+            if (!stockDecreases.isEmpty()) {
+                // productService.decreaseStockBatch(stockDecreases);
+                log.info("Skipped stock decrease for {} products (Performance Optimization)", stockDecreases.size());
+            }
 
-                // 2-3. User별 구매 통계 집계
-                Map<Long, PurchaseSummary> userSummaries = purchases.stream()
-                        .collect(Collectors.groupingBy(
-                                PurchaseInfoDto::userId,
-                                Collectors.collectingAndThen(
-                                        Collectors.toList(),
-                                        list -> new PurchaseSummary(
-                                                list.size(),
-                                                list.stream()
-                                                        .map(p -> p.price().multiply(BigDecimal.valueOf(p.quantity())))
-                                                        .reduce(BigDecimal.ZERO, BigDecimal::add),
-                                                list.getFirst().occurredAt()
-                                        )
-                                )
-                        ));
+            // 2-3. User별 구매 통계 집계
+            Map<Long, PurchaseSummary> userSummaries = purchases.stream()
+                    .collect(Collectors.groupingBy(
+                            PurchaseInfoDto::userId,
+                            Collectors.collectingAndThen(
+                                    Collectors.toList(),
+                                    list -> new PurchaseSummary(
+                                            list.size(),
+                                            list.stream()
+                                                    .map(p -> p.price().multiply(BigDecimal.valueOf(p.quantity())))
+                                                    .reduce(BigDecimal.ZERO, BigDecimal::add),
+                                            list.getFirst().occurredAt()
+                                    )
+                            )
+                    ));
 
-                // 2-4. Bulk 유저 요약 업데이트 (1회 SQL)
-                if (!userSummaries.isEmpty()) {
-                    // userSummaryService.recordPurchaseBatch(userSummaries);
-                    log.info("Skipped user summary update for {} users (Performance Optimization)", userSummaries.size());
-                }
+            // 2-4. Bulk 유저 요약 업데이트 (1회 SQL)
+            if (!userSummaries.isEmpty()) {
+                // userSummaryService.recordPurchaseBatch(userSummaries);
+                log.info("Skipped user summary update for {} users (Performance Optimization)", userSummaries.size());
+            }
 
-                // 2-5. Purchase bulk insert (1회 SQL)
-                purchaseService.createPurchaseBatch(purchases);
-                log.info("Created {} purchase records", purchases.size());
-            });
+            // 2-5. Purchase bulk insert (REQUIRES_NEW Transaction in Service)
+            purchaseService.createPurchaseBatch(purchases);
+            log.info("Created {} purchase records", purchases.size());
 
-            // 3. CampaignActivityApproved 이벤트 발행 (트랜잭션 외부)
-            List<CampaignActivityApprovedEvent>     events = purchases.stream()
+            // 3. CampaignActivityApproved 이벤트 발행
+            List<CampaignActivityApprovedEvent> events = purchases.stream()
                     .filter(p -> p.campaignActivityId() != null)
                     .map(p -> new CampaignActivityApprovedEvent(
                             p.campaignId(),
@@ -142,7 +139,7 @@ public class PurchaseHandler {
             needRetry = true;
         } catch (Exception e) {
             log.error("Error processing purchase batch: {}", e.getMessage(), e);
-            throw e; // 예외 전파
+            // 상위 트랜잭션 롤백 방지를 위해 예외를 던지지 않음 (필요시 던질 수도 있음)
         }
 
         if (needRetry) {
@@ -153,21 +150,19 @@ public class PurchaseHandler {
     private void retryIndividually(List<PurchaseInfoDto> purchases) {
         for (PurchaseInfoDto purchase : purchases) {
             try {
-                transactionTemplate.executeWithoutResult(status -> {
-                    // 1. 재고 감소
-                    // productService.decreaseStockBatch(Map.of(purchase.productId(), (int) purchase.quantity()));
+                // 1. 재고 감소
+                // productService.decreaseStockBatch(Map.of(purchase.productId(), (int) purchase.quantity()));
 
-                    // 2. 유저 요약 업데이트
-                    PurchaseSummary summary = new PurchaseSummary(
-                            1,
-                            purchase.price().multiply(BigDecimal.valueOf(purchase.quantity())),
-                            purchase.occurredAt()
-                    );
-                    // userSummaryService.recordPurchaseBatch(Map.of(purchase.userId(), summary));
+                // 2. 유저 요약 업데이트
+                PurchaseSummary summary = new PurchaseSummary(
+                        1,
+                        purchase.price().multiply(BigDecimal.valueOf(purchase.quantity())),
+                        purchase.occurredAt()
+                );
+                // userSummaryService.recordPurchaseBatch(Map.of(purchase.userId(), summary));
 
-                    // 3. 구매 저장
-                    purchaseService.createPurchaseBatch(List.of(purchase));
-                });
+                // 3. 구매 저장 (REQUIRES_NEW Transaction in Service)
+                purchaseService.createPurchaseBatch(List.of(purchase));
 
                 // 4. 이벤트 발행
                 if (purchase.campaignActivityId() != null) {

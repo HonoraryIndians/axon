@@ -7,6 +7,11 @@ spring:
     username: ${DB_USERNAME:axon_user}
     password: ${DB_PASSWORD:axon_password}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20  # Increased from default 10 to handle concurrent batch processing
+      minimum-idle: 10
+      connection-timeout: 10000  # 10s - Fail fast instead of waiting 30s
+      max-lifetime: 600000  # 10 minutes
   jpa:
     hibernate:
       ddl-auto: update # Use 'validate' in production
