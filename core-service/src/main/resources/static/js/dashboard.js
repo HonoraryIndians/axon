@@ -113,26 +113,40 @@ document.addEventListener('DOMContentLoaded', function () {
         const participants = realtime.activity.participantCount || 0;
         const remaining = realtime.activity.remainingStock || 0;
         const total = realtime.activity.totalStock || 100; // Fallback to 100 to avoid div by zero
-        const percentage = Math.round((remaining / total) * 100);
+        
+        // Stock Percentage
+        const stockPercentage = Math.round((remaining / total) * 100);
+        
+        // Participants Percentage
+        const participantsPercentage = Math.round((participants / total) * 100);
 
         document.getElementById('realtimeParticipants').textContent = participants.toLocaleString();
 
         const stockEl = document.getElementById('realtimeStock');
-        stockEl.textContent = `${remaining.toLocaleString()} (${percentage}%)`;
+        stockEl.textContent = `${remaining.toLocaleString()} (${stockPercentage}%)`;
 
-        const progressBar = document.getElementById('stockProgressBar');
-        progressBar.style.width = `${percentage}%`;
+        // Update Stock Bar
+        const stockProgressBar = document.getElementById('stockProgressBar');
+        if (stockProgressBar) {
+            stockProgressBar.style.width = `${stockPercentage}%`;
+        }
+
+        // Update Participants Bar
+        const participantsProgressBar = document.getElementById('participantsProgressBar');
+        if (participantsProgressBar) {
+            participantsProgressBar.style.width = `${participantsPercentage}%`;
+        }
 
         // Change color based on stock level
-        if (percentage < 10) {
+        if (stockPercentage < 10) {
             stockEl.className = 'text-lg font-bold text-red-600';
-            progressBar.className = 'bg-red-600 h-2.5 rounded-full';
-        } else if (percentage < 50) {
+            stockProgressBar.className = 'bg-red-600 h-2.5 rounded-full';
+        } else if (stockPercentage < 50) {
             stockEl.className = 'text-lg font-bold text-yellow-600';
-            progressBar.className = 'bg-yellow-500 h-2.5 rounded-full';
+            stockProgressBar.className = 'bg-yellow-500 h-2.5 rounded-full';
         } else {
             stockEl.className = 'text-lg font-bold text-green-600';
-            progressBar.className = 'bg-green-600 h-2.5 rounded-full';
+            stockProgressBar.className = 'bg-green-600 h-2.5 rounded-full';
         }
     }
 
@@ -273,117 +287,5 @@ document.addEventListener('DOMContentLoaded', function () {
         const timeString = now.toLocaleTimeString();
         const el = document.getElementById('lastUpdated');
         if (el) el.textContent = `Last updated: ${timeString}`;
-    }
-
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // Chat Interface Logic
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    const chatToggleBtn = document.getElementById('chat-toggle-btn');
-    const chatWindow = document.getElementById('chat-window');
-    const chatCloseBtn = document.getElementById('chat-close-btn');
-    const chatInput = document.getElementById('chat-input');
-    const chatSendBtn = document.getElementById('chat-send-btn');
-    const chatMessages = document.getElementById('chat-messages');
-
-    let isChatOpen = false;
-
-    function toggleChat() {
-        isChatOpen = !isChatOpen;
-        if (isChatOpen) {
-            chatWindow.classList.remove('hidden');
-            // Small delay to allow display:block to apply before opacity transition
-            setTimeout(() => {
-                chatWindow.classList.remove('scale-95', 'opacity-0');
-                chatWindow.classList.add('scale-100', 'opacity-100');
-            }, 10);
-            chatInput.focus();
-        } else {
-            chatWindow.classList.remove('scale-100', 'opacity-100');
-            chatWindow.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                chatWindow.classList.add('hidden');
-            }, 300);
-        }
-    }
-
-    chatToggleBtn.addEventListener('click', toggleChat);
-    chatCloseBtn.addEventListener('click', toggleChat);
-
-    async function sendMessage() {
-        const message = chatInput.value.trim();
-        if (!message) return;
-
-        // Add User Message
-        addMessage(message, 'user');
-        chatInput.value = '';
-
-        // Show Loading
-        const loadingId = addLoadingMessage();
-
-        try {
-            const response = await fetch(`/api/v1/dashboard/campaign/${campaignId}/query`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    query: message,
-                    language: 'en'
-                })
-            });
-
-            const data = await response.json();
-
-            // Remove Loading
-            removeMessage(loadingId);
-
-            // Add Bot Response
-            addMessage(data.answer, 'bot');
-
-        } catch (error) {
-            console.error('Chat Error:', error);
-            removeMessage(loadingId);
-            addMessage('Sorry, something went wrong. Please try again.', 'bot');
-        }
-    }
-
-    chatSendBtn.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-
-    function addMessage(text, sender) {
-        const div = document.createElement('div');
-        div.className = `flex justify-${sender === 'user' ? 'end' : 'start'}`;
-
-        const bubble = document.createElement('div');
-        bubble.className = sender === 'user'
-            ? 'bg-blue-600 text-white rounded-lg py-2 px-4 max-w-[80%] shadow-sm text-sm'
-            : 'bg-white border border-gray-200 rounded-lg py-2 px-4 max-w-[80%] shadow-sm text-sm text-gray-800';
-
-        bubble.textContent = text;
-        div.appendChild(bubble);
-        chatMessages.appendChild(div);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function addLoadingMessage() {
-        const id = 'msg-' + Date.now();
-        const div = document.createElement('div');
-        div.id = id;
-        div.className = 'flex justify-start';
-        div.innerHTML = `
-            <div class="bg-white border border-gray-200 rounded-lg py-2 px-4 shadow-sm text-sm text-gray-500">
-                <i class="fa-solid fa-circle-notch fa-spin"></i> Thinking...
-            </div>
-        `;
-        chatMessages.appendChild(div);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        return id;
-    }
-
-    function removeMessage(id) {
-        const el = document.getElementById(id);
-        if (el) el.remove();
     }
 });

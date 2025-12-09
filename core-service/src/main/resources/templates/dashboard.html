@@ -10,7 +10,7 @@
     <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
 </head>
 <section>
-    <input type="hidden" id="campaignId" th:value="${campaignId}" />
+    <input type="hidden" id="activityId" th:value="${activityId}" />
 
     <main class="dashboard-container pt-6">
         <!-- Breadcrumb -->
@@ -106,7 +106,7 @@
                         <span class="text-lg font-bold text-blue-600" id="realtimeParticipants">0</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 45%"></div>
+                        <div id="participantsProgressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
                     </div>
                 </div>
                 <div>
@@ -146,54 +146,9 @@
         </div>
     </main>
 
-    <!-- Chat Interface -->
-    <div id="chat-widget" class="fixed bottom-6 right-6 z-50">
-        <!-- Chat Button -->
-        <button id="chat-toggle-btn"
-            class="w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-700 transition-all duration-300 focus:outline-none">
-            <i class="fa-solid fa-comment-dots text-2xl"></i>
-        </button>
-
-        <!-- Chat Window -->
-        <div id="chat-window"
-            class="hidden absolute bottom-16 right-0 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col transition-all duration-300 origin-bottom-right transform scale-95 opacity-0">
-
-            <!-- Header -->
-            <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-robot"></i>
-                    <span class="font-semibold">Axon AI Assistant</span>
-                </div>
-                <button id="chat-close-btn" class="text-blue-100 hover:text-white">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            </div>
-
-            <!-- Messages Area -->
-            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto h-80 bg-gray-50 space-y-4">
-                <!-- Welcome Message -->
-                <div class="flex justify-start">
-                    <div
-                        class="bg-white border border-gray-200 rounded-lg py-2 px-4 max-w-[80%] shadow-sm text-sm text-gray-800">
-                        Hello! I can help you analyze your campaign data. Ask me about visits, purchases, GMV, or ROAS.
-                    </div>
-                </div>
-            </div>
-
-            <!-- Input Area -->
-            <div class="p-4 bg-white border-t border-gray-200">
-                <div class="flex gap-2">
-                    <input type="text" id="chat-input"
-                        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                        placeholder="Ask a question..." />
-                    <button id="chat-send-btn"
-                        class="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm hover:bg-blue-700 transition-colors">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Chatbot -->
+    <div th:replace="fragments/chatbot :: chatbot"></div>
+    <script th:src="@{/js/chatbot.js}"></script>
 
     <script th:src="@{/js/dashboard.js}"></script>
 </section>

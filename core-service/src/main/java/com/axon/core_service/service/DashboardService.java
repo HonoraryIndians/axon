@@ -135,12 +135,13 @@ public class DashboardService {
 
     private RealtimeData buildRealtimeDataByActivity(Long activityId) {
         Long participantCount = realtimeMetricsService.getParticipantCount(activityId);
-        Long remainingStock = realtimeMetricsService.getRemainingStock(activityId);
 
         Long totalStock = campaignActivityRepository.findById(activityId)
                 .map(com.axon.core_service.domain.campaignactivity.CampaignActivity::getLimitCount)
                 .map(Long::valueOf)
                 .orElse(100L);
+
+        Long remainingStock = realtimeMetricsService.getRemainingStock(participantCount, totalStock);
 
         ActivityRealtime activityRealtime = new ActivityRealtime(participantCount, remainingStock, totalStock);
         return new RealtimeData(activityRealtime, LocalDateTime.now());
