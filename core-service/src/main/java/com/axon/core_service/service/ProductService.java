@@ -46,4 +46,33 @@ public class ProductService {
         // 3. Dirty Checking으로 자동 UPDATE
         log.info("Stock decreased for {} products", products.size());
     }
+
+    /**
+     * Syncs campaign product stock after campaign ends.
+     *
+     * For FCFS campaigns, stock is managed by Redis counter during the campaign.
+     * This method syncs MySQL Product.stock when the campaign ends.
+     *
+     * Formula: finalStock = initialStock - soldCount
+     *
+     * @param productId the campaign product ID
+     * @param soldCount number of items sold (from Redis counter)
+     */
+    @Transactional
+    public void syncCampaignStock(Long productId, Long soldCount) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+
+        long expectedStock = product.getStock() - soldCount;
+
+        if (expectedStock < 0) {
+            log.warn("Campaign over-sold! productId={}, currentStock={}, soldCount={}",
+                    productId, product.getStock(), soldCount);
+            expectedStock = 0;
+        }
+
+        product.decreaseStock(soldCount);
+        log.info("Campaign stock synced: productId={}, soldCount={}, finalStock={}",
+                productId, soldCount, product.getStock());
+    }
 }

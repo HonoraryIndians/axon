@@ -171,12 +171,13 @@ public class CampaignActivityEntryService {
             // 구매 관련 활동이면 이벤트 준비
             boolean isApproved = (status == CampaignActivityEntryStatus.APPROVED);
             boolean isPurchaseRelated = activity.getActivityType().isPurchaseRelated();
-            
-            log.info("Checking event condition: userId={}, status={}, type={}, isApproved={}, isPurchaseRelated={}", 
-                    dto.getUserId(), status, activity.getActivityType(), isApproved, isPurchaseRelated);
+            boolean isNewEntry = !existingMap.containsKey(key);  // 새로운 Entry인지 확인
 
-            if (isApproved && isPurchaseRelated) {
-                log.info("Adding purchase event for userId={}", dto.getUserId());
+            log.info("Checking event condition: userId={}, status={}, type={}, isApproved={}, isPurchaseRelated={}, isNewEntry={}",
+                    dto.getUserId(), status, activity.getActivityType(), isApproved, isPurchaseRelated, isNewEntry);
+
+            if (isApproved && isPurchaseRelated && isNewEntry) {  // isNewEntry 조건 추가
+                log.info("Adding purchase event for NEW entry userId={}", dto.getUserId());
                 purchaseEvents.add(new PurchaseInfoDto(
                         activity.getCampaignId(),
                         activity.getId(),

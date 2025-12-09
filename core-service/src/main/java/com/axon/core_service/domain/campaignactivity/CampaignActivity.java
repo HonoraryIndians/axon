@@ -219,6 +219,10 @@ public class CampaignActivity extends BaseTimeEntity {
         this.budget = budget;
     }
 
+    public void updateStatus(CampaignActivityStatus status) {
+        this.status = status;
+    }
+
     /**
      * Associates this activity with the given Campaign.
      *
