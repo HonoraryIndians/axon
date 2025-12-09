@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -192,8 +193,24 @@ public class CampaignActivityEntryService {
 
         // 5. Bulk save (1회 DB 접근)
         if (!toSave.isEmpty()) {
-            campaignActivityEntryRepository.saveAll(toSave);
-            log.info("Saved {} entries", toSave.size());
+            try {
+                campaignActivityEntryRepository.saveAll(toSave);
+                log.info("Saved {} entries", toSave.size());
+            } catch (DataIntegrityViolationException e) {
+                // Handle duplicates gracefully - process individually
+                log.warn("Duplicate entries detected in batch, processing individually");
+                int saved = 0;
+                for (CampaignActivityEntry entry : toSave) {
+                    try {
+                        campaignActivityEntryRepository.save(entry);
+                        saved++;
+                    } catch (DataIntegrityViolationException ex) {
+                        log.debug("Skipping duplicate entry: activity={}, user={}",
+                            entry.getCampaignActivity().getId(), entry.getUserId());
+                    }
+                }
+                log.info("Saved {} entries ({} duplicates skipped)", saved, toSave.size() - saved);
+            }
         }
 
         // 6. Bulk event 발행
