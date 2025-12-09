@@ -100,13 +100,31 @@ public class FirstComeFirstServeStrategy implements BatchStrategy {
                 .filter(msg -> activityMap.containsKey(msg.getCampaignActivityId()))
                 .toList();
 
+        List<CampaignActivityKafkaProducerDto> invalidMessages = dedupedMessages.stream()
+                .filter(msg -> !activityMap.containsKey(msg.getCampaignActivityId()))
+                .toList();
+
+        if (!invalidMessages.isEmpty()) {
+            log.warn("⚠️ [FCFS] Skipping {} messages with invalid activityIds: {}",
+                invalidMessages.size(),
+                invalidMessages.stream()
+                    .map(CampaignActivityKafkaProducerDto::getCampaignActivityId)
+                    .distinct()
+                    .collect(Collectors.toList()));
+        }
+
         if (!validMessages.isEmpty()) {
+            log.info("✅ [FCFS] Processing {} valid messages (users: {})",
+                validMessages.size(),
+                validMessages.stream()
+                    .map(CampaignActivityKafkaProducerDto::getUserId)
+                    .limit(10)
+                    .collect(Collectors.toList()));
             campaignActivityEntryService.upsertBatch(
                     activityMap,
                     validMessages,
                     CampaignActivityEntryStatus.APPROVED
             );
-            log.info("FCFS batch processed: {} entries created/updated", validMessages.size());
         }
     }
 

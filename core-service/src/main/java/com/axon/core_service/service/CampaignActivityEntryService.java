@@ -193,13 +193,17 @@ public class CampaignActivityEntryService {
         }
 
         // 5. Bulk save (1회 DB 접근)
+        log.info("📝 [Entry] Attempting to save {} entries (users: {})",
+            toSave.size(),
+            toSave.stream().map(e -> e.getUserId()).limit(10).collect(Collectors.toList()));
+
         if (!toSave.isEmpty()) {
             try {
                 campaignActivityEntryRepository.saveAll(toSave);
-                log.info("Saved {} entries", toSave.size());
+                log.info("✅ [Entry] Saved {} entries successfully", toSave.size());
             } catch (DataIntegrityViolationException e) {
                 // Handle duplicates gracefully - process individually
-                log.warn("Duplicate entries detected in batch, processing individually");
+                log.warn("⚠️ [Entry] Duplicate entries detected in batch, processing individually");
                 int saved = 0;
                 for (CampaignActivityEntry entry : toSave) {
                     try {
@@ -210,14 +214,16 @@ public class CampaignActivityEntryService {
                             entry.getCampaignActivity().getId(), entry.getUserId());
                     }
                 }
-                log.info("Saved {} entries ({} duplicates skipped)", saved, toSave.size() - saved);
+                log.info("✅ [Entry] Saved {} entries ({} duplicates skipped)", saved, toSave.size() - saved);
             }
         }
 
         // 6. Bulk event 발행
         if (!purchaseEvents.isEmpty()) {
+            log.info("📢 [Purchase Event] Publishing {} events for users: {}",
+                purchaseEvents.size(),
+                purchaseEvents.stream().map(PurchaseInfoDto::userId).limit(10).collect(Collectors.toList()));
             purchaseEvents.forEach(eventPublisher::publishEvent);
-            log.info("Published {} purchase events", purchaseEvents.size());
         }
     }
 

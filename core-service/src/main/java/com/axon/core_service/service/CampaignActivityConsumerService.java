@@ -48,7 +48,8 @@ public class CampaignActivityConsumerService {
     @KafkaListener(topics = KafkaTopics.CAMPAIGN_ACTIVITY_COMMAND, groupId = "axon-group")
     public void consume(CampaignActivityKafkaProducerDto message) {
         buffer.offer(message);
-        log.debug("[Kafka] : Activities's message buffered size={}", buffer.size());
+        log.info("📥 [Kafka] Consumed message: userId={}, activityId={}, bufferSize={}",
+            message.getUserId(), message.getCampaignActivityId(), buffer.size());
 
         if(buffer.size() >= kafkaBatchBuffer) {
             flushBatch();
