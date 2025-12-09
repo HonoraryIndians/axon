@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const campaignId = document.getElementById('campaignId').value;
+    const activityId = document.getElementById('activityId').value;
     let funnelChart = null;
     let trafficChart = null;
 
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function fetchDashboardData() {
         try {
-            const response = await fetch(`/api/v1/dashboard/activity/${campaignId}?period=7d`);
+            const response = await fetch(`/api/v1/dashboard/activity/${activityId}?period=7d`);
             const data = await response.json();
 
             updateOverviewCards(data.overview, data.previousOverview);
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function fetchRealtimeData() {
         try {
-            const response = await fetch(`/api/v1/dashboard/activity/${campaignId}?period=7d`);
+            const response = await fetch(`/api/v1/dashboard/activity/${activityId}?period=7d`);
             const data = await response.json();
 
             updateOverviewCards(data.overview, data.previousOverview);
