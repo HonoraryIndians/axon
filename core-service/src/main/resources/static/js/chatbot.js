@@ -116,14 +116,49 @@
         const bubble = document.createElement('div');
         bubble.className = sender === 'user'
             ? 'bg-blue-600 text-white rounded-lg py-2 px-4 max-w-[85%] shadow-sm text-sm'
-            : 'bg-white border border-gray-200 rounded-lg py-2 px-4 max-w-[85%] shadow-sm text-sm text-gray-800 markdown-body';
+            : 'bg-white border border-gray-200 rounded-lg py-2 px-4 max-w-[85%] shadow-sm text-sm text-gray-800 whitespace-pre-wrap';
 
-        // Simple formatting for newlines
-        bubble.innerHTML = text.replace(/\n/g, '<br>');
-        
+        // Format bot messages with simple markdown-like rendering
+        if (sender === 'bot') {
+            bubble.innerHTML = formatBotMessage(text);
+        } else {
+            bubble.textContent = text;
+        }
+
         row.appendChild(bubble);
         chatMessages.appendChild(row);
         scrollToBottom();
+    }
+
+    function formatBotMessage(text) {
+        // 1. Escape HTML first
+        let formatted = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        // 2. Bold: **text** → <strong>text</strong>
+        formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+        // 3. Lists: - item → • item
+        formatted = formatted.replace(/^- (.+)$/gm, '• $1');
+
+        // 4. Numbers: 1. item → 1. item (keep as is but add spacing)
+        formatted = formatted.replace(/^(\d+)\. (.+)$/gm, '<strong>$1.</strong> $2');
+
+        // 5. Section headers (lines starting with #)
+        formatted = formatted.replace(/^### (.+)$/gm, '<strong style="font-size: 1.1em;">$1</strong>');
+        formatted = formatted.replace(/^## (.+)$/gm, '<strong style="font-size: 1.2em;">$1</strong>');
+        formatted = formatted.replace(/^# (.+)$/gm, '<strong style="font-size: 1.3em;">$1</strong>');
+
+        // 6. Line breaks: \n\n → paragraph break, \n → line break
+        formatted = formatted.replace(/\n\n/g, '<br><br>');
+        formatted = formatted.replace(/\n/g, '<br>');
+
+        // 7. Horizontal rules: ━━━ or ---
+        formatted = formatted.replace(/^[━─]{3,}$/gm, '<hr style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0;">');
+
+        return formatted;
     }
 
     function addLoadingMessage() {

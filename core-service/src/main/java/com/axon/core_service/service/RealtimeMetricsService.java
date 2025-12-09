@@ -13,20 +13,13 @@ public class RealtimeMetricsService {
     private final CampaignActivityRepository campaignActivityRepository;
 
     public Long getParticipantCount(Long activityId) {
-        //TODO: Redis Set 크기 조회
-        String key = "campaignActivity:" + activityId + ":participants";
-        return redisTemplate.opsForSet().size(key);
+        String key = "campaign:" + activityId + ":counter";
+        String value = redisTemplate.opsForValue().get(key);
+        return value !=  null ? Long.parseLong(value) : 0L;
     }
 
-    public Long getRemainingStock(Long activityId) {
-        //TODO: limit 조회 (MySQL)
-        Long limit = Long.valueOf(campaignActivityRepository.findById(activityId)
-                .map(CampaignActivity::getLimitCount)
-                .orElse(0));
-        //TOOD: 참여자 수 조회
-        Long participantCount = getParticipantCount(activityId);
-        //TODO: limit - 참여자 수 계산
-        return Math.max(0, limit - participantCount);
+    public Long getRemainingStock(Long participantCount, Long totalStock) {
+        return Math.max(0, totalStock - participantCount);
     }
 
 }

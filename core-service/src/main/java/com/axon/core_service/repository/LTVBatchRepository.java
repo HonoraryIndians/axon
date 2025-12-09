@@ -16,11 +16,6 @@ public interface LTVBatchRepository extends JpaRepository<LTVBatch, Long> {
     List<LTVBatch> findByCampaignActivityIdOrderByMonthOffsetAsc(Long campaignActivityId);
 
     /**
-     * 특정 캠페인 활동의 특정 월 통계 조회
-     */
-    Optional<LTVBatch> findByCampaignActivityIdAndMonthOffset(Long campaignActivityId, Integer monthOffset);
-
-    /**
      * 특정 캠페인 활동의 통계 존재 여부
      */
     boolean existsByCampaignActivityId(Long campaignActivityId);
@@ -35,4 +30,7 @@ public interface LTVBatchRepository extends JpaRepository<LTVBatch, Long> {
             @Param("twelveMonthsAgo") java.time.LocalDateTime twelveMonthsAgo,
             @Param("now") java.time.LocalDateTime now
     );
+
+    // 특정 활동(Activity)의 가장 최신(MonthOffset이 큰) 배치 데이터 조회
+    java.util.Optional<LTVBatch> findTopByCampaignActivityIdOrderByMonthOffsetDesc(Long campaignActivityId);
 }

@@ -1,7 +1,7 @@
 # application.yml
 spring:
   profiles:
-    include: oauth
+    include: oauth, gemini
   datasource:
     url: jdbc:mysql://localhost:3306/axon_db?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:axon_user}
@@ -13,7 +13,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        show_sql: true
+        show_sql: false
   data:
     redis:
       host: localhost
