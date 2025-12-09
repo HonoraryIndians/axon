@@ -104,7 +104,7 @@ echo ""
 # ============================================================================
 # Step 1: Redis 초기화
 # ============================================================================
-echo "🧹 Step 1/5: Redis 초기화..."
+echo "🧹 Step 1/5: Redis 초기화..."ㅇ
 
 if [ "$REDIS_MODE" == "docker" ]; then
     echo "   Docker 모드로 실행..."
@@ -156,8 +156,13 @@ echo "👥 Step 2/5: MySQL 테스트 유저 생성 중..."
 export MYSQL_PWD="$DB_PASS"
 MYSQL_CMD_BASE="mysql -h$DB_HOST -P$DB_PORT -u$DB_USER $DB_NAME"
 
-# 기존 테스트 유저 삭제
-$MYSQL_CMD_BASE -e "DELETE FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END;" 2>/dev/null
+# 기존 테스트 데이터 삭제 (외래키 순서 고려: purchases → entries → user_summary → users)
+echo "   🧹 Cleaning old test data for activity_id=$ACTIVITY_ID..."
+$MYSQL_CMD_BASE -e "DELETE FROM purchases WHERE campaign_activity_id = $ACTIVITY_ID;"
+$MYSQL_CMD_BASE -e "DELETE FROM campaign_activity_entries WHERE campaign_activity_id = $ACTIVITY_ID;"
+$MYSQL_CMD_BASE -e "DELETE FROM user_summary WHERE user_id BETWEEN $USER_ID_START AND $USER_ID_END;"
+$MYSQL_CMD_BASE -e "DELETE FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END;"
+echo "   ✅ Old data cleaned"
 
 # BRONZE 유저 생성 (
 if [ $BRONZE_COUNT -gt 0 ]; then
@@ -235,6 +240,15 @@ EOF
 fi
 
 echo "   ✅ MySQL 유저 생성 완료"
+
+# UserSummary 생성 (User와 1:1 필수 관계)
+echo "   생성 중: UserSummary..."
+$MYSQL_CMD_BASE << EOF
+INSERT INTO user_summary (user_id, last_login_at, last_purchase_at)
+SELECT id, NULL, NULL FROM users WHERE id BETWEEN $USER_ID_START AND $USER_ID_END
+ON DUPLICATE KEY UPDATE user_id=user_id;
+EOF
+echo "   ✅ UserSummary 생성 완료"
 echo ""
 
 # ============================================================================
@@ -337,7 +351,7 @@ USER_COUNT=$($MYSQL_CMD_BASE -s -N -e "SELECT COUNT(*) FROM users WHERE id BETWE
 echo "   MySQL 유저: $USER_COUNT / $NUM_USERS"
 
 # JWT 토큰 수 확인
-TOKEN_COUNT=$(grep -c '"' "$TOKEN_FILE" || echo "0")
+TOKEN_COUNT=$(grep -o '"' "$TOKEN_FILE" | wc -l | tr -d ' ')
 TOKEN_COUNT=$((TOKEN_COUNT / 2))  # key:value이므로 2로 나눔
 echo "   JWT 토큰: $TOKEN_COUNT / $NUM_USERS"
 
@@ -349,6 +363,40 @@ else
     REDIS_COUNT=$(kubectl exec -i "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" KEYS "user:*" | wc -l | tr -d ' ')
 fi
 echo "   Redis 캐시: $REDIS_COUNT / $CACHE_COUNT"
+
+# Product 재고 확인 및 자동 증가
+echo ""
+echo "📦 Product 재고 검증 중..."
+
+# Campaign Activity의 limit_count 조회
+LIMIT_COUNT=$($MYSQL_CMD_BASE -s -N -e \
+  "SELECT limit_count FROM campaign_activities WHERE id = $ACTIVITY_ID;" | head -n 1)
+
+if [ -z "$LIMIT_COUNT" ]; then
+    LIMIT_COUNT=100 # 기본값
+fi
+
+# Product ID와 현재 재고 조회
+PRODUCT_ID=$($MYSQL_CMD_BASE -s -N -e \
+  "SELECT product_id FROM campaign_activities WHERE id = $ACTIVITY_ID;" | head -n 1)
+
+if [ -n "$PRODUCT_ID" ]; then
+    CURRENT_STOCK=$($MYSQL_CMD_BASE -s -N -e \
+      "SELECT stock FROM products WHERE id = $PRODUCT_ID;" | head -n 1)
+
+    # 필요 재고 계산 (limit + 50% 버퍼 for 잠재적 over-booking)
+    REQUIRED_STOCK=$((LIMIT_COUNT * 3 / 2))
+
+    if [ "$CURRENT_STOCK" -lt "$REQUIRED_STOCK" ]; then
+      echo "   ⚠️  WARNING: Current stock ($CURRENT_STOCK) < Required ($REQUIRED_STOCK)"
+      echo "   Increasing product stock to $REQUIRED_STOCK..."
+      $MYSQL_CMD_BASE -e \
+        "UPDATE products SET stock = $REQUIRED_STOCK WHERE id = $PRODUCT_ID;"
+      echo "   ✅ Product stock updated to $REQUIRED_STOCK"
+    else
+      echo "   ✅ Product stock sufficient: $CURRENT_STOCK >= $REQUIRED_STOCK"
+    fi
+fi
 
 if [ "$USER_COUNT" -eq "$NUM_USERS" ] && [ "$TOKEN_COUNT" -ge "$NUM_USERS" ]; then
   echo "   ✅ 검증 성공!"

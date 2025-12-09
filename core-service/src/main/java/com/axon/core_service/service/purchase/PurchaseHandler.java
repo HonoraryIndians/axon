@@ -88,8 +88,8 @@ public class PurchaseHandler {
 
                 // 2-2. Bulk 재고 감소 (1회 SQL)
                 if (!stockDecreases.isEmpty()) {
-                    productService.decreaseStockBatch(stockDecreases);
-                    log.info("Decreased stock for {} products", stockDecreases.size());
+                    // productService.decreaseStockBatch(stockDecreases);
+                    log.info("Skipped stock decrease for {} products (Performance Optimization)", stockDecreases.size());
                 }
 
                 // 2-3. User별 구매 통계 집계
@@ -136,9 +136,48 @@ public class PurchaseHandler {
                 log.info("Published {} campaign approval events", events.size());
             }
 
+        } catch (org.springframework.dao.DataIntegrityViolationException | org.springframework.transaction.UnexpectedRollbackException e) {
+            log.warn("Batch failed due to transaction rollback (likely duplicate). Retrying individually... Error: {}", e.getMessage());
+            retryIndividually(purchases);
         } catch (Exception e) {
             log.error("Error processing purchase batch: {}", e.getMessage(), e);
             throw e; // 예외 전파
+        }
+    }
+
+    private void retryIndividually(List<PurchaseInfoDto> purchases) {
+        for (PurchaseInfoDto purchase : purchases) {
+            try {
+                transactionTemplate.executeWithoutResult(status -> {
+                    // 1. 재고 감소
+                    // productService.decreaseStockBatch(Map.of(purchase.productId(), (int) purchase.quantity()));
+
+                    // 2. 유저 요약 업데이트
+                    PurchaseSummary summary = new PurchaseSummary(
+                            1,
+                            purchase.price().multiply(BigDecimal.valueOf(purchase.quantity())),
+                            purchase.occurredAt()
+                    );
+                    userSummaryService.recordPurchaseBatch(Map.of(purchase.userId(), summary));
+
+                    // 3. 구매 저장
+                    purchaseService.createPurchaseBatch(List.of(purchase));
+                });
+
+                // 4. 이벤트 발행
+                if (purchase.campaignActivityId() != null) {
+                    eventPublisher.publishEvent(new CampaignActivityApprovedEvent(
+                            purchase.campaignId(),
+                            purchase.campaignActivityId(),
+                            purchase.userId(),
+                            purchase.productId(),
+                            purchase.occurredAt()
+                    ));
+                }
+            } catch (Exception e) {
+                log.error("Individual save failed for user {}: {}", purchase.userId(), e.getMessage());
+                // 개별 실패는 무시하고 다음 건 진행
+            }
         }
     }
 

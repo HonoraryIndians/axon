@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -168,8 +169,14 @@ public class CampaignActivityEntryService {
             toSave.add(entry);
 
             // 구매 관련 활동이면 이벤트 준비
-            if (status == CampaignActivityEntryStatus.APPROVED
-                    && activity.getActivityType().isPurchaseRelated()) {
+            boolean isApproved = (status == CampaignActivityEntryStatus.APPROVED);
+            boolean isPurchaseRelated = activity.getActivityType().isPurchaseRelated();
+            
+            log.info("Checking event condition: userId={}, status={}, type={}, isApproved={}, isPurchaseRelated={}", 
+                    dto.getUserId(), status, activity.getActivityType(), isApproved, isPurchaseRelated);
+
+            if (isApproved && isPurchaseRelated) {
+                log.info("Adding purchase event for userId={}", dto.getUserId());
                 purchaseEvents.add(new PurchaseInfoDto(
                         activity.getCampaignId(),
                         activity.getId(),
@@ -186,8 +193,24 @@ public class CampaignActivityEntryService {
 
         // 5. Bulk save (1회 DB 접근)
         if (!toSave.isEmpty()) {
-            campaignActivityEntryRepository.saveAll(toSave);
-            log.info("Saved {} entries", toSave.size());
+            try {
+                campaignActivityEntryRepository.saveAll(toSave);
+                log.info("Saved {} entries", toSave.size());
+            } catch (DataIntegrityViolationException e) {
+                // Handle duplicates gracefully - process individually
+                log.warn("Duplicate entries detected in batch, processing individually");
+                int saved = 0;
+                for (CampaignActivityEntry entry : toSave) {
+                    try {
+                        campaignActivityEntryRepository.save(entry);
+                        saved++;
+                    } catch (DataIntegrityViolationException ex) {
+                        log.debug("Skipping duplicate entry: activity={}, user={}",
+                            entry.getCampaignActivity().getId(), entry.getUserId());
+                    }
+                }
+                log.info("Saved {} entries ({} duplicates skipped)", saved, toSave.size() - saved);
+            }
         }
 
         // 6. Bulk event 발행

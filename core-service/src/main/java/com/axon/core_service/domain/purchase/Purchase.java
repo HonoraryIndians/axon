@@ -12,10 +12,18 @@ import java.time.ZoneId;
 import java.util.Objects;
 
 @Entity
-@Table(name = "purchases", indexes = {
+@Table(name = "purchases",
+    indexes = {
         @Index(name = "idx_purchase_activity_lookup", columnList = "campaign_activity_id, purchase_type, purchase_at"),
         @Index(name = "idx_purchase_user_history", columnList = "user_id, purchase_at")
-})
+    },
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_campaign_purchase_user",
+            columnNames = {"campaign_activity_id", "user_id"}
+        )
+    }
+)
 @Getter
 @NoArgsConstructor
 public class Purchase {
