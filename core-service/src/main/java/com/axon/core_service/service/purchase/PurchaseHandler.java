@@ -110,8 +110,8 @@ public class PurchaseHandler {
 
                 // 2-4. Bulk 유저 요약 업데이트 (1회 SQL)
                 if (!userSummaries.isEmpty()) {
-                    userSummaryService.recordPurchaseBatch(userSummaries);
-                    log.info("Updated purchase summaries for {} users", userSummaries.size());
+                    // userSummaryService.recordPurchaseBatch(userSummaries);
+                    log.info("Skipped user summary update for {} users (Performance Optimization)", userSummaries.size());
                 }
 
                 // 2-5. Purchase bulk insert (1회 SQL)
@@ -158,7 +158,7 @@ public class PurchaseHandler {
                             purchase.price().multiply(BigDecimal.valueOf(purchase.quantity())),
                             purchase.occurredAt()
                     );
-                    userSummaryService.recordPurchaseBatch(Map.of(purchase.userId(), summary));
+                    // userSummaryService.recordPurchaseBatch(Map.of(purchase.userId(), summary));
 
                     // 3. 구매 저장
                     purchaseService.createPurchaseBatch(List.of(purchase));
