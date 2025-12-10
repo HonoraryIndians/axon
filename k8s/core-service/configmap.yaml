@@ -17,7 +17,7 @@ data:
         username: axon_user
         password: ${DB_PASSWORD}
         hikari:
-          maximum-pool-size: 20  # Increased from default 10 to handle concurrent batch processing
+          maximum-pool-size: 50  # Increased to 50 (Total 100 connections) to handle 2000 VU load
           minimum-idle: 10
           connection-timeout: 10000  # 10s - Fail fast instead of waiting 30s
           max-lifetime: 600000  # 10 minutes

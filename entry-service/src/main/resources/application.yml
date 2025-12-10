@@ -8,6 +8,12 @@ spring:
     redis:
       host: localhost
       port: 6379
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:8}
+          max-idle: ${REDIS_POOL_MAX_IDLE:8}
+          min-idle: ${REDIS_POOL_MIN_IDLE:0}
+          max-wait: ${REDIS_POOL_MAX_WAIT:1000}ms
   profiles:
     include: oauth
 
