@@ -33,12 +33,13 @@ public class CacheConfig {
         // Register Java 8 date/time module for LocalDateTime serialization
         mapper.registerModule(new JavaTimeModule());
 
-        // Enable polymorphic type handling to preserve class information in JSON
-        // This allows Redis to deserialize objects back to their original types
+        // Enable polymorphic type handling with WRAPPER_ARRAY format
+        // This wraps type information in an array: ["com.example.Type", {...}]
+        // More compatible with collections and complex types
         mapper.activateDefaultTyping(
             LaissezFaireSubTypeValidator.instance,
             ObjectMapper.DefaultTyping.NON_FINAL,
-            JsonTypeInfo.As.PROPERTY
+            JsonTypeInfo.As.WRAPPER_ARRAY  // Changed from PROPERTY to WRAPPER_ARRAY
         );
 
         return mapper;
