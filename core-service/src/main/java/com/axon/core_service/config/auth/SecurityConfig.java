@@ -26,6 +26,7 @@ public class SecurityConfig {
         private final CustomOAuth2UserService customOAuth2UserService;
         private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
         private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+        private final CustomLogoutHandler customLogoutHandler;
 
         /**
          * Creates a JwtAuthenticationFilter initialized with the configured
@@ -78,7 +79,12 @@ public class SecurityConfig {
                                                                 new HttpStatusEntryPoint(HttpStatus.OK), // 200 OK 반환 (리다이렉트 방지)
                                                                 antMatcher("/test/**"))
                                                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/naver")))
-                                .logout(logout -> logout.logoutSuccessUrl("/"))
+                                .logout(logout -> logout
+                                                .logoutUrl("/logout")
+                                                .logoutSuccessUrl("/")
+                                                .deleteCookies("accessToken", "refreshToken")  // Delete JWT cookies
+                                                .addLogoutHandler(customLogoutHandler)  // Custom cleanup (Redis, events)
+                                                .permitAll())
                                 .oauth2Login(oauth2 -> oauth2
                                                 .loginPage("/oauth2/authorization/naver")
                                                 .userInfoEndpoint(userInfo -> userInfo
