@@ -246,9 +246,9 @@ public class CohortLtvBatchService {
         LocalDateTime monthStart = cohortStartDate.plusMonths(monthOffset);
         LocalDateTime monthEnd = cohortStartDate.plusMonths(monthOffset + 1);
 
-        // 이번 달 구매 데이터만 조회 (증분)
-        List<Purchase> monthlyPurchases = purchaseRepository.findByCampaignActivityIdAndPeriod(
-                activity.getId(),
+        // 이번 달 구매 데이터만 조회 (증분 - 코호트 유저 전체 대상)
+        List<Purchase> monthlyPurchases = purchaseRepository.findByUserIdInAndPeriod(
+                cohortUserIds,
                 monthStart,
                 monthEnd
         );

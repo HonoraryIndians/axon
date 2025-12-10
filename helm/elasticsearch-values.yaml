@@ -59,7 +59,7 @@ spec:
               name: transport
           resources:
             requests:
-              cpu: "1000m"
+              cpu: "500m"
               memory: "6Gi"
             limits:
               cpu: "1000m"

@@ -1,0 +1,60 @@
+sequenceDiagram
+    autonumber
+    participant Scheduler as 스케줄러 (Spring Scheduler)
+    participant Service as 배치 서비스 (CohortLtvBatchService)
+    participant Repo as DB 저장소 (Repository Layer)
+    participant MySQL as MySQL (Data)
+    participant Analyzer as 코호트 분석기 (CohortAnalysisService)
+
+    Note over Scheduler,MySQL: 시스템 부하가 적은 새벽 3시에 실행
+
+    activate Scheduler
+    Scheduler->>Service: processMonthlyCohortStats()
+    activate Service
+
+    Service->>Repo: findActivitiesForBatchProcessing()
+    Note right of Repo: 최근 1년치 캠페인 조회<br/>(분석 대상 식별)
+
+    Repo->>MySQL: 캠페인 목록 조회 (SELECT DISTINCT CampaignActivity)
+    MySQL-->>Service: 대상 캠페인 ID 리스트 (예: 50개)
+
+    loop 각 캠페인별로 반복 처리 (For each activityId)
+        Service->>Service: 처리할 'N개월차' 계산
+        Note right of Service: 예: 지난달이 3개월차였으면<br/>이번엔 4개월차 통계 생성
+
+        alt 이미 데이터가 존재하거나, 아직 날짜가 안 된 경우
+            Service->>Service: 건너뛰기 (Early Exit/Skip)
+        else 새로운 달 통계 생성 필요
+
+            Service->>Repo: findFirstPurchasesByActivityAndPeriod()
+            Note right of Repo: 해당 기간 첫 구매자 조회
+
+            Repo->>MySQL: 첫 구매자 & 재구매자 조회 (SELECT * FROM Purchase)
+            MySQL-->>Service: 구매 이력 데이터
+
+            Service->>Analyzer: analyzeRepeatPurchases(cohortUsers, allPurchases)
+            activate Analyzer
+            Analyzer->>Analyzer: 지표 계산
+            Note right of Analyzer: - 재구매율(Retention)<br/>- 객단가(AOV)<br/>- 구매 빈도(Frequency)
+            Analyzer-->>Service: 분석 결과 반환
+            deactivate Analyzer
+
+            Service->>Service: buildLTVBatch()
+            Note right of Service: LTV 데이터 생성<br/>(고객 1인당 생애 가치 및 누적 매출 계산)
+
+            Service->>Repo: 배치 버퍼에 추가 (Add to batchBuffer)
+        end
+
+        alt 버퍼가 꽉 차면 (예: 50개)
+            Service->>Repo: saveAll(batchBuffer)
+            Note right of Repo: 한 번에 저장 (Bulk Insert)
+            MySQL-->>Service: DB 부하 최소화
+        end
+    end
+
+    Service->>Repo: saveAll(remainingBuffer)
+    Note right of Repo: 남은 데이터 최종 저장
+
+    Service-->>Scheduler: 배치 작업 완료
+    deactivate Service
+    deactivate Scheduler

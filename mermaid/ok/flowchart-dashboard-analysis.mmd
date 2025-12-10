@@ -1,0 +1,74 @@
+%% Flowchart: 분석 대시보드 접근 및 데이터 조회 흐름
+
+flowchart TD
+    Start([마케터: 대시보드 접속]) --> SelectDashboard{대시보드 선택}
+
+    SelectDashboard -->|글로벌| LoadGlobal[글로벌 대시보드 로드]
+    SelectDashboard -->|캠페인| LoadCampaign[캠페인 대시보드 로드]
+    SelectDashboard -->|활동| LoadActivity[활동 대시보드 로드]
+    SelectDashboard -->|코호트| LoadCohort[코호트 대시보드 로드]
+
+    LoadGlobal --> GlobalAPI["GET /api/v1/dashboard/global<br/>?startDate=2025-01-01&endDate=2025-01-31"]
+    LoadCampaign --> CampaignAPI["GET /api/v1/dashboard/campaign/:id<br/>?period=MONTHLY"]
+    LoadActivity --> ActivityAPI["GET /api/v1/dashboard/activity/:id"]
+    LoadCohort --> CohortAPI["GET /api/v1/dashboard/cohort/:id"]
+
+    GlobalAPI --> GlobalService["캠페인 메트릭 서비스"]
+    CampaignAPI --> CampaignService["캠페인 메트릭 서비스"]
+    ActivityAPI --> ActivityService["캠페인 메트릭 서비스<br/>+ Redis 실시간 쿼리"]
+    CohortAPI --> CohortService["코호트 분석 서비스"]
+
+    GlobalService --> GlobalData["집계 데이터 수집"]
+    CampaignService --> CampaignData["캠페인별 데이터"]
+    ActivityService --> ActivityData["활동별 데이터"]
+    CohortService --> CohortData["LTVBatch 쿼리"]
+
+    GlobalData --> GlobalMetrics{메트릭 계산}
+    CampaignData --> CampaignMetrics{메트릭 계산}
+    ActivityData --> ActivityMetrics{메트릭 계산}
+    CohortData --> CohortMetrics{메트릭 계산}
+
+    GlobalMetrics -->|총 매출| GlobalResult["총 매출<br/>전체 캠페인<br/>전체 전환율<br/>평균 ROI"]
+
+    CampaignMetrics -->|캠페인별| CampaignResult["캠페인별 매출<br/>ROI/ROAS<br/>참여자 수<br/>예산 효율성"]
+
+    ActivityMetrics -->|활동별| ActivityResult["실시간 재고<br/>현재 참여자<br/>시간대별 트래픽<br/>전환 퍼널"]
+
+    CohortMetrics -->|LTV 분석| CohortResult["LTV/CAC 비율<br/>월별 매출 추이<br/>재구매율<br/>손익분기월"]
+
+    GlobalResult --> RenderGlobal[차트 렌더링]
+    CampaignResult --> RenderCampaign[차트 렌더링]
+    ActivityResult --> RenderActivity[차트 렌더링]
+    CohortResult --> RenderCohort[차트 렌더링]
+
+    RenderGlobal --> DisplayGlobal[사용자에게 표시]
+    RenderCampaign --> DisplayCampaign[사용자에게 표시]
+    RenderActivity --> DisplayActivity[사용자에게 표시]
+    RenderCohort --> DisplayCohort[사용자에게 표시]
+
+    DisplayGlobal --> Drilldown{드릴다운?}
+    DisplayCampaign --> Drilldown
+    DisplayActivity --> Drilldown
+    DisplayCohort --> Drilldown
+
+    Drilldown -->|캠페인으로| LoadCampaign
+    Drilldown -->|활동으로| LoadActivity
+    Drilldown -->|코호트로| LoadCohort
+    Drilldown -->|CSV 내보내기| ExportData[CSV 생성<br/>다운로드]
+    Drilldown -->|AI 질문| OpenChatbot[LLM 챗봇 열기]
+    Drilldown -->|새로고침| SelectDashboard
+
+    OpenChatbot --> ChatbotQuery[POST /api/v1/dashboard/query]
+    ChatbotQuery --> LLMProcess["LLM 서비스<br/>Gemini API 호출"]
+    LLMProcess --> ChatbotResult[AI 인사이트 표시]
+    ChatbotResult --> Drilldown
+
+    ExportData --> End1([다운로드 완료])
+
+    style LoadGlobal fill:#81c784,stroke:#388e3c,stroke-width:2px
+    style LoadCampaign fill:#4fc3f7,stroke:#0277bd,stroke-width:2px
+    style LoadActivity fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px
+    style LoadCohort fill:#fff176,stroke:#f57f17,stroke-width:2px
+
+    style OpenChatbot fill:#f48fb1,stroke:#c2185b,stroke-width:2px
+    style LLMProcess fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px

@@ -1,0 +1,48 @@
+sequenceDiagram
+    autonumber
+    participant Entry as Entry 서버
+    participant Kafka as 카프카 (대기열)
+    participant Consumer as Core 서버 (소비자)
+    participant Buffer as 메모리 버퍼 (ConcurrentLinkedQueue)
+    participant Strategy as 선착순 로직 (FirstComeFirstServeStrategy)
+    participant MySQL as DB (최종 저장)
+
+    Note over Entry,MySQL: 사용자가 선착순에 당첨된 직후 상황
+
+    loop 수많은 사용자가 동시 당첨
+        Entry->>Kafka: 당첨 티켓 발행 (Produce Message)
+        Note right of Kafka: "누가(User), 무엇을(Item)<br/>언제(Time) 당첨됐나"
+    end
+
+    Note over Consumer,Buffer: Core 서버는 자신의 속도대로 처리 (Backpressure)
+
+    activate Consumer
+    Consumer->>Kafka: 메시지 뭉치 가져오기 (Poll Messages)
+    Kafka-->>Consumer: 메시지 다발 보내기
+
+    loop 내부 버퍼링 (Add to Buffer)
+        Consumer->>Buffer: 임시 저장 (메모리)
+    end
+
+    Consumer->>Consumer: 처리 조건 확인 (Check Flush Condition)
+    Note right of Consumer: 1. 20개가 모였거나<br/>2. 0.1초가 지났으면<br/>-> DB에 저장하러 간다
+
+    alt 조건 충족 (Flush Condition Met)
+        Consumer->>Buffer: 메시지 모두 꺼내기 (Drain All Messages)
+
+        Consumer->>Strategy: processBatch(messages)
+        activate Strategy
+
+        Strategy->>Strategy: 중복 제거 (Deduplicate by activityId:userId)
+        Note right of Strategy: 혹시 모를 중복 요청 걸러냄<br/>(멱등성 보장)
+
+        Strategy->>MySQL: 한 번에 저장 (Bulk Upsert)
+        Note right of MySQL: INSERT INTO CampaignActivityEntry<br/>ON DUPLICATE KEY UPDATE<br/>(원자성 보장)
+
+        MySQL-->>Strategy: 저장 완료 (Affected Rows)
+        deactivate Strategy
+
+        Consumer->>MySQL: 트랜잭션 커밋 (Commit Transaction)
+    end
+
+    deactivate Consumer
