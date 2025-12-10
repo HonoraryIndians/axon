@@ -7,7 +7,8 @@
 </head>
 
 <body>
-    <div layout:fragment="content" class="w-full">
+    <div layout:fragment="content">
+        <div class="w-full">
 
         <!-- Category View -->
         <div th:if="${selectedCategory != null}" class="max-w-[1200px] mx-auto px-4 py-10">
@@ -260,6 +261,7 @@
                 </div>
             </div>
 
+        </div>
         </div>
     </div>
 </body>
