@@ -60,7 +60,7 @@ public class SecurityConfig {
                                                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))  // Allow session for OAuth2 login to preserve original request
                                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
                                 .authorizeHttpRequests(authz -> authz
-                                                .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/uploads/**",
+                                                .requestMatchers("/", "/mainshop", "/css/**", "/image/**", "/images/**", "/js/**", "/uploads/**",
                                                                 "/h2-console/**", "/favicon.ico", "/welcomepage",
                                                                 "/welcomepage.html", "/test/**")
                                                 .permitAll()
