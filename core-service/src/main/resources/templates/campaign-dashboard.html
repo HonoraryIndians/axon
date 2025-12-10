@@ -30,8 +30,11 @@
                 <div class="dashboard-title-row">
                     <h1 class="page-title" id="campaignName">Campaign Dashboard</h1>
                     
-                    <!-- Date Period Selector (Match Activity Dashboard) -->
-                    <div class="relative">
+                    <div class="flex items-center gap-4">
+                        <span id="lastUpdated" class="text-xs text-gray-400 hidden sm:inline-block">Last updated: --:--:--</span>
+
+                        <!-- Date Period Selector (Match Activity Dashboard) -->
+                        <div class="relative">
                         <button onclick="togglePeriodDropdown()" class="flex items-center space-x-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-shadow shadow-sm">
                             <i class="fa-regular fa-calendar text-gray-400"></i>
                             <span id="currentPeriodLabel">Last 7 Days</span>
