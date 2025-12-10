@@ -1,0 +1,89 @@
+%% 3. FCFS + 결제 플로우차트 - 전체 프로세스
+
+flowchart TD
+    Start([사용자: 선착순 참여 버튼 클릭]) --> CheckLogin{로그인 여부}
+
+    CheckLogin -->|미로그인| RedirectLogin[OAuth2 로그인 페이지 리디렉션]
+    RedirectLogin --> Start
+
+    CheckLogin -->|로그인됨| SendRequest[POST /entry/api/v1/entries<br/>userId + activityId]
+
+    SendRequest --> EntryController["Entry Controller<br/>요청 수신"]
+
+    EntryController --> CheckMeta{캠페인 메타<br/>존재 여부}
+
+    CheckMeta -->|Redis Miss| FetchMeta["Core Service 호출<br/>GET /api/v1/campaign/activities/:id<br/>TTL 1시간"]
+    FetchMeta --> CheckMeta
+
+    CheckMeta -->|캐시 Hit| CheckStatus{캠페인 상태}
+
+    CheckStatus -->|INACTIVE/CLOSED| ReturnClosed[응답: 캠페인 종료]
+    ReturnClosed --> End1([종료])
+
+    CheckStatus -->|ACTIVE| FastValidation["Fast Validation<br/><br/><br/>Redis 캐시 조회: userCache:userId<br/>연령 조건 검증<br/>등급 조건 검증"]
+
+    FastValidation -->|실패| ReturnFail[응답: 참여 불가<br/>사유: 연령/등급 미달]
+    ReturnFail --> End2([종료])
+
+    FastValidation -->|성공| HeavyValidation["Heavy Validation<br/>(선택적)<br/><br/><br/>Core Service API 호출<br/>복잡한 필터 조건 검증"]
+
+    HeavyValidation -->|실패| ReturnFail
+    HeavyValidation -->|성공| GenerateToken["결정론적 토큰 생성<br/><br/><br/>Payload: userId, activityId,<br/>productId, quantity, timestamp<br/>HMAC 서명 + Base64"]
+
+    GenerateToken --> FCFSReserve["FCFS 예약 로직<br/><br/><br/>원자성 보장"]
+
+    FCFSReserve --> RedisAdd["Redis SADD<br/>campaign:activityId:users userId"]
+
+    RedisAdd --> CheckDuplicate{추가 성공?}
+
+    CheckDuplicate -->|"0 (이미 존재)"| ReturnDuplicate[응답: 중복 참여]
+    ReturnDuplicate --> End3([종료])
+
+    CheckDuplicate -->|"1 (신규)"| RedisIncr["Redis INCR<br/>campaign:activityId:counter"]
+
+    RedisIncr --> CheckLimit{counter > limitCount?}
+
+    CheckLimit -->|초과| Rollback["Rollback<br/><br/><br/>SREM campaign:activityId:users userId<br/>DECR campaign:activityId:counter"]
+    Rollback --> ReturnSoldOut[응답: 품절]
+    ReturnSoldOut --> End4([종료])
+
+    CheckLimit -->|미초과| PublishEvent["ReservationApprovedEvent 발행<br/>(로컬 이벤트)"]
+
+    PublishEvent --> ReturnToken["응답: 예약 성공<br/><br/><br/>• 순번: counter<br/>• 예약 토큰: JWT<br/> 데이터 원자성을 위한 2차토큰 발급<br/>TTL : 30분"]
+
+    ReturnToken --> UserPayment([사용자: 결제 페이지 이동])
+
+    UserPayment --> ShowPayment[결제 정보 표시<br/>상품명, 가격, 수량]
+
+    ShowPayment --> UserConfirm{사용자<br/>결제 확인?}
+
+    UserConfirm -->|취소| PaymentCancel[1차토큰 만료 전까지 재결제 가능]
+    PaymentCancel --> End5([재결제 / 종료])
+
+    UserConfirm -->|확인| SendPayment["POST /entry/api/v1/payment/confirm<br/>예약 토큰 전송"]
+
+    SendPayment --> ValidateToken{토큰 검증}
+
+    ValidateToken -->|만료/변조| ReturnInvalid[응답: 토큰 오류]
+    ReturnInvalid --> Retry{1차 토큰 유효기간동안 <br/> 재결제}
+
+    Retry -->|예| UserPayment
+    Retry -->|1차 토큰 TTL 만료| End6([종료])
+
+    ValidateToken -->|유효| PublishKafka["Kafka Producer<br/><br/><br/>Topic: axon.campaign-activity.command<br/>Payload: CampaignActivityKafkaProducerDto"]
+
+    PublishKafka --> ReturnSuccess[응답: 결제 접수 완료<br/>비동기 처리 예정]
+
+    ReturnSuccess --> KafkaBuffer["이후 로직은 마이크로 배치 bulk insert<br/>향후 설명"]
+
+
+    %% 스타일링 (진한 색상)
+    style Start fill:#81d4fa,stroke:#0277bd,stroke-width:2px
+    style FCFSReserve fill:#ef9a9a,stroke:#c62828,stroke-width:3px
+    style RedisAdd fill:#ffb74d,stroke:#ef6c00,stroke-width:2px
+    style RedisIncr fill:#ffb74d,stroke:#ef6c00,stroke-width:2px
+    style CheckLimit fill:#fff176,stroke:#f57f17,stroke-width:2px
+    style PublishKafka fill:#81c784,stroke:#388e3c,stroke-width:2px
+    style CoreConsumer fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px
+    style GenerateToken fill:#f48fb1,stroke:#c2185b,stroke-width:2px
+    style ValidateToken fill:#f48fb1,stroke:#c2185b,stroke-width:2px

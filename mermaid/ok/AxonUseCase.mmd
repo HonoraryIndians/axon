@@ -1,0 +1,39 @@
+```mermaid
+---
+title: USE-CASE
+---
+sequenceDiagram
+    autonumber
+    actor User as 고객
+    participant Browser as 브라우저/App
+    participant Entry as Entry Service<br/>(Redis)
+    participant Kafka as Kafka<br/>(Buffer)
+    participant Core as Core Service<br/>(MySQL)
+
+    Note over User, Entry: 1. 선착순 응모 시나리오
+    User->>Browser: "응모하기" 클릭
+    Browser->>Entry: POST /api/v1/entries (FCFS)
+    activate Entry
+    Entry->>Entry: Redis INCR (재고 확인)
+
+    alt 재고 있음 (Success)
+        Entry->>Kafka: 당첨 이벤트 발행
+        Entry-->>Browser: 200 OK (당첨! 구매페이지로 이동)
+        deactivate Entry
+        Browser->>User: "당첨되었습니다!" 팝업
+
+        Note over User, Core: 2. 구매 시나리오
+        User->>Browser: 결제 정보 입력 및 "결제하기"
+        Browser->>Core: POST /api/v1/purchases
+        activate Core
+        Core->>Core: 결제 검증 및 DB 저장
+        Core-->>Browser: 200 OK (구매 완료)
+        deactivate Core
+    else 재고 없음 (Fail)
+        activate Entry
+        Entry-->>Browser: 410 Gone (마감)
+        deactivate Entry
+        Browser->>User: "선착순 마감되었습니다."
+    end
+```
+

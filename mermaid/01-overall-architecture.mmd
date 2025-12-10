@@ -1,0 +1,104 @@
+%% Graph: 전체 아키텍처 구조도
+
+graph TB
+    subgraph Client["클라이언트 계층"]
+        Browser["브라우저<br/>사용자/관리자"]
+        JSTracker["행동 추적 JS<br/>이벤트 수집"]
+    end
+
+    subgraph Entry["응모 요청페이지(선착순)"]
+        EntryController["Entry Controller<br/>POST /entries"]
+        BehaviorController["Behavior Controller<br/>POST /behavior/events"]
+
+        FastValidation["빠른 검증<br/>Redis 캐시 기반<br/>연령/등급 체크"]
+
+        FCFSLogic["선착순 통과 인원 예약<br/>Redis Set<br/>Redis Counter<br/>원자성 보장"]
+
+        EntryKafka["Kafka Producer"]
+
+        EntryRedis[("Redis<br/>참여인원 SET<br/>현재 재고량<br/>사용자 정보 캐싱")]
+    end
+
+    subgraph MQ["메시지 큐"]
+        Kafka[("Apache Kafka<br/>campaign-activity.command<br/>event.behavior")]
+    end
+
+    subgraph Core["Core-Service :8080<br/>비즈니스 로직 및 분석"]
+        CampaignController["Campaign Controller<br/>CRUD 작업"]
+
+        DashboardController["Dashboard Controller<br/>마케팅 분석"]
+
+        LLMController["LLM Query Controller<br/>Gemini AI"]
+
+        KafkaConsumer["Kafka Consumer<br/>마이크로 배칭<br/>20개 또는 100ms"]
+
+        subgraph Strategy["전략 패턴"]
+            FCFS["FCFS 전략<br/>중복 제거 + 대량 Upsert"]
+            Coupon["쿠폰 전략<br/>대량 Insert"]
+        end
+
+        Scheduler["Spring Scheduler<br/>매월 1일 03:00<br/>코호트 LTV 배치"]
+
+        MySQL[("MySQL<br/>캠페인<br/>활동<br/>참여이력<br/>User/Purchase<br/>코호트 월간 배치집계 데이터")]
+    end
+
+    subgraph Pipeline["데이터 파이프라인"]
+        KafkaConnect["Kafka Connect<br/>Elasticsearch Sink"]
+        ES[("Elasticsearch<br/>behavior-events<br/>실시간 집계")]
+    end
+
+    subgraph Monitor["모니터링"]
+        Grafana["Grafana<br/>CPU/RAM/API 응답"]
+    end
+
+    %% 사용자 플로우
+    Browser -->|"FCFS 참여"| EntryController
+    Browser -->|"대시보드"| DashboardController
+    Browser -->|"캠페인 관리"| CampaignController
+    JSTracker -->|"행동 이벤트"| BehaviorController
+
+    %% Entry 서비스 내부
+    EntryController --> FastValidation
+    FastValidation <--> EntryRedis
+    EntryController --> FCFSLogic
+    FCFSLogic <--> EntryRedis
+    FCFSLogic --> EntryKafka
+    BehaviorController --> EntryKafka
+
+    %% Kafka 메시징
+    EntryKafka --> Kafka
+
+    %% Core 서비스 소비
+    Kafka -->|"소비"| KafkaConsumer
+    KafkaConsumer --> FCFS
+    KafkaConsumer --> Coupon
+    FCFS --> MySQL
+    Coupon --> MySQL
+
+    %% 배치 작업
+    Scheduler -->|"통계 계산"| MySQL
+
+    %% 데이터 파이프라인
+    Kafka --> KafkaConnect
+    KafkaConnect --> ES
+
+    %% 대시보드 데이터 소스
+    DashboardController --> ES
+    DashboardController --> MySQL
+    DashboardController --> EntryRedis
+    LLMController --> MySQL
+    LLMController -.->|"Gemini API"| DashboardController
+
+    %% 모니터링
+    MySQL -.-> Grafana
+    EntryRedis -.-> Grafana
+    Entry -.-> Grafana
+    Core -.-> Grafana
+
+    %% 스타일링 (진한 색상)
+    style EntryController fill:#81d4fa,stroke:#0277bd,stroke-width:2px
+    style FCFSLogic fill:#ef9a9a,stroke:#c62828,stroke-width:2px
+    style KafkaConsumer fill:#ffb74d,stroke:#ef6c00,stroke-width:2px
+    style DashboardController fill:#81c784,stroke:#388e3c,stroke-width:2px
+    style LLMController fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px
+    style Kafka fill:#fff176,stroke:#f57f17,stroke-width:3px

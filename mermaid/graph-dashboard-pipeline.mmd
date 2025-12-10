@@ -1,0 +1,67 @@
+%% Graph: 대시보드 데이터 파이프라인
+
+graph TB
+    subgraph Sources["데이터 소스"]
+        ES[("Elasticsearch<br/>behavior-events")]
+        MySQL[("MySQL<br/>Campaign/Entry/Purchase/LTVBatch")]
+        Redis[("Redis<br/>FCFS 실시간 데이터")]
+    end
+
+    subgraph Collection["데이터 수집 계층"]
+        ESQuery["ES 집계<br/>이벤트명별 Terms<br/>날짜 히스토그램"]
+        MySQLQuery["MySQL 쿼리<br/>JOIN 연산<br/>GROUP BY 집계"]
+        RedisQuery["Redis 명령어<br/>SCARD 참여자<br/>GET counter"]
+    end
+
+    subgraph Processing["처리 계층"]
+        MetricsService["캠페인 메트릭 서비스<br/>ROI/ROAS 계산<br/>전환율<br/>예산 효율성"]
+        CohortService["코호트 분석 서비스<br/>LTV 계산<br/>재구매율<br/>평균 주문 금액"]
+    end
+
+    subgraph Dashboards["대시보드 계층"]
+        GlobalDashboard["글로벌 대시보드<br/>전체 캠페인<br/>총 매출<br/>전체 전환율"]
+        CampaignDashboard["캠페인 대시보드<br/>캠페인별 메트릭<br/>ROI/ROAS<br/>예산 활용도"]
+        ActivityDashboard["활동 대시보드<br/>실시간 재고<br/>참여자 수<br/>시간대별 트래픽"]
+        CohortDashboard["코호트 대시보드<br/>LTV/CAC 비율<br/>월별 매출 추이<br/>손익분기점 분석"]
+    end
+
+    subgraph Frontend["프론트엔드 계층"]
+        ChartJS["Chart.js<br/>선/막대/파이 차트"]
+        DataTable["데이터 테이블<br/>페이징<br/>정렬/필터링"]
+    end
+
+    ES --> ESQuery
+    MySQL --> MySQLQuery
+    Redis --> RedisQuery
+
+    ESQuery --> MetricsService
+    MySQLQuery --> MetricsService
+    RedisQuery --> MetricsService
+
+    MySQLQuery --> CohortService
+
+    MetricsService --> GlobalDashboard
+    MetricsService --> CampaignDashboard
+    MetricsService --> ActivityDashboard
+    CohortService --> CohortDashboard
+
+    GlobalDashboard --> ChartJS
+    GlobalDashboard --> DataTable
+
+    CampaignDashboard --> ChartJS
+    CampaignDashboard --> DataTable
+
+    ActivityDashboard --> ChartJS
+    ActivityDashboard --> DataTable
+
+    CohortDashboard --> ChartJS
+    CohortDashboard --> DataTable
+
+    style ES fill:#ffb74d,stroke:#ef6c00,stroke-width:2px
+    style MySQL fill:#81d4fa,stroke:#0277bd,stroke-width:2px
+    style Redis fill:#ef9a9a,stroke:#c62828,stroke-width:2px
+
+    style GlobalDashboard fill:#81c784,stroke:#388e3c,stroke-width:2px
+    style CampaignDashboard fill:#4fc3f7,stroke:#0277bd,stroke-width:2px
+    style ActivityDashboard fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px
+    style CohortDashboard fill:#fff176,stroke:#f57f17,stroke-width:2px

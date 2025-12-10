@@ -1,0 +1,75 @@
+%% Use-case Diagram: 사용자 및 관리자 기능
+
+graph LR
+    subgraph Actors["Actors"]
+        User["고객"]
+        Marketer["마케터<br/>Admin"]
+        Developer["관리자<br/>Admin"]
+    end
+
+    subgraph UserUseCases["사용자 기능"]
+        Register["네이버 회원가입<br/>OAuth2"]
+
+        subgraph Participate["응모 참여"]
+            FCFS["선착순 응모"]
+            Coupon["쿠폰"]
+        end
+
+        Shopping["쇼핑몰 쿠폰 적용 구매"]
+    end
+
+    subgraph MarketerUseCases["마케터 기능"]
+        subgraph Dashboard["트리형 분석 대시보드"]
+            Global["Level 1: 글로벌<br/>Total Performance<br/>Revenue/Conversion"]
+            Campaign["Level 2: 캠페인 단위<br/>Per-Campaign<br/>ROI/ROAS"]
+            Activity["Level 3: 활동 단위<br/>참여율<br/>실시간 재고 현황"]
+            Cohort["Level 4: 코호트<br/>LTV/CAC 분석<br/>재참여율<br/>월별 LTV, CAC 그래프"]
+        end
+
+        LLMChat["LLM 챗봇<br/>단순 통계 조회<br/>마케팅 인사이트 제공"]
+
+        CampaignMgmt["캠페인 생성<br/>필터 조건<br/>예산 조정"]
+    end
+
+    subgraph DevUseCases["관리자 기능"]
+        Monitoring["서버 성능 체크<br/>CPU/RAM<br/>API 성공 비율"]
+
+        GrafanaAlert["그라파나 대시보드"]
+    end
+
+    %% 사용자 연결
+    User --> Register
+    User --> Participate
+    User --> Shopping
+
+    Participate --> FCFS
+    Participate --> Coupon
+
+    %% 마케터 연결
+    Marketer --> Dashboard
+    Marketer --> LLMChat
+    Marketer --> CampaignMgmt
+
+    Dashboard --> Global
+    Global --> Campaign
+    Campaign --> Activity
+    Activity --> Cohort
+
+    %% 개발자 연결
+    Developer --> Monitoring
+    Developer --> GrafanaAlert
+
+    %% 스타일링
+    style User fill:#81d4fa,stroke:#0277bd,stroke-width:2px,color:BLACK
+    style Marketer fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:BLACK
+    style Developer fill:#81c784,stroke:#388e3c,stroke-width:2px,color:BLACK
+
+    style FCFS fill:#ef9a9a,stroke:#c62828,stroke-width:2px
+    style Coupon fill:#ffb74d,stroke:#ef6c00,stroke-width:2px
+
+    style Global fill:#81c784,stroke:#388e3c,stroke-width:2px,color:BLACK
+    style Campaign fill:#4fc3f7,stroke:#0277bd,stroke-width:2px,color:BLACK
+    style Activity fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:BLACK
+    style Cohort fill:#fff176,stroke:#f57f17,stroke-width:2px,color:BLACK
+
+    style LLMChat fill:#f48fb1,stroke:#c2185b,stroke-width:2px,color:BLACK

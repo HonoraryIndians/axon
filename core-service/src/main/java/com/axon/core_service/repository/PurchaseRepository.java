@@ -42,18 +42,17 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
         /**
          * 특정 Activity의 첫 구매 고객만 조회 (Cohort 정의)
-         * userId별 최초 구매만 반환
+         * 해당 기간 내 구매 중, 유저의 생애 첫 구매인 경우만 조회
          */
-        @Query(value = "SELECT p.* FROM purchases p " +
-                        "INNER JOIN ( " +
-                        "    SELECT user_id, MIN(purchase_at) as first_purchase " +
-                        "    FROM purchases " +
-                        "    WHERE campaign_activity_id = :activityId " +
-                        "    AND purchase_at >= :startDate " +
-                        "    AND purchase_at < :endDate " +
-                        "    GROUP BY user_id " +
-                        ") first ON p.user_id = first.user_id AND p.purchase_at = first.first_purchase " +
-                        "WHERE p.campaign_activity_id = :activityId", nativeQuery = true)
+        @Query("SELECT p FROM Purchase p " +
+                        "WHERE p.campaignActivityId = :activityId " +
+                        "AND p.purchaseAt >= :startDate " +
+                        "AND p.purchaseAt < :endDate " +
+                        "AND NOT EXISTS (" +
+                        "    SELECT 1 FROM Purchase prev " +
+                        "    WHERE prev.userId = p.userId " +
+                        "    AND prev.purchaseAt < p.purchaseAt" +
+                        ")")
         List<Purchase> findFirstPurchasesByActivityAndPeriod(
                         @Param("activityId") Long activityId,
                         @Param("startDate") LocalDateTime startDate,
@@ -66,6 +65,19 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
                         "WHERE p.userId IN :userIds " +
                         "ORDER BY p.userId, p.purchaseAt ASC")
         List<Purchase> findByUserIdIn(@Param("userIds") List<Long> userIds);
+
+        /**
+         * 특정 유저 목록의 특정 기간 내 구매 이력 조회 (LTV 증분 계산용)
+         */
+        @Query("SELECT p FROM Purchase p " +
+                        "WHERE p.userId IN :userIds " +
+                        "AND p.purchaseAt >= :startDate " +
+                        "AND p.purchaseAt < :endDate " +
+                        "ORDER BY p.purchaseAt ASC")
+        List<Purchase> findByUserIdInAndPeriod(
+                        @Param("userIds") List<Long> userIds,
+                        @Param("startDate") LocalDateTime startDate,
+                        @Param("endDate") LocalDateTime endDate);
 
         /**
          * 특정 Activity에서 재구매한 고객 수 조회
