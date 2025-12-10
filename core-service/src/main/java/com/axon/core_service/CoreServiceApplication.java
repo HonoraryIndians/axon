@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableScheduling
 @EnableJpaAuditing
-//@EnableCaching  // TODO: Fix Redis serialization issue
 @SpringBootApplication
 public class CoreServiceApplication {
 
