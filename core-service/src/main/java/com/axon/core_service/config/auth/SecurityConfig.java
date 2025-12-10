@@ -55,7 +55,8 @@ public class SecurityConfig {
                 http
                                 .httpBasic(httpBasic -> httpBasic.disable())
                                 .csrf(csrf -> csrf.disable())
-                                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .sessionManagement(sm -> sm
+                                                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))  // Allow session for OAuth2 login to preserve original request
                                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
                                 .authorizeHttpRequests(authz -> authz
                                                 .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/uploads/**",
