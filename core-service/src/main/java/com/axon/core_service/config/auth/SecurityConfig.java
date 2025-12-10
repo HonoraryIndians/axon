@@ -81,7 +81,7 @@ public class SecurityConfig {
                                                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/naver")))
                                 .logout(logout -> logout
                                                 .logoutUrl("/logout")
-                                                .logoutSuccessUrl("/")
+                                                .logoutSuccessUrl("/mainshop")
                                                 .deleteCookies("accessToken", "refreshToken")  // Delete JWT cookies
                                                 .addLogoutHandler(customLogoutHandler)  // Custom cleanup (Redis, events)
                                                 .permitAll())
