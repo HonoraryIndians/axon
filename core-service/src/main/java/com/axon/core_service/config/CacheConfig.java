@@ -1,8 +1,6 @@
 package com.axon.core_service.config;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Duration;
 import org.springframework.cache.annotation.EnableCaching;
@@ -25,7 +23,7 @@ public class CacheConfig {
 
     /**
      * Configure ObjectMapper for Redis JSON serialization.
-     * Enables polymorphic type handling and Java 8 time support.
+     * Only registers JavaTimeModule - GenericJackson2JsonRedisSerializer handles type info.
      */
     private ObjectMapper cacheObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
@@ -33,14 +31,10 @@ public class CacheConfig {
         // Register Java 8 date/time module for LocalDateTime serialization
         mapper.registerModule(new JavaTimeModule());
 
-        // Enable polymorphic type handling with WRAPPER_ARRAY format
-        // This wraps type information in an array: ["com.example.Type", {...}]
-        // More compatible with collections and complex types
-        mapper.activateDefaultTyping(
-            LaissezFaireSubTypeValidator.instance,
-            ObjectMapper.DefaultTyping.NON_FINAL,
-            JsonTypeInfo.As.WRAPPER_ARRAY  // Changed from PROPERTY to WRAPPER_ARRAY
-        );
+        // NOTE: Do NOT use activateDefaultTyping() here!
+        // GenericJackson2JsonRedisSerializer already handles polymorphic types
+        // using its own @class property mechanism. Adding activateDefaultTyping
+        // causes double type wrapping and deserialization errors.
 
         return mapper;
     }
