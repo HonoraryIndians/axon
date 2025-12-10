@@ -18,10 +18,10 @@
         (function() {
             window.__AXON_TRACKER_DEBUG__ = true;
             window.__AXON_TRACKER_COLLECT_ENDPOINT__ = '/entry/api/v1/behavior/events';
-            
+
             /*[# th:if="${#authentication != null and #authentication.principal != 'anonymousUser'}"]*/
                 try {
-                    window.__AXON_USER_ID__ = /*[[${#authentication.principal.username}]]*/ null;
+                    window.__AXON_USER_ID__ = /*[[${#authentication.principal.userId}]]*/ null;
                 } catch (e) {
                     console.warn('[AxonTracker] User ID extraction failed', e);
                 }
