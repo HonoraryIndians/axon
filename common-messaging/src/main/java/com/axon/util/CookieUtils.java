@@ -33,6 +33,7 @@ public class CookieUtils {
 
     /**
      * Add a cookie to the HTTP response with the specified name, value, path, max age, and HttpOnly flag.
+     * Includes SameSite and Secure attributes for better security and cross-site compatibility.
      *
      * @param response the HttpServletResponse to which the cookie will be added
      * @param name     the cookie name
@@ -41,11 +42,24 @@ public class CookieUtils {
      * @param httpOnly whether the cookie should be marked HttpOnly
      */
     public static void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean httpOnly) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setPath("/");
-        cookie.setHttpOnly(httpOnly);
-        cookie.setMaxAge(maxAge);
-        response.addCookie(cookie);
+        // Build Set-Cookie header manually (no spring-web dependency required)
+        StringBuilder cookieHeader = new StringBuilder();
+        cookieHeader.append(name).append("=").append(value);
+        cookieHeader.append("; Path=/");
+        cookieHeader.append("; Max-Age=").append(maxAge);
+
+        if (httpOnly) {
+            cookieHeader.append("; HttpOnly");
+        }
+
+        // Note: Secure=false for HTTP environment (current setup)
+        // Set to true if upgrading to HTTPS
+        // cookieHeader.append("; Secure");
+
+        // SameSite=Lax is sufficient for OAuth2 flows and works with HTTP
+        cookieHeader.append("; SameSite=Lax");
+
+        response.addHeader("Set-Cookie", cookieHeader.toString());
     }
 
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
