@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-    th:replace="fragments/layout :: layout('Axon - Cohort Analysis', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section}, 'dashboard')">
+    th:replace="fragments/layout :: layout('Axon - Cohort Analysis', 'bg-gray-50 text-neutral-900', ~{::head}, ~{::section}, 'dashboard')">
 
 <head>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,12 +12,12 @@
 <section>
     <input type="hidden" id="activityId" th:value="${activityId}" />
 
-    <div class="dashboard-container">
+    <div class="dashboard-layout">
         <!-- Sidebar -->
         <div th:replace="fragments/dashboard_sidebar :: sidebar('cohort', ${activityId}, null)"></div>
 
         <!-- Main Content -->
-        <main class="dashboard-content">
+        <main class="dashboard-main">
             <!-- Header -->
             <div class="dashboard-header">
                 <div class="flex flex-col gap-1">
@@ -33,7 +33,7 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <a th:href="@{/admin/dashboard/activity/{id}(id=${activityId})}"
+                    <a th:href="@{/admin/dashboard/{id}(id=${activityId})}"
                         class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
                         <i class="fa-solid fa-arrow-left"></i>
                         Back to Real-time
@@ -54,27 +54,43 @@
 
                         <div class="grid grid-cols-4 gap-8 border-t border-gray-100 pt-4">
                             <div>
-                                <span
-                                    class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">Cohort
-                                    Start</span>
+                                <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">
+                                    Cohort Period
+                                    <span class="inline-block cursor-help tooltip-wrapper"
+                                        data-tippy-content="코호트 분석의 기준이 되는 기간입니다. 이 기간 동안 처음으로 구매를 발생시킨 고객들을 대상으로 분석합니다.">
+                                        <i class="fa-regular fa-circle-question ml-1"></i>
+                                    </span>
+                                </span>
                                 <div id="cohortPeriod" class="font-semibold text-gray-900">-</div>
                             </div>
                             <div>
-                                <span
-                                    class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">Total
-                                    Customers</span>
+                                <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">
+                                    Total Customers
+                                    <span class="inline-block cursor-help tooltip-wrapper"
+                                        data-tippy-content="해당 기간 동안 처음으로 구매를 발생시킨 고유 고객 수입니다.">
+                                        <i class="fa-regular fa-circle-question ml-1"></i>
+                                    </span>
+                                </span>
                                 <div id="totalCustomers" class="font-semibold text-gray-900">-</div>
                             </div>
                             <div>
-                                <span
-                                    class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">Total
-                                    Budget</span>
+                                <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">
+                                    Total Budget
+                                    <span class="inline-block cursor-help tooltip-wrapper"
+                                        data-tippy-content="이 캠페인 활동에 할당된 총 마케팅 예산입니다.">
+                                        <i class="fa-regular fa-circle-question ml-1"></i>
+                                    </span>
+                                </span>
                                 <div id="totalBudget" class="font-semibold text-gray-900">-</div>
                             </div>
                             <div>
-                                <span
-                                    class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">Avg
-                                    CAC</span>
+                                <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">
+                                    Avg CAC
+                                    <span class="inline-block cursor-help tooltip-wrapper"
+                                        data-tippy-content="고객 획득 비용(Customer Acquisition Cost)입니다.<br>총 예산 / 신규 고객 수">
+                                        <i class="fa-regular fa-circle-question ml-1"></i>
+                                    </span>
+                                </span>
                                 <div id="avgCACBanner" class="font-semibold text-gray-900">-</div>
                             </div>
                         </div>
@@ -87,7 +103,13 @@
                 <!-- 30-day LTV -->
                 <div class="kpi-card">
                     <div class="flex justify-between items-start mb-2">
-                        <h3 class="kpi-label">30-Day LTV</h3>
+                        <h3 class="kpi-label">
+                            30-Day LTV
+                            <span class="inline-block cursor-help text-gray-400 tooltip-wrapper"
+                                data-tippy-content="최초 구매 후 30일 동안 발생한<br>고객당 평균 누적 매출입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </h3>
                         <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Month 1</span>
                     </div>
                     <div id="ltv30d" class="kpi-value text-gray-900">-</div>
@@ -103,7 +125,13 @@
                 <!-- 90-day LTV -->
                 <div class="kpi-card">
                     <div class="flex justify-between items-start mb-2">
-                        <h3 class="kpi-label">90-Day LTV</h3>
+                        <h3 class="kpi-label">
+                            90-Day LTV
+                            <span class="inline-block cursor-help text-gray-400 tooltip-wrapper"
+                                data-tippy-content="최초 구매 후 90일 동안 발생한<br>고객당 평균 누적 매출입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </h3>
                         <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Month 3</span>
                     </div>
                     <div id="ltv90d" class="kpi-value text-gray-900">-</div>
@@ -116,7 +144,13 @@
                 <!-- 365-day LTV -->
                 <div class="kpi-card">
                     <div class="flex justify-between items-start mb-2">
-                        <h3 class="kpi-label">365-Day LTV</h3>
+                        <h3 class="kpi-label">
+                            365-Day LTV
+                            <span class="inline-block cursor-help text-gray-400 tooltip-wrapper"
+                                data-tippy-content="최초 구매 후 1년(365일) 동안 발생한<br>고객당 평균 누적 매출입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </h3>
                         <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Year 1</span>
                     </div>
                     <div id="ltv365d" class="kpi-value text-gray-900">-</div>
@@ -129,7 +163,13 @@
                 <!-- Current LTV -->
                 <div class="kpi-card border-l-4 border-l-emerald-500">
                     <div class="flex justify-between items-start mb-2">
-                        <h3 class="kpi-label text-emerald-900">Current LTV</h3>
+                        <h3 class="kpi-label text-emerald-900">
+                            Current LTV
+                            <span class="inline-block cursor-help text-emerald-700 tooltip-wrapper"
+                                data-tippy-content="현재 시점까지 누적된<br>총 고객당 평균 매출입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </h3>
                         <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Live</span>
                     </div>
                     <div id="ltvCurrent" class="kpi-value text-emerald-700">-</div>
@@ -145,7 +185,13 @@
                 <!-- Repeat Purchase Rate -->
                 <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500 font-medium mb-1">Repeat Purchase Rate</p>
+                        <p class="text-sm text-gray-500 font-medium mb-1">
+                            Repeat Purchase Rate
+                            <span class="inline-block cursor-help tooltip-wrapper"
+                                data-tippy-content="최초 구매 이후 한 번 이상<br>추가 구매를 한 고객의 비율입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </p>
                         <h4 id="repeatPurchaseRate" class="text-2xl font-bold text-gray-900">-</h4>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
@@ -156,7 +202,13 @@
                 <!-- Avg Frequency -->
                 <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500 font-medium mb-1">Avg Purchase Frequency</p>
+                        <p class="text-sm text-gray-500 font-medium mb-1">
+                            Avg Purchase Frequency
+                            <span class="inline-block cursor-help tooltip-wrapper"
+                                data-tippy-content="기간 내 구매 고객 한 명당<br>평균 총 결제 횟수입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </p>
                         <h4 id="avgPurchaseFrequency" class="text-2xl font-bold text-gray-900">-</h4>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500">
@@ -167,7 +219,13 @@
                 <!-- Avg Order Value -->
                 <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500 font-medium mb-1">Avg Order Value</p>
+                        <p class="text-sm text-gray-500 font-medium mb-1">
+                            Avg Order Value
+                            <span class="inline-block cursor-help tooltip-wrapper"
+                                data-tippy-content="비용을 제외하지 않은<br>1회 주문당 평균 결제 금액입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </p>
                         <h4 id="avgOrderValue" class="text-2xl font-bold text-gray-900">-</h4>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
@@ -214,6 +272,30 @@
     <!-- Chatbot -->
     <div th:replace="fragments/chatbot :: chatbot"></div>
     <script th:src="@{/js/chatbot.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof tippy !== 'undefined') {
+                tippy('.tooltip-wrapper', {
+                    allowHTML: true,
+                    placement: 'top',
+                    animation: 'shift-away',
+                    zIndex: 99999999,
+                    appendTo: document.body,
+                    popperOptions: {
+                        strategy: 'fixed',
+                        modifiers: [
+                            {
+                                name: 'preventOverflow',
+                                options: {
+                                    boundary: 'window',
+                                },
+                            },
+                        ],
+                    },
+                });
+            }
+        });
+    </script>
 </section>
 
 </html>
