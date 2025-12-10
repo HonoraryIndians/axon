@@ -195,4 +195,30 @@ public class CouponService {
 
         return discount;
     }
+
+    /**
+     * 쿠폰 사용 처리
+     *
+     * @param userCouponId 사용할 UserCoupon ID
+     * @param userId 사용자 ID (검증용)
+     */
+    @Transactional
+    public void useCoupon(Long userCouponId, Long userId) {
+        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
+                .orElseThrow(() -> new IllegalArgumentException("UserCoupon not found: " + userCouponId));
+
+        // 소유자 확인
+        if (!userCoupon.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("UserCoupon does not belong to user: " + userId);
+        }
+
+        // 이미 사용된 쿠폰인지 확인
+        if (userCoupon.getStatus() != CouponStatus.ISSUED) {
+            throw new IllegalStateException("Coupon already used or invalid");
+        }
+
+        // 쿠폰 사용 처리
+        userCoupon.use();
+        log.info("Coupon {} used by user {}", userCouponId, userId);
+    }
 }

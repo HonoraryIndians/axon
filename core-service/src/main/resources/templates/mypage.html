@@ -170,11 +170,17 @@
 
                                 <div
                                     class="flex justify-between items-center text-xs text-gray-500 border-t border-accent/20 pt-4">
-                                    <span>사용기간: 2024.12.31까지</span>
-                                    <span class="font-bold text-accent" th:if="${uc.status.name() == 'ISSUED'}">사용
-                                        가능</span>
-                                    <span class="font-bold text-gray-400" th:if="${uc.status.name() == 'USED'}">사용
-                                        완료</span>
+                                    <span
+                                        th:text="|사용기간: ${#temporals.format(uc.coupon.endDate, 'yyyy.MM.dd')}까지|">사용기간:
+                                        2024.12.31까지</span>
+                                    <span class="font-bold text-accent">사용 가능</span>
+                                </div>
+                                <div class="mt-2 text-xs text-gray-400 space-y-1">
+                                    <p th:if="${uc.coupon.minOrderAmount != null}"
+                                        th:text="|최소 주문금액: ${#numbers.formatInteger(uc.coupon.minOrderAmount, 0, 'COMMA')}원|">
+                                        최소주문금액</p>
+                                    <p th:if="${uc.coupon.targetCategory != null}"
+                                        th:text="|적용 카테고리: ${uc.coupon.targetCategory}|">카테고리</p>
                                 </div>
                             </div>
                         </div>
