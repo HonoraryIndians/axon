@@ -116,13 +116,17 @@ if [ "$REDIS_MODE" == "docker" ]; then
       "campaign:${ACTIVITY_ID}:meta" \
       > /dev/null 2>&1
 
-    # 토큰 키 삭제 (SCAN + DEL)
+    # 토큰 키 삭제 (SCAN + 일괄 DEL - 최적화)
     echo "   토큰 키 정리 중..."
-    docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" --scan --pattern "RESERVATION_TOKEN:*" | \
-      xargs -r -I{} docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" DEL {} > /dev/null 2>&1 || true
+    TOKEN_KEYS=$(docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" --scan --pattern "RESERVATION_TOKEN:*" 2>/dev/null | tr '\n' ' ')
+    if [ -n "$TOKEN_KEYS" ]; then
+      docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" DEL $TOKEN_KEYS > /dev/null 2>&1 || true
+    fi
 
-    docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" --scan --pattern "PAYMENT_APPROVED_TOKEN:*" | \
-      xargs -r -I{} docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" DEL {} > /dev/null 2>&1 || true
+    PAYMENT_KEYS=$(docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" --scan --pattern "PAYMENT_APPROVED_TOKEN:*" 2>/dev/null | tr '\n' ' ')
+    if [ -n "$PAYMENT_KEYS" ]; then
+      docker exec axon-redis redis-cli -a "$REDIS_PASSWORD" DEL $PAYMENT_KEYS > /dev/null 2>&1 || true
+    fi
 else
     echo "   K8s 모드로 실행..."
     # Pod 이름 동적 조회
@@ -135,13 +139,17 @@ else
       "campaign:${ACTIVITY_ID}:meta" \
       > /dev/null 2>&1
 
-    # 토큰 키 삭제 (SCAN + DEL)
+    # 토큰 키 삭제 (SCAN + 일괄 DEL - 최적화)
     echo "   토큰 키 정리 중..."
-    kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" --scan --pattern "RESERVATION_TOKEN:*" | \
-      xargs -r -I{} kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" DEL {} > /dev/null 2>&1 || true
+    TOKEN_KEYS=$(kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" --scan --pattern "RESERVATION_TOKEN:*" 2>/dev/null | tr '\n' ' ')
+    if [ -n "$TOKEN_KEYS" ]; then
+      kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" DEL $TOKEN_KEYS > /dev/null 2>&1 || true
+    fi
 
-    kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" --scan --pattern "PAYMENT_APPROVED_TOKEN:*" | \
-      xargs -r -I{} kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" DEL {} > /dev/null 2>&1 || true
+    PAYMENT_KEYS=$(kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" --scan --pattern "PAYMENT_APPROVED_TOKEN:*" 2>/dev/null | tr '\n' ' ')
+    if [ -n "$PAYMENT_KEYS" ]; then
+      kubectl exec "$REDIS_POD" -- redis-cli -a "$REDIS_PASSWORD" DEL $PAYMENT_KEYS > /dev/null 2>&1 || true
+    fi
 fi
 
 echo "   ✅ Redis 초기화 완료"

@@ -1,5 +1,6 @@
 package com.axon.core_service.service.llm;
 
+import com.axon.core_service.domain.dashboard.DashboardPeriod;
 import com.axon.core_service.domain.dto.dashboard.CampaignDashboardResponse;
 import com.axon.core_service.domain.dto.dashboard.OverviewData;
 import com.axon.core_service.domain.dto.llm.DashboardQueryResponse;
@@ -29,8 +30,9 @@ public class MockLLMQueryService implements LLMQueryService {
         String intent = determineIntent(lowerQuery);
 
         // 2. Fetch Data
-        CampaignDashboardResponse dashboardData = dashboardService.getDashboardByCampaign(campaignId);
-        OverviewData overview = dashboardData.overview();
+        CampaignDashboardResponse dashboard = dashboardService.getDashboardByCampaign(
+                campaignId, DashboardPeriod.SEVEN_DAYS, null, null);
+        OverviewData overview = dashboard.overview();
 
         // 3. Generate Answer
         String answer = generateAnswer(intent, overview, lowerQuery);

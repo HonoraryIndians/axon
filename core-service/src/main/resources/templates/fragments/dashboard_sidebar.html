@@ -28,8 +28,10 @@
         <div class="sidebar-label">Advanced</div>
 
         <!-- Links dependent on context -->
-        <a th:if="${campaignId != null && activePage == 'activity'}"
-            th:href="@{/admin/dashboard/cohort/{id}(id=${campaignId})}" class="sidebar-menu-item">
+        <!-- Links dependent on context -->
+        <a th:if="${campaignId != null && (activePage == 'activity' || activePage == 'cohort')}"
+            th:href="@{/admin/dashboard/cohort/{id}(id=${campaignId})}" class="sidebar-menu-item"
+            th:classappend="${activePage == 'cohort'} ? 'active' : ''">
             <i class="fa-solid fa-users-viewfinder"></i>
             <span>Cohort Analysis</span>
         </a>

@@ -68,9 +68,18 @@ public class DashboardController {
 
     @GetMapping("/campaign/{campaignId}")
     public ResponseEntity<CampaignDashboardResponse> getDashboardByCampaign(
-            @PathVariable Long campaignId) {
-        CampaignDashboardResponse response = dashboardService
-                .getDashboardByCampaign(campaignId);
+            @PathVariable Long campaignId,
+            @RequestParam(defaultValue = "7d") String period,
+            @RequestParam(required = false) LocalDateTime startDate,
+            @RequestParam(required = false) LocalDateTime endDate) {
+
+        DashboardPeriod dashboardPeriod = DashboardPeriod.fromCode(period);
+        CampaignDashboardResponse response = dashboardService.getDashboardByCampaign(
+                campaignId,
+                dashboardPeriod,
+                startDate,
+                endDate);
+
         return ResponseEntity.ok(response);
     }
 
@@ -84,8 +93,8 @@ public class DashboardController {
      * 2. 없으면 실시간 계산 (Fallback, 느림)
      *
      * @param activityId Activity ID
-     * @param startDate Cohort 시작일 (optional, 기본값: Activity 시작일)
-     * @param endDate Cohort 종료일 (optional, 기본값: 현재)
+     * @param startDate  Cohort 시작일 (optional, 기본값: Activity 시작일)
+     * @param endDate    Cohort 종료일 (optional, 기본값: 현재)
      * @return Cohort 분석 결과
      */
     @GetMapping("/cohort/activity/{activityId}")
@@ -109,8 +118,7 @@ public class DashboardController {
         CohortAnalysisResponse response = cohortAnalysisService.analyzeCohortByActivity(
                 activityId,
                 startDate,
-                endDate
-        );
+                endDate);
         return ResponseEntity.ok(response);
     }
 
@@ -129,8 +137,8 @@ public class DashboardController {
         LTVBatch latestStat = stats.getLast();
 
         // 30일/90일/365일 LTV 찾기 (monthOffset 기준: 1개월 = ~30일)
-        BigDecimal ltv30d = findLtvByMonthOffset(stats, 1);   // 0개월 ~ 1개월
-        BigDecimal ltv90d = findLtvByMonthOffset(stats, 3);   // 0개월 ~ 3개월
+        BigDecimal ltv30d = findLtvByMonthOffset(stats, 1); // 0개월 ~ 1개월
+        BigDecimal ltv90d = findLtvByMonthOffset(stats, 3); // 0개월 ~ 3개월
         BigDecimal ltv365d = findLtvByMonthOffset(stats, 12); // 0개월 ~ 12개월
 
         // 월별 상세 데이터 생성 (그래프용 - "2025년 7월" 형식)
@@ -144,8 +152,7 @@ public class DashboardController {
                         stat.getCumulativeProfit(),
                         stat.getLtvCacRatio().doubleValue(),
                         stat.getIsBreakEven(),
-                        stat.getActiveUsers()
-                ))
+                        stat.getActiveUsers()))
                 .toList();
 
         return new CohortAnalysisResponse(
@@ -168,8 +175,7 @@ public class DashboardController {
                 latestStat.getAvgPurchaseFrequency().doubleValue(),
                 latestStat.getAvgOrderValue(),
                 latestStat.getCollectedAt(),
-                monthlyDetails
-        );
+                monthlyDetails);
     }
 
     /**
@@ -216,7 +222,8 @@ public class DashboardController {
 
         ScheduledFuture<?> scheduledTask = scheduler.scheduleAtFixedRate(() -> {
             try {
-                CampaignDashboardResponse data = dashboardService.getDashboardByCampaign(campaignId);
+                CampaignDashboardResponse data = dashboardService.getDashboardByCampaign(
+                        campaignId, DashboardPeriod.SEVEN_DAYS, null, null);
                 emitter.send(SseEmitter.event().name("dashboard-update").data(data));
             } catch (Exception e) {
                 log.error("Error streaming dashboard for campaign: {}", campaignId, e);

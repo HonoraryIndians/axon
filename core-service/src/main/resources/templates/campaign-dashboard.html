@@ -29,9 +29,28 @@
 
                 <div class="dashboard-title-row">
                     <h1 class="page-title" id="campaignName">Campaign Dashboard</h1>
-                    <p class="text-sm text-gray-500">
-                        Last updated: <span id="lastUpdated">--:--:--</span>
-                    </p>
+                    
+                    <!-- Date Period Selector (Match Activity Dashboard) -->
+                    <div class="relative">
+                        <button onclick="togglePeriodDropdown()" class="flex items-center space-x-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                            <i class="fa-regular fa-calendar text-gray-400"></i>
+                            <span id="currentPeriodLabel">Last 7 Days</span>
+                            <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-2"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="periodDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+                            <a href="#" onclick="changePeriod('1d', 'Last 24 Hours')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                                Last 24 Hours
+                            </a>
+                            <a href="#" onclick="changePeriod('7d', 'Last 7 Days')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                                Last 7 Days
+                            </a>
+                            <a href="#" onclick="changePeriod('30d', 'Last 30 Days')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                                Last 30 Days
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 

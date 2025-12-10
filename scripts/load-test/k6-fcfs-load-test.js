@@ -107,7 +107,7 @@ const spike_scenario = {
         // Phase 5: End
         { duration: '5s', target: 0 },
       ],
-      gracefulRampDown: '5s',
+      gracefulRampDown: '10s',
     },
   },
 
@@ -324,14 +324,14 @@ export default function (data) {
 // 행동 이벤트 전송
 // =========================================================================
 function sendBehaviorEvent(data, userId, sessionId, triggerType) {
-  const eventName = `${triggerType}_test`;
+  const eventName = triggerType;
   const payload = JSON.stringify({
     eventName: eventName,
     triggerType: triggerType,
     occurredAt: new Date().toISOString(),
     userId: userId,
     sessionId: sessionId,
-    pageUrl: `/campaign/${data.activityId}`,
+    pageUrl: `/campaign-activity/${data.activityId}/view`,
     referrer: '',
     properties: {
       activityId: data.activityId,
