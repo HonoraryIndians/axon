@@ -57,21 +57,11 @@
 
                 <div class="flex gap-3">
                     <button
-                        class="flex-1 h-14 border border-black bg-white text-black font-bold text-base hover:bg-gray-50 transition-colors">장바구니</button>
+                        class="flex-1 h-14 border-2 border-black bg-white text-black font-bold text-base hover:bg-gray-50 transition-colors"
+                        style="border: 2px solid black;">장바구니</button>
                     <button
                         class="flex-1 h-14 bg-black text-white font-bold text-base hover:opacity-90 transition-opacity"
                         th:onclick="'location.href=\'/checkout?productId=' + ${product.id} + '\''">바로구매</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Detail Content Placeholder -->
-        <div class="mt-24 pt-10 border-t border-[#eee] text-center">
-            <h3 class="text-xl font-bold mb-8">상품 상세 정보</h3>
-            <div class="bg-[#f8f8f8] h-[800px] flex items-center justify-center text-gray">
-                <div class="text-center">
-                    <i class="ph ph-image text-4xl mb-2"></i>
-                    <p>상세 이미지가 위치하는 영역입니다.</p>
                 </div>
             </div>
         </div>
