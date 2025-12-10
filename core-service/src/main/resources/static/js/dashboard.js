@@ -1,10 +1,34 @@
 document.addEventListener('DOMContentLoaded', function () {
     const activityId = document.getElementById('activityId').value;
+    let currentPeriod = '7d'; // Default
     let funnelChart = null;
     let trafficChart = null;
 
     // Initialize Dashboard
     initDashboard();
+
+    // Make functions available globally for HTML onclick handlers
+    window.togglePeriodDropdown = function () {
+        document.getElementById('periodDropdownMenu').classList.toggle('hidden');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function (event) {
+        const dropdown = document.getElementById('periodDropdownMenu');
+        const btn = document.getElementById('periodDropdownBtn');
+        if (!dropdown.contains(event.target) && !btn.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    window.changePeriod = function (period, label) {
+        currentPeriod = period;
+        document.getElementById('currentPeriodLabel').textContent = label;
+        togglePeriodDropdown(); // Close menu
+
+        // Refresh data immediately
+        fetchDashboardData();
+    }
 
     function initDashboard() {
         fetchDashboardData();
@@ -14,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function fetchDashboardData() {
         try {
-            const response = await fetch(`/api/v1/dashboard/activity/${activityId}?period=7d`);
+            const response = await fetch(`/api/v1/dashboard/activity/${activityId}?period=${currentPeriod}`);
             const data = await response.json();
 
             updateOverviewCards(data.overview, data.previousOverview);
@@ -29,7 +53,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function fetchRealtimeData() {
         try {
-            const response = await fetch(`/api/v1/dashboard/activity/${activityId}?period=7d`);
+            // Realtime data might not need period, but keeping it consistent or fetching only realtime endpoint
+            // The controller for activity dashboard uses period for overview/graphs
+            // For strict realtime status, period matters less, but let's keep it consistent
+            const response = await fetch(`/api/v1/dashboard/activity/${activityId}?period=${currentPeriod}`);
             const data = await response.json();
 
             updateOverviewCards(data.overview, data.previousOverview);
@@ -113,10 +140,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const participants = realtime.activity.participantCount || 0;
         const remaining = realtime.activity.remainingStock || 0;
         const total = realtime.activity.totalStock || 100; // Fallback to 100 to avoid div by zero
-        
+
         // Stock Percentage
         const stockPercentage = Math.round((remaining / total) * 100);
-        
+
         // Participants Percentage
         const participantsPercentage = Math.round((participants / total) * 100);
 
@@ -180,12 +207,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const data = funnelData.map(step => step.count);
 
         if (funnelChart) {
-            // Update existing chart data smoothly
             funnelChart.data.labels = labels;
             funnelChart.data.datasets[0].data = data;
-            funnelChart.update('active'); // Smooth animation
+            funnelChart.update('active');
         } else {
-            // Create new chart on first load
             funnelChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -193,14 +218,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     datasets: [{
                         label: 'Users',
                         data: data,
+                        // Professional Blue Gradient equivalent steps or distinct slate/blue shades
                         backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)', // Blue
-                            'rgba(168, 85, 247, 0.8)', // Purple
-                            'rgba(34, 197, 94, 0.8)',  // Green
-                            'rgba(249, 115, 22, 0.8)'  // Orange
+                            '#2563eb', // Blue 600
+                            '#3b82f6', // Blue 500
+                            '#60a5fa', // Blue 400
+                            '#93c5fd'  // Blue 300
                         ],
-                        borderRadius: 4,
-                        barPercentage: 0.6
+                        borderRadius: 3,
+                        barPercentage: 0.5
                     }]
                 },
                 options: {
@@ -210,10 +236,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 10,
+                            cornerRadius: 4,
                             callbacks: {
                                 label: function (context) {
                                     const value = context.raw;
-                                    const total = data[0]; // Visit count as base
+                                    const total = data[0];
                                     const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
                                     return `${value.toLocaleString()} (${percentage}%)`;
                                 }
@@ -221,8 +250,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     scales: {
-                        x: { grid: { display: false } },
-                        y: { grid: { display: false } }
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { display: false }
+                        },
+                        y: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: {
+                                font: { size: 12, family: "-apple-system, BlinkMacSystemFont, 'Segoe UI'" },
+                                color: '#64748b'
+                            }
+                        }
                     }
                 }
             });
@@ -232,8 +270,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderTrafficChart(trafficData) {
         const ctx = document.getElementById('trafficChart').getContext('2d');
 
-        // Map data to labels (Time) and values (Count)
-        // trafficData is List<TimeSeriesData> { timestamp, count }
         const labels = trafficData.map(d => {
             const date = new Date(d.timestamp);
             return date.getHours() + ':00';
@@ -241,12 +277,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const data = trafficData.map(d => d.count);
 
         if (trafficChart) {
-            // Update existing chart data smoothly
             trafficChart.data.labels = labels;
             trafficChart.data.datasets[0].data = data;
-            trafficChart.update('active'); // Smooth animation
+            trafficChart.update('active');
         } else {
-            // Create new chart on first load
             trafficChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -254,12 +288,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     datasets: [{
                         label: 'Visitors',
                         data: data,
-                        borderColor: 'rgb(99, 102, 241)', // Indigo
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        tension: 0.4,
+                        borderColor: '#2563eb', // Blue 600
+                        backgroundColor: 'rgba(37, 99, 235, 0.05)', // Very subtle fill
+                        borderWidth: 2,
+                        tension: 0.3,
                         fill: true,
-                        pointRadius: 3,
-                        pointHoverRadius: 6
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        pointHoverBackgroundColor: '#2563eb',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
                     }]
                 },
                 options: {
@@ -272,17 +310,36 @@ document.addEventListener('DOMContentLoaded', function () {
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            mode: 'index',
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#f8fafc',
+                            padding: 10,
+                            cornerRadius: 4,
+                            displayColors: false,
                             intersect: false
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { borderDash: [2, 2] }
+                            grid: {
+                                borderDash: [4, 4],
+                                color: '#e2e8f0',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 5,
+                                color: '#94a3b8',
+                                font: { size: 11 }
+                            }
                         },
                         x: {
-                            grid: { display: false }
+                            grid: { display: false, drawBorder: false },
+                            ticks: {
+                                maxTicksLimit: 8,
+                                color: '#94a3b8',
+                                font: { size: 11 }
+                            }
                         }
                     }
                 }

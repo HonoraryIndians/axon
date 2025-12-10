@@ -22,7 +22,7 @@ const common = (() => {
          * - Publishes logout event
          * - Clears JWT cookies
          */
-        logout: function() {
+        logout: function () {
             window.location.href = '/logout';
         },
 
@@ -149,6 +149,15 @@ const common = (() => {
                         appendTo: document.body
                     });
                 }
+            });
+
+            // Initialize standard data-tippy-content attributes
+            tippy('[data-tippy-content]', {
+                allowHTML: true,
+                placement: 'top',
+                animation: 'shift-away',
+                zIndex: 99999,
+                appendTo: document.body
             });
         }
     };

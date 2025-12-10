@@ -12,136 +12,168 @@
 <section>
     <input type="hidden" id="activityId" th:value="${activityId}" />
 
-    <main class="dashboard-container pt-6">
-        <!-- Breadcrumb -->
-        <div class="mb-4 text-sm text-gray-500 flex items-center gap-2">
-            <a href="/admin" class="hover:text-blue-600 transition-colors"><i class="fa-solid fa-house"></i></a>
-            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
-            <a href="/admin/dashboard/overview" class="hover:text-blue-600 transition-colors">Global Dashboard</a>
-            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
-            <a th:if="${parentCampaignId}" th:href="@{/admin/dashboard/campaign/{id}(id=${parentCampaignId})}" class="hover:text-blue-600 transition-colors" th:text="${parentCampaignName}">Campaign</a>
-            <span th:unless="${parentCampaignId}">Unknown Campaign</span>
-            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
-            <span class="font-medium text-gray-900" th:text="${campaignName}">Activity</span>
-        </div>
+    <div class="dashboard-layout">
+        <!-- Local Sidebar (Dark Theme) -->
+        <div th:replace="fragments/dashboard_sidebar :: sidebar('activity', ${campaignId}, ${parentCampaignId})"></div>
 
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="font-semibold text-gray-900 text-2xl" th:text="'Activity Dashboard: ' + ${campaignName}">Activity Dashboard</h1>
-            <div class="flex items-center gap-4">
-                <a th:href="@{/admin/dashboard/cohort/{id}(id=${campaignId})}"
-                   class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
-                    <i class="fa-solid fa-users mr-2"></i>고객 LTV 분석 보기
-                </a>
-                <div class="live-indicator">
-                    <div class="live-dot"></div>
-                    <span>LIVE</span>
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="mb-2 flex items-center gap-2 text-sm text-gray-500">
+                    <span>Admin</span>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                    <span>Dashboard</span>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                    <span class="font-medium text-gray-900" th:text="${campaignName}">Campaign</span>
                 </div>
-                <span id="lastUpdated" class="text-sm text-gray-500">Last updated: --:--:--</span>
-            </div>
-        </div>
 
-        <!-- Section 1: KPI Cards Grid (Funnel Metrics) -->
-        <div class="kpi-grid">
-            <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Visits', 'fa-solid fa-eye', 'blue', '0', '-', 'neutral')">
-            </div>
-            <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('totalEngages', 'Total Engages', 'fa-solid fa-hand-pointer', 'purple', '0', '-', 'neutral')">
-            </div>
-            <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('totalQualifies', 'Qualified', 'fa-solid fa-check-circle', 'green', '0', '-', 'neutral')">
-            </div>
-            <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('purchaseCount', 'Purchases', 'fa-solid fa-cart-shopping', 'orange', '0', '-', 'neutral')">
-            </div>
-        </div>
+                <div class="dashboard-title-row">
+                    <h1 class="page-title" th:text="${campaignName}">Campaign Dashboard</h1>
 
-        <!-- Section 1.5: Marketing Metrics -->
-        <div class="kpi-grid mb-8">
-            <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('gmv', 'GMV (총 거래액)', 'fa-solid fa-sack-dollar', 'emerald', '₩0', '-', 'neutral')">
-            </div>
-            <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('engagementRate', 'CTR (Engagement)', 'fa-solid fa-hand-pointer', 'purple', '0%', '-', 'neutral')">
-            </div>
-            <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('conversionRate', 'CVR (Conversion)', 'fa-solid fa-bullseye', 'indigo', '0%', '-', 'neutral')">
-            </div>
-            <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('aov', 'Avg Order Value', 'fa-solid fa-receipt', 'amber', '₩0', '-', 'neutral')">
-            </div>
-            <div
-                th:replace="fragments/dashboard_widgets :: kpiCard('roas', 'ROAS', 'fa-solid fa-chart-line', 'rose', '0%', '-', 'neutral')">
-            </div>
-        </div>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <button id="periodDropdownBtn" onclick="togglePeriodDropdown()"
+                                class="bg-white border border-gray-200 rounded px-3 py-1.5 flex items-center gap-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                                <i class="fa-regular fa-calendar"></i>
+                                <span id="currentPeriodLabel">Last 7 Days</span>
+                                <i class="fa-solid fa-caret-down text-xs text-gray-400"></i>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div id="periodDropdownMenu"
+                                class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded shadow-lg z-50 py-1">
+                                <a href="#" onclick="changePeriod('1d', 'Last 24 Hours')"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Last
+                                    24 Hours</a>
+                                <a href="#" onclick="changePeriod('7d', 'Last 7 Days')"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Last
+                                    7 Days</a>
+                                <a href="#" onclick="changePeriod('30d', 'Last 30 Days')"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">Last
+                                    30 Days</a>
+                            </div>
+                        </div>
 
-        <!-- Section 2: Real-time Stock Status -->
-        <div
-            class="realtime-status-box mb-8 p-6 rounded-xl shadow-sm border border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-yellow-200 rounded-lg text-yellow-700">
-                        <i class="fa-solid fa-bolt text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900">Real-time Activity Status</h3>
-                        <p class="text-sm text-gray-600">Live monitoring of participants and stock</p>
+                        <div class="live-badge">
+                            <div class="live-dot"></div>
+                            <span>LIVE</span>
+                        </div>
                     </div>
                 </div>
+                <p class="text-sm text-gray-500">
+                    Last updated: <span id="lastUpdated">--:--:--</span>
+                </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <div class="flex justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-600">Current Participants</span>
-                        <span class="text-lg font-bold text-blue-600" id="realtimeParticipants">0</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div id="participantsProgressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
-                    </div>
+            <!-- KPI Cards Row -->
+            <div class="kpi-grid">
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Visits', 'fa-solid fa-eye', 'blue', '0', '-', 'neutral')">
                 </div>
-                <div>
-                    <div class="flex justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-600">Remaining Stock</span>
-                        <span class="text-lg font-bold text-red-600" id="realtimeStock">0 (0%)</span>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalEngages', 'Engagements', 'fa-solid fa-hand-pointer', 'purple', '0', '-', 'neutral')">
+                </div>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalQualifies', 'Qualified', 'fa-solid fa-check-circle', 'green', '0', '-', 'neutral')">
+                </div>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('purchaseCount', 'Purchases', 'fa-solid fa-cart-shopping', 'orange', '0', '-', 'neutral')">
+                </div>
+            </div>
+
+            <!-- Business Metrics Row -->
+            <div class="kpi-grid">
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('gmv', 'Total GMV', 'fa-solid fa-sack-dollar', 'emerald', '₩0', '-', 'neutral')">
+                </div>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('conversionRate', 'Conversion Rate', 'fa-solid fa-bullseye', 'indigo', '0%', '-', 'neutral')">
+                </div>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('roas', 'ROAS', 'fa-solid fa-chart-line', 'rose', '0%', '-', 'neutral')">
+                </div>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('aov', 'Avg Order Value', 'fa-solid fa-receipt', 'amber', '₩0', '-', 'neutral')">
+                </div>
+            </div>
+
+            <!-- Real-time Section (Anchor) -->
+            <div id="realtime-section" class="mb-8">
+                <div class="realtime-card p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="text-blue-600">
+                                <i class="fa-solid fa-users text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-lg">Active Participants</h3>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Real-time
+                                    Activity</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold text-gray-900" id="realtimeParticipants">0</div>
+                            <div class="text-sm text-gray-500">Current Users</div>
+                        </div>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div id="stockProgressBar" class="bg-red-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    <div class="w-full bg-gray-100 rounded-sm h-1.5 mb-6 overflow-hidden">
+                        <div id="participantsProgressBar"
+                            class="bg-blue-600 h-1.5 rounded-sm transition-all duration-500" style="width: 0%"></div>
+                    </div>
+
+                    <div class="border-t border-gray-100 pt-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-box-open text-gray-400"></i>
+                                <span class="font-medium text-gray-700">Stock Availability</span>
+                            </div>
+                            <span class="font-bold text-gray-900" id="realtimeStock">0 left</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-sm h-1.5 overflow-hidden">
+                            <div id="stockProgressBar"
+                                class="h-1.5 rounded-sm transition-all duration-500 bg-emerald-500" style="width: 0%">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Section 3: Conversion Funnel -->
-        <div class="charts-grid">
-            <div class="chart-container full-width">
-                <div class="chart-header">
-                    <h3 class="chart-title">Conversion Funnel</h3>
+            <!-- Charts Row -->
+            <div id="funnel-section" class="charts-grid">
+                <!-- Funnel Chart -->
+                <div class="chart-card half">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Conversion Funnel</h3>
+                        <button class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-ellipsis"></i></button>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="funnelChart"></canvas>
+                    </div>
                 </div>
-                <div class="h-64">
-                    <canvas id="funnelChart"></canvas>
+
+                <!-- Traffic Trend -->
+                <div class="chart-card half">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Traffic Trend (24h)</h3>
+                        <div class="flex gap-1 bg-gray-100 p-1 rounded-md">
+                            <span
+                                class="text-xs font-medium px-2 py-1 bg-white rounded shadow-sm text-gray-800">24H</span>
+                            <span
+                                class="text-xs font-medium px-2 py-1 text-gray-500 hover:text-gray-700 cursor-pointer">7D</span>
+                        </div>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Section 4: Traffic Trend (Line Chart) -->
-        <div class="charts-grid">
-            <div class="chart-container full-width">
-                <div class="chart-header">
-                    <h3 class="chart-title">Hourly Traffic Trend (Last 24h)</h3>
-                </div>
-                <div class="h-64">
-                    <canvas id="trafficChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
-    <!-- Chatbot -->
+    <!-- Chatbot & Scripts -->
     <div th:replace="fragments/chatbot :: chatbot"></div>
     <script th:src="@{/js/chatbot.js}"></script>
-
     <script th:src="@{/js/dashboard.js}"></script>
-</section>
 
 </html>

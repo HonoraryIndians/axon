@@ -11,70 +11,99 @@
 </head>
 <section>
     <!-- Hidden input for API context (not used directly for global, but good to have consistent structure) -->
-    <input type="hidden" id="campaignId" value="global" /> 
+    <input type="hidden" id="campaignId" value="global" />
 
-    <main class="dashboard-container pt-6">
-        <!-- Section 1: Global KPI Cards -->
-        <div class="kpi-grid mb-8">
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Global Visits', 'fa-solid fa-earth-americas', 'blue', '0', '-', 'neutral')"></div>
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalPurchases', 'Total Global Purchases', 'fa-solid fa-shopping-bag', 'green', '0', '-', 'neutral')"></div>
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalGMV', 'Total Global GMV', 'fa-solid fa-coins', 'emerald', '₩0', '-', 'neutral')"></div>
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalROAS', 'Global ROAS', 'fa-solid fa-chart-line', 'rose', '0%', '-', 'neutral')"></div>
-        </div>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div th:replace="fragments/dashboard_sidebar :: sidebar('global', null, null)"></div>
 
-        <!-- Section 2: Top N Campaigns by GMV -->
-        <div class="charts-grid mb-8">
-            <div class="chart-container full-width">
-                <div class="chart-header">
-                    <h3 class="chart-title">Top 5 Campaigns by GMV</h3>
+        <main class="dashboard-main pt-6">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="mb-2 flex items-center gap-2 text-sm text-gray-500">
+                    <a href="/admin" class="hover:text-blue-600 transition-colors"><i class="fa-solid fa-house"></i></a>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                    <span class="font-medium text-gray-900">Global Overview</span>
                 </div>
-                <div class="h-80">
-                    <canvas id="topCampaignsChart"></canvas>
+
+                <div class="dashboard-title-row">
+                    <h1 class="page-title">Global Dashboard</h1>
+                    <p class="text-sm text-gray-500">
+                        Real-time cross-campaign analytics
+                    </p>
                 </div>
             </div>
-        </div>
 
-        <!-- Section 3: Global Hourly Traffic Trend -->
-        <div class="charts-grid mb-8">
-            <div class="chart-container full-width">
-                <div class="chart-header">
-                    <h3 class="chart-title">Global Hourly Traffic Trend (Last 24h)</h3>
+            <!-- Section 1: Global KPI Cards -->
+            <div class="kpi-grid mb-8">
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Visits', 'fa-solid fa-earth-americas', 'blue', '0', '-', 'neutral')">
                 </div>
-                <div class="h-80">
-                    <canvas id="globalTrafficChart"></canvas>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalPurchases', 'Total Purchases', 'fa-solid fa-shopping-bag', 'green', '0', '-', 'neutral')">
+                </div>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalGMV', 'Total GMV', 'fa-solid fa-coins', 'emerald', '₩0', '-', 'neutral')">
+                </div>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalROAS', 'Global ROAS', 'fa-solid fa-chart-line', 'rose', '0%', '-', 'neutral')">
                 </div>
             </div>
-        </div>
-        
-        <!-- Section 4: Campaign Efficiency Table -->
-        <div class="charts-grid mb-8">
-            <div class="chart-container full-width overflow-hidden">
-                <div class="chart-header border-b border-gray-100 pb-4 mb-0">
-                    <h3 class="chart-title">Campaign Efficiency Overview</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">Campaign Name</th>
-                                <th scope="col" class="px-6 py-3 text-right">Budget</th>
-                                <th scope="col" class="px-6 py-3 text-right">GMV</th>
-                                <th scope="col" class="px-6 py-3 text-right">ROAS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="campaignEfficiencyTableBody">
-                            <!-- Rows will be populated by JS -->
-                        </tbody>
-                    </table>
+
+            <!-- Section 2: Top N Campaigns by GMV -->
+            <div class="charts-grid mb-8">
+                <div class="chart-card full">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Top 5 Campaigns by GMV</h3>
+                    </div>
+                    <div class="h-80 relative">
+                        <canvas id="topCampaignsChart"></canvas>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <script th:src="@{/js/global-dashboard.js}"></script>
-    <!-- Chatbot -->
-    <div th:replace="fragments/chatbot :: chatbot"></div>
-    <script th:src="@{/js/chatbot.js}"></script>
+            <!-- Section 3: Global Hourly Traffic Trend -->
+            <div class="charts-grid mb-8">
+                <div class="chart-card full">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Global Hourly Traffic Trend (Last 24h)</h3>
+                    </div>
+                    <div class="h-80 relative">
+                        <canvas id="globalTrafficChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Campaign Efficiency Table -->
+            <div class="charts-grid mb-8">
+                <div class="chart-card full overflow-hidden">
+                    <div class="chart-header border-b border-gray-100 pb-4 mb-0">
+                        <h3 class="chart-title">Campaign Efficiency Overview</h3>
+                    </div>
+                    <div class="overflow-x-auto mt-4">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 font-medium">Campaign Name</th>
+                                    <th scope="col" class="px-4 py-3 text-right font-medium">Budget</th>
+                                    <th scope="col" class="px-4 py-3 text-right font-medium">GMV</th>
+                                    <th scope="col" class="px-4 py-3 text-right font-medium">ROAS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="campaignEfficiencyTableBody" class="divide-y divide-gray-100">
+                                <!-- Rows will be populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script th:src="@{/js/global-dashboard.js}"></script>
+        <!-- Chatbot -->
+        <div th:replace="fragments/chatbot :: chatbot"></div>
+        <script th:src="@{/js/chatbot.js}"></script>
+    </div>
 </section>
 
 </html>

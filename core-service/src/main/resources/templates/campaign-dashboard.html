@@ -12,84 +12,98 @@
 <section>
     <input type="hidden" id="campaignId" th:value="${campaignId}" />
 
-    <main class="dashboard-container pt-6">
-        <!-- Breadcrumb -->
-        <div class="mb-4 text-sm text-gray-500 flex items-center gap-2">
-            <a href="/admin" class="hover:text-blue-600 transition-colors"><i class="fa-solid fa-house"></i></a>
-            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
-            <a href="/admin/dashboard/overview" class="hover:text-blue-600 transition-colors">Global Dashboard</a>
-            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
-            <span class="font-medium text-gray-900" th:text="${campaignName}">Campaign</span>
-        </div>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div th:replace="fragments/dashboard_sidebar :: sidebar('campaign', ${campaignId}, null)"></div>
 
-        <div class="flex justify-between items-center mb-6">
-             <h1 class="font-semibold text-gray-900 text-2xl" id="campaignName">Campaign Dashboard</h1>
-             <span id="lastUpdated" class="text-sm text-gray-500">Last updated: --:--:--</span>
-        </div>
-
-        <!-- Section 1: Campaign KPI Cards -->
-        <div class="kpi-grid mb-8">
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Visits', 'fa-solid fa-eye', 'blue', '0', '-', 'neutral')"></div>
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalPurchases', 'Total Purchases', 'fa-solid fa-cart-shopping', 'green', '0', '-', 'neutral')"></div>
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalGMV', 'Total GMV', 'fa-solid fa-sack-dollar', 'emerald', '₩0', '-', 'neutral')"></div>
-            <div th:replace="fragments/dashboard_widgets :: kpiCard('totalROAS', 'ROAS', 'fa-solid fa-chart-line', 'rose', '0%', '-', 'neutral')"></div>
-        </div>
-
-        <!-- Section 2: Comparison Chart -->
-        <div class="charts-grid mb-8">
-            <div class="chart-container full-width">
-                <div class="chart-header">
-                    <h3 class="chart-title">Activity Performance Comparison</h3>
+        <main class="dashboard-main pt-6">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="mb-2 flex items-center gap-2 text-sm text-gray-500">
+                    <a href="/admin" class="hover:text-blue-600 transition-colors"><i class="fa-solid fa-house"></i></a>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                    <a href="/admin/dashboard/overview" class="hover:text-blue-600 transition-colors">Global</a>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                    <span class="font-medium text-gray-900" th:text="${campaignName}">Campaign</span>
                 </div>
-                <div class="h-80">
-                    <canvas id="comparisonChart"></canvas>
-                </div>
-            </div>
-        </div>
 
-        <!-- Section 3: Heatmap & Table -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Hourly Heatmap -->
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3 class="chart-title">Hourly Traffic Heatmap (00:00 - 23:00)</h3>
-                </div>
-                <div class="h-64">
-                    <canvas id="heatmapChart"></canvas>
+                <div class="dashboard-title-row">
+                    <h1 class="page-title" id="campaignName">Campaign Dashboard</h1>
+                    <p class="text-sm text-gray-500">
+                        Last updated: <span id="lastUpdated">--:--:--</span>
+                    </p>
                 </div>
             </div>
 
-            <!-- Activity List Table -->
-            <div class="chart-container overflow-hidden">
-                <div class="chart-header border-b border-gray-100 pb-4 mb-0">
-                    <h3 class="chart-title">Activity Details</h3>
+            <!-- Section 1: Campaign KPI Cards -->
+            <div class="kpi-grid mb-8">
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalVisits', 'Total Visits', 'fa-solid fa-eye', 'blue', '0', '-', 'neutral')">
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">Activity Name</th>
-                                <th scope="col" class="px-6 py-3 text-right">Visits</th>
-                                <th scope="col" class="px-6 py-3 text-right">Clicks</th>
-                                <th scope="col" class="px-6 py-3 text-right">CTR</th>
-                                <th scope="col" class="px-6 py-3 text-right">Purchases</th>
-                                <th scope="col" class="px-6 py-3 text-right">CVR</th>
-                                <th scope="col" class="px-6 py-3 text-right">GMV</th>
-                            </tr>
-                        </thead>
-                        <tbody id="activityTableBody">
-                            <!-- Rows will be populated by JS -->
-                        </tbody>
-                    </table>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalPurchases', 'Total Purchases', 'fa-solid fa-cart-shopping', 'green', '0', '-', 'neutral')">
+                </div>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalGMV', 'Total GMV', 'fa-solid fa-sack-dollar', 'emerald', '₩0', '-', 'neutral')">
+                </div>
+                <div
+                    th:replace="fragments/dashboard_widgets :: kpiCard('totalROAS', 'ROAS', 'fa-solid fa-chart-line', 'rose', '0%', '-', 'neutral')">
                 </div>
             </div>
-        </div>
-    </main>
 
-    <script th:src="@{/js/campaign-dashboard.js}"></script>
-    <!-- Chatbot -->
-    <div th:replace="fragments/chatbot :: chatbot"></div>
-    <script th:src="@{/js/chatbot.js}"></script>
+            <!-- Section 2: Comparison Chart -->
+            <div class="charts-grid mb-8">
+                <div class="chart-card full">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Activity Performance Comparison</h3>
+                    </div>
+                    <div class="h-80 relative">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Heatmap & Table -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+                <!-- Hourly Heatmap -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Hourly Traffic Heatmap</h3>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="heatmapChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Activity List Table -->
+                <div class="chart-card overflow-hidden">
+                    <div class="chart-header border-b border-gray-100 pb-4 mb-0">
+                        <h3 class="chart-title">Activity Details</h3>
+                    </div>
+                    <div class="overflow-x-auto mt-4">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 font-medium">Activity</th>
+                                    <th scope="col" class="px-4 py-3 text-right font-medium">Visits</th>
+                                    <th scope="col" class="px-4 py-3 text-right font-medium">Purchases</th>
+                                    <th scope="col" class="px-4 py-3 text-right font-medium">GMV</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityTableBody" class="divide-y divide-gray-100">
+                                <!-- Rows will be populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script th:src="@{/js/campaign-dashboard.js}"></script>
+        <!-- Chatbot -->
+        <div th:replace="fragments/chatbot :: chatbot"></div>
+        <script th:src="@{/js/chatbot.js}"></script>
+    </div>
 </section>
 
 </html>

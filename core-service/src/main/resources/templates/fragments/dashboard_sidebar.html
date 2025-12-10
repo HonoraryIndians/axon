@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body th:fragment="sidebar(activePage, campaignId, parentCampaignId)">
+    <nav class="dashboard-sidebar">
+        <div class="sidebar-label">Analytics</div>
+
+        <a th:href="@{/admin/dashboard/overview}" class="sidebar-menu-item"
+            th:classappend="${activePage == 'global'} ? 'active' : ''">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Overview</span>
+        </a>
+
+        <!-- Activity Specific Links (Only show if we are in Activity Context) -->
+        <th:block th:if="${activePage == 'activity'}">
+            <a href="#realtime-section" class="sidebar-menu-item">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Real-time</span>
+            </a>
+            <a href="#funnel-section" class="sidebar-menu-item">
+                <i class="fa-solid fa-filter"></i>
+                <span>Funnel & Traffic</span>
+            </a>
+        </th:block>
+
+        <div class="my-4 border-t border-gray-700 mx-4 opacity-50"></div>
+
+        <div class="sidebar-label">Advanced</div>
+
+        <!-- Links dependent on context -->
+        <a th:if="${campaignId != null && activePage == 'activity'}"
+            th:href="@{/admin/dashboard/cohort/{id}(id=${campaignId})}" class="sidebar-menu-item">
+            <i class="fa-solid fa-users-viewfinder"></i>
+            <span>Cohort Analysis</span>
+        </a>
+
+        <a th:if="${parentCampaignId}" th:href="@{/admin/dashboard/campaign/{id}(id=${parentCampaignId})}"
+            class="sidebar-menu-item">
+            <i class="fa-solid fa-turn-up"></i>
+            <span>Parent Campaign</span>
+        </a>
+    </nav>
+</body>
+
+</html>

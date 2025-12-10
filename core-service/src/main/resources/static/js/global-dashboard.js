@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function initGlobalDashboard() {
         fetchGlobalDashboardData();
         // Poll every 10 seconds for updates (global can be less frequent)
-        setInterval(fetchGlobalDashboardData, 10000); 
+        setInterval(fetchGlobalDashboardData, 10000);
     }
 
     async function fetchGlobalDashboardData() {
@@ -61,9 +61,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     datasets: [{
                         label: 'GMV (KRW)',
                         data: data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
+                        backgroundColor: '#3b82f6', // Blue-500
+                        borderRadius: 4,
+                        barPercentage: 0.6
                     }]
                 },
                 options: {
@@ -72,21 +72,36 @@ document.addEventListener('DOMContentLoaded', function () {
                     scales: {
                         y: {
                             beginAtZero: true,
+                            grid: { color: '#f1f5f9', drawBorder: false },
                             ticks: {
-                                callback: function(value) {
-                                    return formatCurrency(value);
-                                }
+                                callback: function (value) { return formatCurrency(value); },
+                                font: { size: 11 },
+                                color: '#64748b'
                             }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11 }, color: '#64748b' }
                         }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
                     },
                     plugins: {
                         tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            cornerRadius: 8,
+                            titleFont: { size: 13, weight: 600 },
+                            bodyFont: { size: 12 },
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     return context.dataset.label + ': ' + formatCurrency(context.raw);
                                 }
                             }
-                        }
+                        },
+                        legend: { display: false }
                     },
                     onClick: (evt, activeElements) => {
                         if (activeElements.length > 0) {
@@ -105,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderGlobalTrafficChart(hourlyTraffic) {
         const ctx = document.getElementById('globalTrafficChart').getContext('2d');
-        const hours = Array.from({length: 24}, (_, i) => i);
+        const hours = Array.from({ length: 24 }, (_, i) => i);
         const data = hours.map(h => hourlyTraffic.hourlyTraffic[h] || 0);
 
         if (globalTrafficChart) {
@@ -119,10 +134,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     datasets: [{
                         label: 'Hourly Visitors',
                         data: data,
-                        fill: true,
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        tension: 0.4
+                        fill: {
+                            target: 'origin',
+                            above: 'rgba(59, 130, 246, 0.1)'
+                        },
+                        borderColor: '#60a5fa', // Blue-400
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
                     }]
                 },
                 options: {
@@ -131,11 +151,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Visitors'
-                            }
+                            grid: { color: '#f1f5f9', drawBorder: false },
+                            title: { display: true, text: 'Visitors' },
+                            ticks: { color: '#64748b' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#64748b' }
                         }
+                    },
+                    plugins: {
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 10
+                        },
+                        legend: { display: false }
                     }
                 }
             });
