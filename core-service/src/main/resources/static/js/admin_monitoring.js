@@ -169,12 +169,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('uptime-value').textContent = uptime;
             }
 
-            const gcRes = await fetchMetric('core', 'jvm.gc.pause'); 
+            const gcRes = await fetchMetric('core', 'jvm.gc.pause');
             if (gcRes) {
-                 const totalTime = gcRes.measurements.find(m => m.statistic === 'TOTAL_TIME');
-                 if(totalTime) document.getElementById('gc-value').textContent = totalTime.value.toFixed(2) + 's';
+                const totalTime = gcRes.measurements.find(m => m.statistic === 'TOTAL_TIME');
+                if (totalTime) document.getElementById('gc-value').textContent = totalTime.value.toFixed(2) + 's';
             }
-            
+
             const classesRes = await fetchMetric('core', 'jvm.classes.loaded');
             if (classesRes) document.getElementById('classes-value').textContent = classesRes.measurements[0].value;
 
@@ -182,23 +182,19 @@ document.addEventListener('DOMContentLoaded', function () {
             const req200 = await fetchMetric('core', 'http.server.requests', 'status:200');
             const req404 = await fetchMetric('core', 'http.server.requests', 'status:404');
             const req500 = await fetchMetric('core', 'http.server.requests', 'status:500');
-            
+
             let count200 = req200 ? req200.measurements[0].value : 0;
             let count404 = req404 ? req404.measurements[0].value : 0;
             let count500 = req500 ? req500.measurements[0].value : 0;
 
-            // Mock data for demonstration if traffic is low
-            if (count200 === 0 && count404 === 0 && count500 === 0) {
-                count200 = 1250; // Mock Success
-                count404 = 45;   // Mock Client Error
-                count500 = 12;   // Mock Server Error
-            }
-            
+            // Mock data removed to prevent confusion during API failures
+            // if (count200 === 0 && count404 === 0 && count500 === 0) { ... }
+
             // Update HTML values
             document.getElementById('http-200-val').textContent = count200;
             document.getElementById('http-400-val').textContent = count404;
             document.getElementById('http-500-val').textContent = count500;
-            
+
             httpChart.data.datasets[0].data = [count200, count404, count500];
             httpChart.update();
 
@@ -226,10 +222,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateChart(chart, datasetIndex, value) {
         const dataset = chart.data.datasets[datasetIndex];
         if (!dataset) return;
-        
+
         dataset.data.shift();
         dataset.data.push(value);
-        
+
         // Only update chart once after all datasets are updated (handled by call order)
         // But chart.update() is cheap enough for 2 datasets
         chart.update();
