@@ -8,4 +8,6 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT uc.coupon.id FROM UserCoupon uc WHERE uc.userId = :userId")
     java.util.List<Long> findAllCouponIdsByUserId(Long userId);
+
+    java.util.List<UserCoupon> findAllByUserId(Long userId);
 }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/default}">
+
+<head>
+    <title>SKU STORE - Payment</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="w-full">
+        <div class="max-w-[800px] mx-auto px-4 py-16">
+            <h2 class="text-3xl font-black mb-10 tracking-tight text-center">SECURE PAYMENT</h2>
+
+            <div class="bg-gray-50 p-8 rounded-sm mb-8">
+                <h3 class="font-bold text-lg mb-6">Payment Method</h3>
+
+                <div class="flex gap-4 mb-8">
+                    <button
+                        class="flex-1 py-4 border-2 border-black bg-white font-bold rounded-sm flex items-center justify-center gap-2">
+                        Credit Card
+                    </button>
+                    <button
+                        class="flex-1 py-4 border border-gray-300 bg-white text-gray-500 rounded-sm hover:border-gray-400">
+                        KakaoPay
+                    </button>
+                    <button
+                        class="flex-1 py-4 border border-gray-300 bg-white text-gray-500 rounded-sm hover:border-gray-400">
+                        Toss
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-2">Card Number</label>
+                        <input type="text" placeholder="0000 0000 0000 0000"
+                            class="w-full h-12 px-4 border border-gray-300 rounded-sm outline-none focus:border-black">
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-bold mb-2">Expiry Date</label>
+                            <input type="text" placeholder="MM/YY"
+                                class="w-full h-12 px-4 border border-gray-300 rounded-sm outline-none focus:border-black">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-bold mb-2">CVC</label>
+                            <input type="text" placeholder="123"
+                                class="w-full h-12 px-4 border border-gray-300 rounded-sm outline-none focus:border-black">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2">Card Holder Name</label>
+                        <input type="text" placeholder="Name on Card"
+                            class="w-full h-12 px-4 border border-gray-300 rounded-sm outline-none focus:border-black">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mb-8 px-2">
+                <span class="text-gray-600">Total Amount</span>
+                <span class="font-black text-2xl">589,000원</span>
+            </div>
+
+            <button onclick="location.href='/payment/success'"
+                class="w-full h-14 bg-accent text-white font-black text-lg hover:bg-opacity-90 transition-opacity rounded-sm shadow-lg">
+                PAY 589,000원
+            </button>
+        </div>
+    </div>
+</body>
+
+</html>

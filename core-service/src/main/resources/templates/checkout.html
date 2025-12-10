@@ -74,6 +74,39 @@
             </div>
         </div>
 
+        <!-- Coupon Section -->
+        <div class="mb-10">
+            <h2 class="text-lg font-bold mb-4 border-b-2 border-black pb-2">쿠폰 할인</h2>
+            <div class="flex gap-3 items-center">
+                <select id="coupon-select"
+                    class="flex-1 h-12 border border-[#ddd] px-3 focus:border-black outline-none rounded-sm bg-white">
+                    <option value="">쿠폰을 선택해주세요</option>
+                    <option th:each="coupon : ${coupons}"
+                            th:value="${coupon.userCouponId}"
+                            th:data-discount="${coupon.calculatedDiscount}"
+                            th:text="|${coupon.couponName} (${#numbers.formatInteger(coupon.calculatedDiscount, 0, 'COMMA')}원 할인)|">
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Payment Summary -->
+        <div class="mb-10 bg-gray-50 p-6 rounded-sm">
+            <div class="flex justify-between mb-2">
+                <span class="text-gray-600">주문금액</span>
+                <span class="font-bold" th:text="${product.price} + '원'">Price</span>
+            </div>
+            <div class="flex justify-between mb-4">
+                <span class="text-gray-600">할인금액</span>
+                <span class="font-bold text-accent" id="discount-amount-display">-0원</span>
+            </div>
+            <div class="flex justify-between border-t border-gray-200 pt-4">
+                <span class="text-lg font-bold text-black">총 결제금액</span>
+                <span class="text-xl font-black text-black" id="total-amount-display"
+                    th:text="${product.price} + '원'">Total</span>
+            </div>
+        </div>
+
         <!-- Payment Method -->
         <div class="mb-12">
             <h2 class="text-lg font-bold mb-4 border-b-2 border-black pb-2">결제 수단</h2>
@@ -89,14 +122,61 @@
 
         <!-- Final Payment Button -->
         <div class="sticky bottom-0 bg-white py-4 border-t border-[#eee]">
-            <button
+            <button id="btn-pay" onclick="location.href='/payment/success'"
                 class="w-full h-14 bg-accent text-white font-black text-lg rounded-sm hover:bg-blue-600 transition-colors shadow-lg flex justify-center items-center gap-2">
-                <span th:text="${product.price} + '원'">Price</span>
+                <span class="price-text" th:text="${product.price} + '원'">Price</span>
                 <span>결제하기</span>
             </button>
         </div>
 
     </div>
+
+    <!-- Script for Coupon Logic -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function () {
+            const originalPrice = [[${product.price}]]; // Server-side rendered price
+            const payButton = document.getElementById('btn-pay');
+            const couponSelect = document.getElementById('coupon-select');
+
+            // Handle coupon selection
+            couponSelect.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                let finalPrice = originalPrice;
+                let discountAmount = 0;
+
+                if (selectedOption.value) {
+                    discountAmount = parseFloat(selectedOption.dataset.discount) || 0;
+                    finalPrice = originalPrice - discountAmount;
+                    if (finalPrice < 0) finalPrice = 0;
+                }
+
+                // Update UI
+                updatePriceUI(finalPrice, discountAmount);
+            });
+
+            function updatePriceUI(price, discount) {
+                const formatter = new Intl.NumberFormat('ko-KR');
+
+                // Update Button Text
+                const priceSpan = payButton.querySelector('.price-text');
+                if (priceSpan) {
+                    priceSpan.textContent = formatter.format(Math.round(price)) + '원';
+                }
+
+                // Update Summary UI
+                const discountDisplay = document.getElementById('discount-amount-display');
+                if (discountDisplay) {
+                    discountDisplay.textContent = '-' + formatter.format(Math.round(discount)) + '원';
+                }
+                const totalDisplay = document.getElementById('total-amount-display');
+                if (totalDisplay) {
+                    totalDisplay.textContent = formatter.format(Math.round(price)) + '원';
+                }
+            }
+        });
+        /*]]>*/
+    </script>
 </body>
 
 </html>

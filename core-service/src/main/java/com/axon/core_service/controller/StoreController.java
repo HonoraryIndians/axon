@@ -1,11 +1,14 @@
 package com.axon.core_service.controller;
 
 import com.axon.core_service.domain.campaignactivity.CampaignActivity;
+import com.axon.core_service.domain.coupon.UserCoupon;
 import com.axon.core_service.domain.dto.campaignactivity.filter.FilterDetail;
+import com.axon.core_service.domain.dto.coupon.ApplicableCouponDto;
 import com.axon.core_service.domain.product.Product;
 import com.axon.core_service.exception.CampaignActivityNotFoundException;
 import com.axon.core_service.repository.CampaignActivityRepository;
 import com.axon.core_service.repository.ProductRepository;
+import com.axon.core_service.service.CouponService;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +37,7 @@ public class StoreController {
     private final ProductRepository productRepository;
     private final com.axon.core_service.repository.UserCouponRepository userCouponRepository;
     private final com.axon.core_service.config.auth.JwtTokenProvider jwtTokenProvider;
+    private final CouponService couponService;
 
     @org.springframework.beans.factory.annotation.Value("${axon.entry-service-url}")
     private String entryServiceUrl;
@@ -129,11 +133,52 @@ public class StoreController {
     }
 
     @GetMapping("/checkout")
-    public String checkout(@RequestParam Long productId, Model model) {
+    public String checkout(@RequestParam Long productId,
+                          @org.springframework.web.bind.annotation.CookieValue(value = "accessToken", required = false) String accessToken,
+                          Model model) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
 
         model.addAttribute("product", convertToProductDto(product));
+
+        Long userId = null;
+
+        // 쿠키에서 accessToken 가져와서 사용자 ID 추출 (mypage와 동일한 방식)
+        if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
+            try {
+                org.springframework.security.core.Authentication auth = jwtTokenProvider.getAuthentication(accessToken);
+                Object principal = auth.getPrincipal();
+
+                if (principal instanceof com.axon.core_service.domain.user.CustomOAuth2User) {
+                    com.axon.core_service.domain.user.CustomOAuth2User oauthUser = (com.axon.core_service.domain.user.CustomOAuth2User) principal;
+                    userId = oauthUser.getUserId();
+                } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                    String username = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+                    userId = Long.parseLong(username);
+                }
+                log.info("Extracted userId from token: {}", userId);
+            } catch (Exception e) {
+                log.error("Error extracting userId from token", e);
+            }
+        } else {
+            log.info("No valid accessToken found in cookies");
+        }
+
+        // 사용자가 로그인되어 있으면 적용 가능한 쿠폰 조회
+        if (userId != null) {
+            try {
+                List<ApplicableCouponDto> applicableCoupons = couponService.getApplicableCoupons(userId, product.getPrice(), product.getCategory());
+                model.addAttribute("coupons", applicableCoupons);
+                log.info("Found {} applicable coupons for user {} and product {}", applicableCoupons.size(), userId, productId);
+            } catch (Exception e) {
+                log.error("Error loading coupons for checkout", e);
+                model.addAttribute("coupons", java.util.Collections.emptyList());
+            }
+        } else {
+            log.info("userId is null - user not authenticated");
+            model.addAttribute("coupons", java.util.Collections.emptyList());
+        }
+
         return "checkout";
     }
 
@@ -212,6 +257,56 @@ public class StoreController {
 
         model.addAttribute("campaignActivity", convertToDto(campaignActivity));
         return "entry";
+    }
+
+    @GetMapping("/cart")
+    public String cart() {
+        return "cart";
+    }
+
+    @GetMapping("/cart/checkout")
+    public String payment() {
+        return "payment";
+    }
+
+    @GetMapping("/payment/success")
+    public String paymentSuccess() {
+        return "payment-success";
+    }
+
+    @GetMapping("/mypage")
+    public String mypage(
+            @org.springframework.web.bind.annotation.CookieValue(value = "accessToken", required = false) String accessToken,
+            Model model) {
+        String username = "Guest";
+        Long userId = null;
+        List<UserCoupon> userCoupons = new ArrayList<>();
+
+        if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
+            try {
+                org.springframework.security.core.Authentication auth = jwtTokenProvider.getAuthentication(accessToken);
+                Object principal = auth.getPrincipal();
+
+                if (principal instanceof com.axon.core_service.domain.user.CustomOAuth2User) {
+                    com.axon.core_service.domain.user.CustomOAuth2User oauthUser = (com.axon.core_service.domain.user.CustomOAuth2User) principal;
+                    username = oauthUser.getDisplayName(); // Use real name
+                    userId = oauthUser.getUserId();
+                } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                    username = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+                    userId = Long.parseLong(username); // Fallback for test users
+                }
+
+                if (userId != null) {
+                    userCoupons = userCouponRepository.findAllByUserId(userId);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to extract user data from token", e);
+            }
+        }
+
+        model.addAttribute("username", username);
+        model.addAttribute("userCoupons", userCoupons);
+        return "mypage";
     }
 
     private CampaignActivityDisplayDto convertToDto(CampaignActivity activity) {

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/default}">
+
+<head>
+    <title>SKU STORE - Cart</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="w-full">
+        <div class="max-w-[1200px] mx-auto px-4 py-16">
+            <h2 class="text-3xl font-black mb-10 tracking-tight">SHOPPING CART</h2>
+
+            <div class="flex flex-col lg:flex-row gap-12">
+                <!-- Cart Items -->
+                <div class="flex-1">
+                    <div class="border-t border-black">
+                        <!-- Item 1 -->
+                        <div class="flex py-8 border-b border-gray-200 gap-6">
+                            <div
+                                class="w-24 h-24 bg-gray-100 flex items-center justify-center rounded-sm overflow-hidden relative">
+                                <img src="/image/product/tech_2.jpg" class="absolute inset-0 w-full h-full object-cover"
+                                    alt="Product Image">
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-2">
+                                    <h4 class="font-bold text-lg">무선 이어폰 X</h4>
+                                    <button class="text-gray-400 hover:text-black transition-colors"><i
+                                            class="ph-bold ph-x"></i></button>
+                                </div>
+                                <p class="text-gray-500 text-sm mb-4">SoundPro / Free Size</p>
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center border border-gray-300 rounded-sm">
+                                        <button class="px-3 py-1 hover:bg-gray-50">-</button>
+                                        <span class="px-3 py-1 font-medium text-sm">1</span>
+                                        <button class="px-3 py-1 hover:bg-gray-50">+</button>
+                                    </div>
+                                    <span class="font-bold">89,000원</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="flex py-8 border-b border-gray-200 gap-6">
+                            <div
+                                class="w-24 h-24 bg-gray-100 flex items-center justify-center rounded-sm overflow-hidden relative">
+                                <img src="/image/product/tech_12.jpg"
+                                    class="absolute inset-0 w-full h-full object-cover" alt="Product Image">
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-2">
+                                    <h4 class="font-bold text-lg">한성 듀얼 모니터 세트</h4>
+                                    <button class="text-gray-400 hover:text-black transition-colors"><i
+                                            class="ph-bold ph-x"></i></button>
+                                </div>
+                                <p class="text-gray-500 text-sm mb-4">한성 / Black</p>
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center border border-gray-300 rounded-sm">
+                                        <button class="px-3 py-1 hover:bg-gray-50">-</button>
+                                        <span class="px-3 py-1 font-medium text-sm">1</span>
+                                        <button class="px-3 py-1 hover:bg-gray-50">+</button>
+                                    </div>
+                                    <span class="font-bold">500,000원</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="w-full lg:w-[360px]">
+                    <div class="bg-gray-50 p-8 rounded-sm sticky top-24">
+                        <h3 class="font-bold text-lg mb-6">Order Summary</h3>
+
+                        <div class="flex justify-between mb-4 text-sm">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span class="font-medium">589,000원</span>
+                        </div>
+                        <div class="flex justify-between mb-4 text-sm">
+                            <span class="text-gray-600">Shipping</span>
+                            <span class="font-medium">Free</span>
+                        </div>
+                        <div class="flex justify-between mb-6 text-sm">
+                            <span class="text-gray-600">Estimated Tax</span>
+                            <span class="font-medium">-</span>
+                        </div>
+
+                        <div class="border-t border-gray-200 pt-6 flex justify-between items-end mb-8">
+                            <span class="font-bold text-lg">Total</span>
+                            <span class="font-black text-2xl tracking-tight">589,000원</span>
+                        </div>
+
+                        <button onclick="location.href='/cart/checkout'"
+                            class="w-full h-12 bg-black text-white font-bold hover:bg-accent transition-colors">
+                            CHECKOUT NOW
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

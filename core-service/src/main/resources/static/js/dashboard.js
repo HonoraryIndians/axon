@@ -180,49 +180,53 @@ document.addEventListener('DOMContentLoaded', function () {
         const data = funnelData.map(step => step.count);
 
         if (funnelChart) {
-            funnelChart.destroy();
-        }
-
-        funnelChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Users',
-                    data: data,
-                    backgroundColor: [
-                        'rgba(59, 130, 246, 0.8)', // Blue
-                        'rgba(168, 85, 247, 0.8)', // Purple
-                        'rgba(34, 197, 94, 0.8)',  // Green
-                        'rgba(249, 115, 22, 0.8)'  // Orange
-                    ],
-                    borderRadius: 4,
-                    barPercentage: 0.6
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                const value = context.raw;
-                                const total = data[0]; // Visit count as base
-                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${value.toLocaleString()} (${percentage}%)`;
+            // Update existing chart data smoothly
+            funnelChart.data.labels = labels;
+            funnelChart.data.datasets[0].data = data;
+            funnelChart.update('active'); // Smooth animation
+        } else {
+            // Create new chart on first load
+            funnelChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Users',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)', // Blue
+                            'rgba(168, 85, 247, 0.8)', // Purple
+                            'rgba(34, 197, 94, 0.8)',  // Green
+                            'rgba(249, 115, 22, 0.8)'  // Orange
+                        ],
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const value = context.raw;
+                                    const total = data[0]; // Visit count as base
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${value.toLocaleString()} (${percentage}%)`;
+                                }
                             }
                         }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { grid: { display: false } }
                     }
-                },
-                scales: {
-                    x: { grid: { display: false } },
-                    y: { grid: { display: false } }
                 }
-            }
-        });
+            });
+        }
     }
 
     function renderTrafficChart(trafficData) {
@@ -237,49 +241,53 @@ document.addEventListener('DOMContentLoaded', function () {
         const data = trafficData.map(d => d.count);
 
         if (trafficChart) {
-            trafficChart.destroy();
-        }
-
-        trafficChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Visitors',
-                    data: data,
-                    borderColor: 'rgb(99, 102, 241)', // Indigo
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 3,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
+            // Update existing chart data smoothly
+            trafficChart.data.labels = labels;
+            trafficChart.data.datasets[0].data = data;
+            trafficChart.update('active'); // Smooth animation
+        } else {
+            // Create new chart on first load
+            trafficChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Visitors',
+                        data: data,
+                        borderColor: 'rgb(99, 102, 241)', // Indigo
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    }]
                 },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
                         mode: 'index',
-                        intersect: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { borderDash: [2, 2] }
+                        intersect: false,
                     },
-                    x: {
-                        grid: { display: false }
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { borderDash: [2, 2] }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     function updateLastUpdatedTime() {
