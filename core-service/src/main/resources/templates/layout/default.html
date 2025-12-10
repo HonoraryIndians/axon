@@ -17,7 +17,14 @@
     <script th:inline="javascript">
         (function() {
             window.__AXON_TRACKER_DEBUG__ = true;
-            window.__AXON_TRACKER_COLLECT_ENDPOINT__ = '/entry/api/v1/behavior/events';
+
+            // Local development: collectEndpoint goes to localhost:8081/entry (entry-service)
+            // eventsEndpoint uses relative path (same origin = core-service:8080)
+            // Production: use /entry path (Nginx routing)
+            const isLocal = window.location.hostname === 'localhost';
+            window.__AXON_TRACKER_COLLECT_ENDPOINT__ = isLocal
+                ? 'http://localhost:8081/entry/api/v1/behavior/events'
+                : '/entry/api/v1/behavior/events';
 
             /*[# th:if="${#authentication != null and #authentication.principal != 'anonymousUser'}"]*/
                 try {
