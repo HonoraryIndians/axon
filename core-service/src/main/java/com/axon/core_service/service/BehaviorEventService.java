@@ -89,6 +89,7 @@ public class BehaviorEventService {
         SearchResponse<Void> response = elasticsearchClient.search(s -> s
                 .index("axon.event.*")
                 .size(0)
+                .trackTotalHits(t -> t.enabled(true)) // Fix: Enable accurate total hits count (no 10k limit)
                 .query(q -> q.bool(b -> b
                         .filter(buildPageUrlFilter(activityId))
                         .filter(buildMultiTriggerTypeFilter(triggerTypes))
@@ -281,6 +282,7 @@ public class BehaviorEventService {
         SearchResponse<Void> response = elasticsearchClient.search(s -> s
                 .index("axon.event.*") // Fixed: search all separated indices
                 .size(0)
+                .trackTotalHits(t -> t.enabled(true)) // Fix: Enable accurate total hits count (no 10k limit)
                 .query(q -> q.bool(b -> b
                         .filter(buildPageUrlFilter(activityId))
                         .filter(buildTriggerTypeFilter(triggerType))
