@@ -21,6 +21,28 @@ import java.util.List;
 public class PurchaseService {
     private final PurchaseRepository purchaseRepository;
 
+    @Transactional
+    public void createPurchase(PurchaseInfoDto info) {
+        log.info("Creating purchase record for userId={}, productId={}", info.userId(), info.productId());
+
+        Purchase purchase = new Purchase(
+                info.userId(),
+                info.productId(),
+                info.campaignActivityId(),
+                info.purchaseType(),
+                info.price(),
+                info.quantity(),
+                info.purchasedAt()
+        );
+
+        try {
+            purchaseRepository.save(purchase);
+            log.info("Saved purchase record for userId={}, productId={}", info.userId(), info.productId());
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Duplicate purchase detected: activity={}, user={}",
+                    info.campaignActivityId(), info.userId());
+        }
+    }
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createPurchaseBatch(List<PurchaseInfoDto> purchases) {
         if (purchases.isEmpty()) {

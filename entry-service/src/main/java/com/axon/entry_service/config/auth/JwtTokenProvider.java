@@ -34,6 +34,7 @@ public class JwtTokenProvider {
      */
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
+        log.info("Loaded JWT Secret Key: {}", secretKey);
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }

@@ -1,5 +1,6 @@
 package com.axon.core_service.service.purchase;
 import com.axon.core_service.domain.dto.purchase.PurchaseInfoDto;
+import com.axon.core_service.domain.purchase.PurchaseType;
 import com.axon.core_service.event.CampaignActivityApprovedEvent;
 import com.axon.core_service.service.ProductService;
 import com.axon.core_service.service.UserSummaryService;
@@ -14,6 +15,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,13 +38,34 @@ public class PurchaseHandler {
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void handle(PurchaseInfoDto info) {
-        purchaseBuffer.offer(info);
-        log.debug("[Purchase] Event buffered. Buffer size: {}", purchaseBuffer.size());
+        if (info.purchaseType() == PurchaseType.SHOP) {
+            log.debug("[Purchase] Processing SHOP purchase immediately: userId={}, productId={}", info.userId(), info.productId());
+            processImmediate(info);
+        } else {
+            purchaseBuffer.offer(info);
+            log.debug("[Purchase] Event buffered. Buffer size: {}", purchaseBuffer.size());
 
-        // 50개 모이면 즉시 처리
-        if (purchaseBuffer.size() >= batchSize) {
-            flushBatch();
+            // 50개 모이면 즉시 처리
+            if (purchaseBuffer.size() >= batchSize) {
+                flushBatch();
+            }
         }
+    }
+
+    /**
+     * 일반 쇼핑몰 구매(SHOP) 등 즉시 처리가 필요한 경우 호출
+     */
+    private void processImmediate(PurchaseInfoDto info) {
+        // 1. 실시간 재고 감소 (단건 처리)
+        productService.decreaseStock(info.productId(), info.quantity());
+
+        // 2. 실시간 유저 요약 업데이트 (단건 처리)
+        userSummaryService.recordPurchase(info.userId(), info.occurredAt());
+
+        // 3. Purchase 기록 저장 (단건 처리)
+        purchaseService.createPurchase(info);
+
+        log.info("Successfully processed immediate purchase for user {}", info.userId());
     }
 
     /**
@@ -87,8 +110,8 @@ public class PurchaseHandler {
 
             // 2-2. Bulk 재고 감소 (1회 SQL)
             if (!stockDecreases.isEmpty()) {
-                // productService.decreaseStockBatch(stockDecreases);
-                log.info("Skipped stock decrease for {} products (Performance Optimization)", stockDecreases.size());
+                // 선착순(FCFS)의 경우 실시간 재고 감소는 스킵하고, 캠페인 종료 후 스케줄러가 일괄 차감
+                 log.info("Skipped stock decrease for {} products (Performance Optimization for FCFS)", stockDecreases.size());
             }
 
             // 2-3. User별 구매 통계 집계
@@ -109,8 +132,7 @@ public class PurchaseHandler {
 
             // 2-4. Bulk 유저 요약 업데이트 (1회 SQL)
             if (!userSummaries.isEmpty()) {
-                // userSummaryService.recordPurchaseBatch(userSummaries);
-                log.info("Skipped user summary update for {} users (Performance Optimization)", userSummaries.size());
+                userSummaryService.recordPurchaseBatch(userSummaries);
             }
 
             // 2-5. Purchase bulk insert (REQUIRES_NEW Transaction in Service)
@@ -150,21 +172,10 @@ public class PurchaseHandler {
     private void retryIndividually(List<PurchaseInfoDto> purchases) {
         for (PurchaseInfoDto purchase : purchases) {
             try {
-                // 1. 재고 감소
-                // productService.decreaseStockBatch(Map.of(purchase.productId(), (int) purchase.quantity()));
-
-                // 2. 유저 요약 업데이트
-                PurchaseSummary summary = new PurchaseSummary(
-                        1,
-                        purchase.price().multiply(BigDecimal.valueOf(purchase.quantity())),
-                        purchase.occurredAt()
-                );
-                // userSummaryService.recordPurchaseBatch(Map.of(purchase.userId(), summary));
-
-                // 3. 구매 저장 (REQUIRES_NEW Transaction in Service)
+                // 1. 구매 저장 (REQUIRES_NEW Transaction in Service)
                 purchaseService.createPurchaseBatch(List.of(purchase));
 
-                // 4. 이벤트 발행
+                // 2. 이벤트 발행
                 if (purchase.campaignActivityId() != null) {
                     eventPublisher.publishEvent(new CampaignActivityApprovedEvent(
                             purchase.campaignId(),
@@ -213,6 +224,6 @@ public class PurchaseHandler {
     public record PurchaseSummary(
             int purchaseCount,
             BigDecimal totalAmount,
-            java.time.Instant lastPurchaseTime
+            Instant lastPurchaseTime
     ) {}
 }

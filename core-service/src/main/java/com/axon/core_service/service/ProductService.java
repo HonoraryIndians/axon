@@ -48,6 +48,21 @@ public class ProductService {
     }
 
     /**
+     * Decreases stock for a single product (used for SHOP purchases).
+     *
+     * @param productId the product ID
+     * @param quantity  the amount to decrease
+     */
+    @Transactional
+    public void decreaseStock(Long productId, Integer quantity) {
+        Product product = productRepository.findByIdWithPessimisticLock(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+
+        product.decreaseStock(quantity);
+        log.info("Stock decreased for productId={}, amount={}", productId, quantity);
+    }
+
+    /**
      * Syncs campaign product stock after campaign ends.
      *
      * For FCFS campaigns, stock is managed by Redis counter during the campaign.

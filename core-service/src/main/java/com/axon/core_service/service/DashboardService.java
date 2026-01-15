@@ -377,13 +377,11 @@ public class DashboardService {
             totalGMV = totalGMV.add(campaignGmv);
             totalBudget = totalBudget.add(budget);
 
-            if (visits > 0 || purchases > 0) {
-                gmvRanking.add(new CampaignRankData(campaignId, campaign.getName(), campaignGmv.longValue(),
-                        formatCurrency(campaignGmv)));
-                visitRanking.add(new CampaignRankData(campaignId, campaign.getName(), visits, String.valueOf(visits)));
-                efficiencyData
-                        .add(new CampaignEfficiencyData(campaignId, campaign.getName(), budget, campaignGmv, roas));
-            }
+            gmvRanking.add(new CampaignRankData(campaignId, campaign.getName(), campaignGmv.longValue(),
+                    formatCurrency(campaignGmv)));
+            visitRanking.add(new CampaignRankData(campaignId, campaign.getName(), visits, String.valueOf(visits)));
+            efficiencyData
+                    .add(new CampaignEfficiencyData(campaignId, campaign.getName(), budget, campaignGmv, roas));
         }
 
         gmvRanking.sort((a, b) -> Long.compare(b.value(), a.value()));

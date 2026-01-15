@@ -203,7 +203,7 @@ public class BehaviorEventService {
                 Void.class);
 
         java.util.Map<Integer, Long> hourlyTraffic = new java.util.HashMap<>();
-        if (response.aggregations() != null) {
+        if (response.aggregations() != null && response.aggregations().containsKey("hourly_traffic")) {
             co.elastic.clients.elasticsearch._types.aggregations.DateHistogramAggregate agg = response.aggregations()
                     .get("hourly_traffic").dateHistogram();
             for (co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket bucket : agg.buckets()

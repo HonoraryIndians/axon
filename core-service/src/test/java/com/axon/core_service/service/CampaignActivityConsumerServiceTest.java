@@ -99,7 +99,7 @@ class CampaignActivityConsumerServiceTest {
         CampaignActivity saved = campaignActivityRepository.save(activity);
         this.campaignActivityId = saved.getId();
 
-        Product testProduct = new Product("테스트 상품", 100L, java.math.BigDecimal.valueOf(10000));
+        Product testProduct = new Product("테스트 상품", 100L, java.math.BigDecimal.valueOf(10000), "TEST_CATEGORY");
         productRepository.save(testProduct);
 
         userIds = new ArrayList<>(NUMBER_OF_THREADS);

@@ -286,8 +286,8 @@ class CohortAnalysisServiceTest {
                 .willReturn(Optional.of(testActivity));
         given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(
                 eq(activityId),
-                any(Instant.class),
-                any(Instant.class)
+                any(LocalDateTime.class),
+                any(LocalDateTime.class)
         )).willReturn(List.of(purchase));
         given(purchaseRepository.findByUserIdIn(anyList()))
                 .willReturn(List.of(purchase));
