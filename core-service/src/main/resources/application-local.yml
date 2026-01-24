@@ -1,0 +1,39 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/axon_db?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+    username: axon_user
+    password: axon1234
+    hikari:
+      maximum-pool-size: 20
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: axon1234
+  kafka:
+    bootstrap-servers: localhost:9092
+  elasticsearch:
+    uris: http://localhost:9200
+
+axon:
+  entry-service-url: http://localhost:8081
+
+logging:
+  level:
+    com.axon: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  prometheus:
+    metrics:
+      export:
+        enabled: false
+
+jwt:
+  secret: "YOUR_VERY_SECRET_RANDOM_STRING_THAT_IS_LONG_ENOUGH_axonskusw"

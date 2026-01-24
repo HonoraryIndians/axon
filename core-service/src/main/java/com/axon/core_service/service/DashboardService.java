@@ -72,8 +72,8 @@ public class DashboardService {
         Long qualifies = getStepCount(activityId, FunnelStep.QUALIFY, start, end);
         Long purchases = getStepCount(activityId, FunnelStep.PURCHASE, start, end);
 
-        com.axon.core_service.domain.campaignactivity.CampaignActivity activity =
-                campaignActivityRepository.findById(activityId).orElse(null);
+        com.axon.core_service.domain.campaignactivity.CampaignActivity activity = campaignActivityRepository
+                .findById(activityId).orElse(null);
 
         java.math.BigDecimal price = activity != null ? activity.getPrice() : java.math.BigDecimal.ZERO;
         java.math.BigDecimal budget = activity != null && activity.getBudget() != null
@@ -104,8 +104,7 @@ public class DashboardService {
                 purchaseRate,
                 aov,
                 budget,
-                roas
-        );
+                roas);
     }
 
     private List<FunnelStepData> buildFunnelByActivity(Long activityId,
@@ -166,16 +165,47 @@ public class DashboardService {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     @Transactional(readOnly = true)
-    public CampaignDashboardResponse getDashboardByCampaign(Long campaignId) {
+    public CampaignDashboardResponse getDashboardByCampaign(Long campaignId, DashboardPeriod period,
+            LocalDateTime customStart, LocalDateTime customEnd) {
+        LocalDateTime start = customStart != null ? customStart : period.getStartDateTime();
+        LocalDateTime end = customEnd != null ? customEnd : LocalDateTime.now();
+
+        // 1. Build Current Overview
+        CampaignOverviewResult currentResult = buildOverviewDataByCampaign(campaignId, start, end);
+
+        // 2. Build Previous Overview (for calc trends)
+        LocalDateTime previousStart = start.minusDays(period.getDays());
+        LocalDateTime previousEnd = end.minusDays(period.getDays());
+        CampaignOverviewResult previousResult = buildOverviewDataByCampaign(campaignId, previousStart, previousEnd);
+
+        // 3. Get Heatmap (Current Period)
+        HeatmapData heatmap = getHourlyHeatmap(campaignId, start, end);
+
+        return new CampaignDashboardResponse(
+                campaignId,
+                currentResult.campaignName,
+                period.getCode(),
+                currentResult.overview,
+                previousResult.overview, // Previous data for UI trends
+                currentResult.activities,
+                heatmap,
+                LocalDateTime.now());
+    }
+
+    private record CampaignOverviewResult(
+            String campaignName,
+            OverviewData overview,
+            List<ActivityComparisonData> activities) {
+    }
+
+    private CampaignOverviewResult buildOverviewDataByCampaign(Long campaignId, LocalDateTime start,
+            LocalDateTime end) {
         com.axon.core_service.domain.campaign.Campaign campaign = campaignRepository.findById(campaignId)
                 .orElseThrow(() -> new IllegalArgumentException("Campaign not found: " + campaignId));
         List<com.axon.core_service.domain.campaignactivity.CampaignActivity> activities = campaign
                 .getCampaignActivities();
 
-        LocalDateTime start = campaign.getStartAt() != null ? campaign.getStartAt() : LocalDateTime.now().minusDays(7);
-        LocalDateTime end = LocalDateTime.now();
-
-        // 2. Optimized: Fetch all stats in ONE query
+        // Optimized: Fetch all stats in ONE query
         Map<Long, Map<String, Long>> stats;
         try {
             stats = behaviorEventService.getCampaignStats(campaignId, start, end);
@@ -191,7 +221,7 @@ public class DashboardService {
         java.math.BigDecimal totalGMV = java.math.BigDecimal.ZERO;
 
         List<ActivityComparisonData> comparisonTable = new ArrayList<>();
-        List<Long> activityIds = new ArrayList<>();
+        List<Long> activityIds = new ArrayList<>(); // This was used for heatmap, now moved to getHourlyHeatmap
 
         for (com.axon.core_service.domain.campaignactivity.CampaignActivity activity : activities) {
             activityIds.add(activity.getId());
@@ -236,16 +266,16 @@ public class DashboardService {
         double totalPurchaseRate = totalQualifies > 0 ? (double) totalPurchases / totalQualifies * 100 : 0.0;
 
         java.math.BigDecimal totalAOV = totalPurchases > 0
-            ? totalGMV.divide(java.math.BigDecimal.valueOf(totalPurchases), 2, java.math.RoundingMode.HALF_UP)
-            : java.math.BigDecimal.ZERO;
+                ? totalGMV.divide(java.math.BigDecimal.valueOf(totalPurchases), 2, java.math.RoundingMode.HALF_UP)
+                : java.math.BigDecimal.ZERO;
 
         java.math.BigDecimal totalBudget = campaign.getBudget() != null
-            ? campaign.getBudget()
-            : java.math.BigDecimal.ZERO;
+                ? campaign.getBudget()
+                : java.math.BigDecimal.ZERO;
 
         double totalROAS = calculateROAS(totalGMV, totalBudget);
 
-        OverviewData totalOverview = new OverviewData(
+        OverviewData overview = new OverviewData(
                 totalVisits,
                 totalEngages,
                 totalQualifies,
@@ -259,27 +289,29 @@ public class DashboardService {
                 totalBudget,
                 totalROAS);
 
-        HeatmapData heatmap = null;
+        return new CampaignOverviewResult(campaign.getName(), overview, comparisonTable);
+    }
+
+    private HeatmapData getHourlyHeatmap(Long campaignId, LocalDateTime start, LocalDateTime end) {
+        com.axon.core_service.domain.campaign.Campaign campaign = campaignRepository.findById(campaignId)
+                .orElseThrow(() -> new IllegalArgumentException("Campaign not found: " + campaignId));
+        List<Long> activityIds = campaign.getCampaignActivities().stream()
+                .map(com.axon.core_service.domain.campaignactivity.CampaignActivity::getId)
+                .toList();
         try {
             Map<Integer, Long> hourlyTraffic = behaviorEventService.getHourlyTraffic(activityIds, start, end);
-            heatmap = new HeatmapData(hourlyTraffic);
+            return new HeatmapData(hourlyTraffic);
         } catch (IOException e) {
-            heatmap = new HeatmapData(Collections.emptyMap());
+            log.error("Failed to get hourly traffic for campaign: {}", campaignId, e);
+            return new HeatmapData(Collections.emptyMap());
         }
-
-        return new CampaignDashboardResponse(
-                campaign.getId(),
-                campaign.getName(),
-                totalOverview,
-                comparisonTable,
-                heatmap,
-                LocalDateTime.now());
     }
 
     public java.math.BigDecimal calculateGMV(Long activityId, Long purchaseCount) {
-        com.axon.core_service.domain.campaignactivity.CampaignActivity activity = campaignActivityRepository.findById(activityId)
+        com.axon.core_service.domain.campaignactivity.CampaignActivity activity = campaignActivityRepository
+                .findById(activityId)
                 .orElseThrow(() -> new IllegalArgumentException("Activity not found: " + activityId));
-        
+
         java.math.BigDecimal price = activity.getPrice() != null ? activity.getPrice() : java.math.BigDecimal.ZERO;
         return price.multiply(java.math.BigDecimal.valueOf(purchaseCount));
     }
@@ -324,17 +356,20 @@ public class DashboardService {
 
             Long visits = stats.getOrDefault("PAGE_VIEW", 0L);
             Long purchases = stats.getOrDefault("PURCHASE", 0L);
-            
+
             // Simplified GMV calculation: Purchases * Avg Price (First activity price)
-            // Note: For precise global GMV, we should aggregate per activity, but for speed we approximate here
-            java.math.BigDecimal avgPrice = java.math.BigDecimal.valueOf(10000); 
+            // Note: For precise global GMV, we should aggregate per activity, but for speed
+            // we approximate here
+            java.math.BigDecimal avgPrice = java.math.BigDecimal.valueOf(10000);
             if (!campaign.getCampaignActivities().isEmpty()) {
-                 java.math.BigDecimal firstPrice = campaign.getCampaignActivities().get(0).getPrice();
-                 if (firstPrice != null) avgPrice = firstPrice;
+                java.math.BigDecimal firstPrice = campaign.getCampaignActivities().get(0).getPrice();
+                if (firstPrice != null)
+                    avgPrice = firstPrice;
             }
             java.math.BigDecimal campaignGmv = avgPrice.multiply(java.math.BigDecimal.valueOf(purchases));
 
-            java.math.BigDecimal budget = campaign.getBudget() != null ? campaign.getBudget() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal budget = campaign.getBudget() != null ? campaign.getBudget()
+                    : java.math.BigDecimal.ZERO;
             double roas = calculateROAS(campaignGmv, budget);
 
             totalVisits += visits;
@@ -342,24 +377,25 @@ public class DashboardService {
             totalGMV = totalGMV.add(campaignGmv);
             totalBudget = totalBudget.add(budget);
 
-            if (visits > 0 || purchases > 0) {
-                gmvRanking.add(new CampaignRankData(campaignId, campaign.getName(), campaignGmv.longValue(), formatCurrency(campaignGmv)));
-                visitRanking.add(new CampaignRankData(campaignId, campaign.getName(), visits, String.valueOf(visits)));
-                efficiencyData.add(new CampaignEfficiencyData(campaignId, campaign.getName(), budget, campaignGmv, roas));
-            }
+            gmvRanking.add(new CampaignRankData(campaignId, campaign.getName(), campaignGmv.longValue(),
+                    formatCurrency(campaignGmv)));
+            visitRanking.add(new CampaignRankData(campaignId, campaign.getName(), visits, String.valueOf(visits)));
+            efficiencyData
+                    .add(new CampaignEfficiencyData(campaignId, campaign.getName(), budget, campaignGmv, roas));
         }
 
         gmvRanking.sort((a, b) -> Long.compare(b.value(), a.value()));
         visitRanking.sort((a, b) -> Long.compare(b.value(), a.value()));
 
-        if (gmvRanking.size() > 10) gmvRanking = gmvRanking.subList(0, 10);
-        if (visitRanking.size() > 10) visitRanking = visitRanking.subList(0, 10);
+        if (gmvRanking.size() > 10)
+            gmvRanking = gmvRanking.subList(0, 10);
+        if (visitRanking.size() > 10)
+            visitRanking = visitRanking.subList(0, 10);
 
         OverviewData globalOverview = new OverviewData(
                 totalVisits, 0L, 0L, totalPurchases, totalGMV,
-                0.0, 0.0, 0.0, 0.0, java.math.BigDecimal.ZERO, totalBudget, 
-                calculateROAS(totalGMV, totalBudget)
-        );
+                0.0, 0.0, 0.0, 0.0, java.math.BigDecimal.ZERO, totalBudget,
+                calculateROAS(totalGMV, totalBudget));
 
         // Calculate Global Heatmap
         HeatmapData globalHeatmap = null;
@@ -368,7 +404,7 @@ public class DashboardService {
             // For now, let's aggregate traffic from all campaigns we iterated
             // Or better, let behaviorEventService handle "all" query
             List<Long> allActivityIds = new ArrayList<>();
-            for(com.axon.core_service.domain.campaign.Campaign c : campaigns) {
+            for (com.axon.core_service.domain.campaign.Campaign c : campaigns) {
                 c.getCampaignActivities().forEach(a -> allActivityIds.add(a.getId()));
             }
             Map<Integer, Long> hourlyTraffic = behaviorEventService.getHourlyTraffic(allActivityIds, start, end);
@@ -383,8 +419,7 @@ public class DashboardService {
                 visitRanking,
                 efficiencyData,
                 globalHeatmap,
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
     }
 
     private String formatCurrency(java.math.BigDecimal amount) {

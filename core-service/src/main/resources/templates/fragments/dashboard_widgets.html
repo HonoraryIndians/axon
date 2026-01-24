@@ -2,36 +2,58 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <!-- KPI Card Fragment -->
+<!-- Updated to match new GA4/Matomo style CSS -->
 <div th:fragment="kpiCard(id, title, iconClass, iconColor, initialValue, trend, trendClass)">
-    <div class="kpi-card">
-        <div class="kpi-header">
+    <div class="kpi-card h-full">
+        <div class="flex justify-between items-start mb-2">
             <div class="flex items-center gap-2">
-                <span class="kpi-title" th:text="${title}">Title</span>
-                <span th:id="${id} + '-tooltip-icon'" class="cursor-help text-gray-400 hover:text-gray-600 transition-colors">
+                <h3 class="kpi-label" th:text="${title}">Title</h3>
+                <span th:id="${id} + '-tooltip-icon'"
+                    class="cursor-help text-gray-400 hover:text-gray-600 transition-colors">
                     <i class="fa-regular fa-circle-question text-xs"></i>
                 </span>
             </div>
-            <div th:class="'kpi-icon ' + ${iconColor}">
+            <div th:class="'text-lg ' + 
+                (${iconColor} == 'blue' ? 'text-blue-600' : 
+                (${iconColor} == 'purple' ? 'text-purple-600' : 
+                (${iconColor} == 'green' ? 'text-green-600' : 
+                (${iconColor} == 'orange' ? 'text-orange-600' : 
+                (${iconColor} == 'emerald' ? 'text-emerald-600' : 
+                (${iconColor} == 'indigo' ? 'text-indigo-600' : 
+                (${iconColor} == 'rose' ? 'text-rose-600' : 
+                (${iconColor} == 'amber' ? 'text-amber-600' : 'text-gray-600'))))))))">
                 <i th:class="${iconClass}"></i>
             </div>
         </div>
+
         <div class="kpi-value" th:id="${id}" th:text="${initialValue}">0</div>
-        <div class="kpi-trend" th:classappend="${trendClass}">
-            <i th:if="${trendClass == 'up'}" class="fa-solid fa-arrow-up"></i>
-            <i th:if="${trendClass == 'down'}" class="fa-solid fa-arrow-down"></i>
-            <span th:text="${trend}">0% vs last period</span>
+
+        <div class="kpi-meta" th:classappend="${trendClass}">
+            <span th:if="${trendClass == 'up'}" class="flex items-center text-green-600 font-medium text-sm">
+                <i class="fa-solid fa-arrow-up mr-1 text-xs"></i>
+                <span th:text="${trend}">0%</span>
+            </span>
+            <span th:if="${trendClass == 'down'}" class="flex items-center text-red-600 font-medium text-sm">
+                <i class="fa-solid fa-arrow-down mr-1 text-xs"></i>
+                <span th:text="${trend}">0%</span>
+            </span>
+            <span th:if="${trendClass == 'neutral'}" class="text-gray-400 text-sm">
+                <span th:text="${trend}">-</span>
+            </span>
+            <span class="text-gray-400 text-xs ml-2 font-normal">vs last period</span>
         </div>
     </div>
 </div>
 
 <!-- Chart Container Fragment -->
+<!-- Kept for compatibility with other pages -->
 <div th:fragment="chartContainer(id, title, widthClass)">
-    <div th:class="'chart-container ' + ${widthClass}">
+    <div th:class="'chart-card ' + (${widthClass} == 'full-width' ? 'full' : 'half')">
         <div class="chart-header">
             <h3 class="chart-title" th:text="${title}">Chart Title</h3>
-            <div class="chart-actions">
-                <button class="chart-btn active">7D</button>
-                <button class="chart-btn">30D</button>
+            <div class="flex gap-1 bg-gray-50 p-1 rounded-md">
+                <button class="px-2 py-1 text-xs font-medium bg-white rounded shadow-sm text-gray-800">7D</button>
+                <button class="px-2 py-1 text-xs font-medium text-gray-500 hover:text-gray-700">30D</button>
             </div>
         </div>
         <div style="position: relative; height: 300px;">

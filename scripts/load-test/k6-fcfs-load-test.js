@@ -1,6 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Counter, Trend } from 'k6/metrics';
+import exec from 'k6/execution';
 
 /**
  * =========================================================================
@@ -106,7 +107,7 @@ const spike_scenario = {
         // Phase 5: End
         { duration: '5s', target: 0 },
       ],
-      gracefulRampDown: '5s',
+      gracefulRampDown: '10s',
     },
   },
 
@@ -286,8 +287,9 @@ export function setup() {
 // 메인 시나리오: 각 VU(Virtual User)가 실행하는 흐름
 // =========================================================================
 export default function (data) {
-  // 랜덤 userId 생성 (1000-9000)
-  const userId = Math.floor(Math.random() * (data.userIdEnd - data.userIdStart + 1)) + data.userIdStart;
+  // 순차적 userId 생성 (중복 방지)
+  const uniqueIndex = exec.scenario.iterationInTest;
+  const userId = data.userIdStart + (uniqueIndex % (data.userIdEnd - data.userIdStart + 1));
   const sessionId = `session-${userId}-${Date.now()}`;
 
   // ===== Step 1: 페이지 방문 이벤트 =====
@@ -322,14 +324,14 @@ export default function (data) {
 // 행동 이벤트 전송
 // =========================================================================
 function sendBehaviorEvent(data, userId, sessionId, triggerType) {
-  const eventName = `${triggerType}_test`;
+  const eventName = triggerType;
   const payload = JSON.stringify({
     eventName: eventName,
     triggerType: triggerType,
     occurredAt: new Date().toISOString(),
     userId: userId,
     sessionId: sessionId,
-    pageUrl: `/campaign/${data.activityId}`,
+    pageUrl: `/campaign-activity/${data.activityId}/view`,
     referrer: '',
     properties: {
       activityId: data.activityId,

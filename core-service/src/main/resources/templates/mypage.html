@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/default}">
+
+<head>
+    <title>SKU STORE - My Page</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="w-full">
+        <div class="max-w-[1200px] mx-auto px-4 py-16">
+
+            <!-- Welcome Header -->
+            <div class="mb-12">
+                <h2 class="text-3xl font-black tracking-tight mb-2">MY ACCOUNT</h2>
+                <p class="text-gray-500">안녕하세요, <span class="text-black font-bold border-b border-black pb-0.5"
+                        th:text="${username} + '님'">User님</span>. 오늘도 특별한 쇼핑 되세요.</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-12">
+                <!-- Sidebar Nav -->
+                <div class="w-full lg:w-[250px] shrink-0">
+                    <div class="flex flex-col gap-2 sticky top-24">
+                        <a href="#orders" onclick="showSection('orders')" id="nav-orders"
+                            class="font-bold text-black pl-4 border-l-2 border-black py-2 cursor-pointer">주문 내역</a>
+                        <a href="#coupons" onclick="showSection('coupons')" id="nav-coupons"
+                            class="text-gray-500 hover:text-black pl-4 border-l-2 border-transparent py-2 transition-colors cursor-pointer">쿠폰함</a>
+                        <a href="#profile" onclick="showSection('profile')" id="nav-profile"
+                            class="text-gray-500 hover:text-black pl-4 border-l-2 border-transparent py-2 transition-colors cursor-pointer">회원
+                            정보 수정</a>
+                    </div>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="flex-1 min-h-[500px]">
+
+                    <!-- SECTION: ORDERS -->
+                    <div id="section-orders">
+                        <h3 class="font-bold text-xl mb-6">최근 주문 내역</h3>
+                        <div class="space-y-6">
+                            <!-- Order 1 -->
+                            <div
+                                class="border border-gray-200 rounded-sm p-6 hover:border-black transition-colors group">
+                                <div class="flex justify-between items-start mb-6 pb-6 border-b border-gray-100">
+                                    <div>
+                                        <span class="text-xs font-bold text-gray-400 block mb-1">2024.11.20</span>
+                                        <span class="font-bold">Order #20241120-001582</span>
+                                    </div>
+                                    <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-sm">배송
+                                        완료</span>
+                                </div>
+                                <div class="flex gap-6 items-center">
+                                    <div
+                                        class="w-20 h-20 bg-gray-50 flex items-center justify-center rounded-sm overflow-hidden relative">
+                                        <img src="/image/product/fashion_1.jpg"
+                                            class="absolute inset-0 w-full h-full object-cover" alt="Product Image">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold mb-1">편백나무 옷걸이 10개 세트</h4>
+                                        <p class="text-sm text-gray-500">BasicWear / Free</p>
+                                        <div class="flex gap-4 mt-2 text-sm">
+                                            <span>25,000원</span>
+                                            <span class="text-gray-300">|</span>
+                                            <span>1개</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <button
+                                            class="text-sm font-bold border-b border-black hover:text-gray-600 hover:border-gray-600 transition-colors">리뷰
+                                            작성</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order 2 -->
+                            <div
+                                class="border border-gray-200 rounded-sm p-6 hover:border-black transition-colors group">
+                                <div class="flex justify-between items-start mb-6 pb-6 border-b border-gray-100">
+                                    <div>
+                                        <span class="text-xs font-bold text-gray-400 block mb-1">2024.11.05</span>
+                                        <span class="font-bold">Order #20241105-000491</span>
+                                    </div>
+                                    <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-sm">구매
+                                        확정</span>
+                                </div>
+                                <div class="flex gap-6 items-center">
+                                    <div
+                                        class="w-20 h-20 bg-gray-50 flex items-center justify-center rounded-sm overflow-hidden relative">
+                                        <img src="/image/product/home_1.jpg"
+                                            class="absolute inset-0 w-full h-full object-cover" alt="Product Image">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold mb-1">Modern Sofa</h4>
+                                        <p class="text-sm text-gray-500">CozyHome / One Size</p>
+                                        <div class="flex gap-4 mt-2 text-sm">
+                                            <span>450,000원</span>
+                                            <span class="text-gray-300">|</span>
+                                            <span>1개</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <button
+                                            class="text-sm font-bold border-b border-black hover:text-gray-600 hover:border-gray-600 transition-colors">재구매</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order 3 (Canceled) -->
+                            <div
+                                class="border border-gray-200 rounded-sm p-6 hover:border-black transition-colors opacity-70">
+                                <div class="flex justify-between items-start mb-6 pb-6 border-b border-gray-100">
+                                    <div>
+                                        <span class="text-xs font-bold text-gray-400 block mb-1">2024.10.28</span>
+                                        <span class="font-bold">Order #20241028-091223</span>
+                                    </div>
+                                    <span
+                                        class="bg-red-50 text-red-600 text-xs font-bold px-2 py-1 rounded-sm">취소됨</span>
+                                </div>
+                                <div class="flex gap-6 items-center">
+                                    <div
+                                        class="w-20 h-20 bg-gray-50 flex items-center justify-center rounded-sm overflow-hidden relative">
+                                        <img src="/image/product/food_5.jpg"
+                                            class="absolute inset-0 w-full h-full object-cover" alt="Product Image">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold mb-1">냉동 햄버거 세트</h4>
+                                        <p class="text-sm text-gray-500">HAM&FRY / 2팩</p>
+                                        <div class="flex gap-4 mt-2 text-sm">
+                                            <span>35,000원</span>
+                                            <span class="text-gray-300">|</span>
+                                            <span>1개</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION: COUPONS -->
+                    <div id="section-coupons" class="hidden">
+                        <h3 class="font-bold text-xl mb-6">나의 쿠폰함</h3>
+
+                        <!-- Coupon List -->
+                        <div th:if="${not #lists.isEmpty(userCoupons)}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div th:each="uc : ${userCoupons}"
+                                class="border border-dashed border-accent bg-accent/5 p-6 rounded-sm relative overflow-hidden group hover:bg-accent/10 transition-colors">
+                                <div class="absolute top-0 right-0 w-16 h-16 bg-accent/20 rounded-bl-full -mr-8 -mt-8">
+                                </div>
+
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <span
+                                            class="text-xs font-bold text-accent uppercase tracking-wider mb-1 block">COUPON</span>
+                                        <h4 class="font-black text-xl" th:text="${uc.coupon.couponName}">Coupon Name
+                                        </h4>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-end gap-2 mb-4">
+                                    <span th:if="${uc.coupon.discountRate != null}"
+                                        class="text-4xl font-black text-accent"
+                                        th:text="${uc.coupon.discountRate} + '%'">20%</span>
+                                    <span th:if="${uc.coupon.discountAmount != null}"
+                                        class="text-4xl font-black text-accent"
+                                        th:text="${#numbers.formatInteger(uc.coupon.discountAmount, 0, 'COMMA')}">5000</span>
+                                    <span th:if="${uc.coupon.discountAmount != null}"
+                                        class="text-lg font-bold text-accent mb-1">원</span>
+                                    <span class="text-sm text-gray-500 mb-1.5 ml-1">할인</span>
+                                </div>
+
+                                <div
+                                    class="flex justify-between items-center text-xs text-gray-500 border-t border-accent/20 pt-4">
+                                    <span
+                                        th:text="|사용기간: ${#temporals.format(uc.coupon.endDate, 'yyyy.MM.dd')}까지|">사용기간:
+                                        2024.12.31까지</span>
+                                    <span class="font-bold text-accent">사용 가능</span>
+                                </div>
+                                <div class="mt-2 text-xs text-gray-400 space-y-1">
+                                    <p th:if="${uc.coupon.minOrderAmount != null}"
+                                        th:text="|최소 주문금액: ${#numbers.formatInteger(uc.coupon.minOrderAmount, 0, 'COMMA')}원|">
+                                        최소주문금액</p>
+                                    <p th:if="${uc.coupon.targetCategory != null}"
+                                        th:text="|적용 카테고리: ${uc.coupon.targetCategory}|">카테고리</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div th:if="${#lists.isEmpty(userCoupons)}" class="bg-gray-50 rounded-sm p-12 text-center">
+                            <i class="ph ph-ticket text-4xl text-gray-300 mb-4 inline-block"></i>
+                            <p class="text-gray-500 mb-2">보유 중인 쿠폰이 없습니다.</p>
+                            <a href="/events" class="text-sm font-bold border-b border-black">이벤트 보러가기</a>
+                        </div>
+                    </div>
+
+
+                    <!-- SECTION: PROFILE -->
+                    <div id="section-profile" class="hidden">
+                        <h3 class="font-bold text-xl mb-6">회원 정보 수정</h3>
+                        <div class="max-w-[500px]">
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-bold mb-2">이름</label>
+                                    <input type="text" th:value="${username}"
+                                        class="w-full h-12 px-4 border border-gray-300 rounded-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                                        readonly>
+                                    <p class="text-xs text-gray-400 mt-1">* 이름은 변경할 수 없습니다.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold mb-2">휴대폰 번호</label>
+                                    <input type="text" value="010-1234-5678"
+                                        class="w-full h-12 px-4 border border-gray-300 rounded-sm outline-none focus:border-black">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold mb-2">이메일</label>
+                                    <input type="email" value="user@example.com"
+                                        class="w-full h-12 px-4 border border-gray-300 rounded-sm outline-none focus:border-black">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold mb-2">비밀번호 변경</label>
+                                    <input type="password" placeholder="새 비밀번호 입력"
+                                        class="w-full h-12 px-4 border border-gray-300 rounded-sm outline-none focus:border-black mb-2">
+                                    <input type="password" placeholder="새 비밀번호 확인"
+                                        class="w-full h-12 px-4 border border-gray-300 rounded-sm outline-none focus:border-black">
+                                </div>
+
+                                <div class="pt-4 flex gap-4">
+                                    <button
+                                        class="flex-1 h-12 bg-black text-white font-bold rounded-sm hover:bg-gray-800 transition-colors">저장하기</button>
+                                    <button
+                                        class="flex-1 h-12 border border-gray-300 text-gray-600 font-bold rounded-sm hover:bg-gray-50 transition-colors">취소</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simple Tab Script -->
+    <script layout:fragment="script">
+        function showSection(sectionId) {
+            // Hide all sections
+            ['orders', 'coupons', 'profile'].forEach(id => {
+                document.getElementById('section-' + id).classList.add('hidden');
+
+                // Update Nav Style
+                const nav = document.getElementById('nav-' + id);
+                nav.classList.remove('text-black', 'border-black');
+                nav.classList.add('text-gray-500', 'border-transparent');
+            });
+
+            // Show selected
+            document.getElementById('section-' + sectionId).classList.remove('hidden');
+
+            // Update Active Nav
+            const activeNav = document.getElementById('nav-' + sectionId);
+            activeNav.classList.remove('text-gray-500', 'border-transparent');
+            activeNav.classList.add('text-black', 'border-black');
+        }
+    </script>
+</body>
+
+</html>

@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 public class CampaignActivityConsumerService {
 
     private final Map<CampaignActivityType, CampaignStrategy> strategies;
-    private final int kafkaBatchBuffer = 50;
+    private final int kafkaBatchBuffer = 20;  // Reduced from 50 to decrease transaction time and lock contention
 
     // 메시지 버퍼 (Thread-safe Queue)
     private final ConcurrentLinkedQueue<CampaignActivityKafkaProducerDto> buffer = new ConcurrentLinkedQueue<>();
@@ -48,7 +48,8 @@ public class CampaignActivityConsumerService {
     @KafkaListener(topics = KafkaTopics.CAMPAIGN_ACTIVITY_COMMAND, groupId = "axon-group")
     public void consume(CampaignActivityKafkaProducerDto message) {
         buffer.offer(message);
-        log.debug("[Kafka] : Activities's message buffered size={}", buffer.size());
+        log.info("📥 [Kafka] Consumed message: userId={}, activityId={}, bufferSize={}",
+            message.getUserId(), message.getCampaignActivityId(), buffer.size());
 
         if(buffer.size() >= kafkaBatchBuffer) {
             flushBatch();

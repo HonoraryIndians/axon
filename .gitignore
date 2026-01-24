@@ -8,3 +8,4 @@ build/
 common-messaging/.gradle/
 # Secret files
 application-oauth.yml
+.env

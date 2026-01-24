@@ -111,11 +111,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     {
                         label: '누적 이익 (₩)',
                         data: data.monthlyDetails.map(m => m.profit || 0),
-                        borderColor: function(context) {
+                        borderColor: function (context) {
                             const value = context.parsed?.y || 0;
                             return value >= 0 ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)';
                         },
-                        backgroundColor: function(context) {
+                        backgroundColor: function (context) {
                             const value = context.parsed?.y || 0;
                             return value >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
                         },
@@ -182,10 +182,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     legend: {
                         display: true,
                         position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12, family: "'Inter', sans-serif" }
+                        }
                     },
                     tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: { size: 13, weight: 600, family: "'Inter', sans-serif" },
+                        bodyFont: { size: 12, family: "'Inter', sans-serif" },
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 let label = context.dataset.label || '';
                                 if (label) {
                                     label += ': ';
@@ -205,10 +215,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 },
                 scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "'Inter', sans-serif" }, color: '#64748b' }
+                    },
                     y: {
                         beginAtZero: true,
+                        grid: { color: '#f1f5f9', borderDash: [5, 5] },
                         ticks: {
-                            callback: function(value) {
+                            font: { family: "'Inter', sans-serif" },
+                            color: '#64748b',
+                            callback: function (value) {
                                 return '₩' + (value / 1000000).toFixed(1) + 'M';
                             }
                         }

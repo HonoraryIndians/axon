@@ -50,7 +50,7 @@ echo "📊 Current data count:"
 echo ""
 
 # Elasticsearch count
-ES_COUNT=$(curl -s "${ES_URL}/behavior-events/_count?q=properties.activityId:${ACTIVITY_ID}" | jq -r '.count' 2>/dev/null || echo "0")
+ES_COUNT=$(curl -s "${ES_URL}/axon.event.*/_count?q=properties.activityId:${ACTIVITY_ID}" | jq -r '.count' 2>/dev/null || echo "0")
 echo "  📁 Elasticsearch events: $ES_COUNT"
 
 # MySQL count (quick check, actual deletion is robust)

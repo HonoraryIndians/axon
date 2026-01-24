@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Thunder Herd Scenario</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --primary-color: #FF5252; /* VU (Spike) */
+            --secondary-color: #448AFF; /* RPS (Throughput) */
+            --grid-color: #e0e0e0;
+            --card-bg: #f9f9f9;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1e1e1e;
+                --text-colorㅇ: #e0e0e0;
+                --grid-color: #333333;
+                --card-bg: #2c2c2c;
+            }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #777;
+            margin-bottom: 40px;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        /* Graph Container */
+        .chart-container {
+            width: 100%;
+            max-width: 900px;
+            height: 450px;
+            position: relative;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 20px 60px 60px 60px;
+            margin-bottom: 30px;
+            box-sizing: border-box;
+        }
+
+        /* SVG Graph */
+        svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .axis path, .axis line {
+            fill: none;
+            stroke: var(--text-color);
+            opacity: 0.5;
+            shape-rendering: crispEdges;
+        }
+
+        .grid-line {
+            stroke: var(--grid-color);
+            stroke-width: 1;
+            stroke-dasharray: 4;
+        }
+
+        /* VU Line (Red) */
+        .line-vu {
+            fill: none;
+            stroke: var(--primary-color);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 4px 6px rgba(255, 82, 82, 0.4));
+        }
+
+        /* RPS Line (Blue) */
+        .line-rps {
+            fill: none;
+            stroke: var(--secondary-color);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 8 4; /* Dashed line for RPS */
+            opacity: 0.8;
+        }
+
+        .area {
+            fill: url(#gradient);
+            opacity: 0.15;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            fill: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .point {
+            fill: var(--bg-color);
+            stroke: var(--primary-color);
+            stroke-width: 3;
+            r: 5;
+            transition: r 0.3s;
+        }
+        
+        .point:hover {
+            r: 8;
+            cursor: pointer;
+        }
+
+        .annotation {
+            font-size: 0.85rem;
+            fill: var(--text-color);
+            font-weight: bold;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.8);
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .legend { background: rgba(0,0,0,0.6); }
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot-vu { width: 10px; height: 10px; background-color: var(--primary-color); border-radius: 50%; }
+        .dot-rps { width: 10px; height: 4px; background-color: var(--secondary-color); }
+
+        /* Formula Box */
+        .formula-box {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 50px;
+            font-size: 0.9rem;
+            color: #666;
+            border-left: 4px solid var(--secondary-color);
+            box-shadow: var(--shadow);
+        }
+
+        .formula-title {
+            font-weight: bold;
+            color: var(--text-color);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        code {
+            background: rgba(0,0,0,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            color: var(--secondary-color);
+        }
+
+        /* Table */
+        .table-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--grid-color);
+        }
+
+        th {
+            background-color: rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .bg-spike { background-color: #FF5252; }
+        .bg-peak { background-color: #FF1744; }
+        .bg-decline { background-color: #FF9800; }
+        .bg-tail { background-color: #4CAF50; }
+        .bg-end { background-color: #9E9E9E; }
+
+    </style>
+</head>
+<body>
+
+    <h1>🌩️ Thunder Herd (Spike)</h1>
+    <p class="subtitle">3000 Virtual Users Concurrency Test Scenario</p>
+
+    <div class="chart-container">
+        <div class="legend">
+            <div class="legend-item"><div class="dot-vu"></div> VU (Users)</div>
+            <div class="legend-item"><div class="dot-rps"></div> Est. RPS</div>
+        </div>
+
+        <svg viewBox="0 0 800 400" preserveAspectRatio="none">
+            <!-- Gradient -->
+            <defs>
+                <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="var(--primary-color)" />
+                    <stop offset="100%" stop-color="var(--bg-color)" stop-opacity="0" />
+                </linearGradient>
+            </defs>
+
+            <!-- Grid Lines (Horizontal) -->
+            <line x1="0" y1="350" x2="800" y2="350" class="grid-line" /> <!-- 0 -->
+            <line x1="0" y1="290" x2="800" y2="290" class="grid-line" /> <!-- 600 -->
+            <line x1="0" y1="50" x2="800" y2="50" class="grid-line" />   <!-- 3000 -->
+
+            <!-- Axes -->
+            <line x1="0" y1="350" x2="800" y2="350" stroke="currentColor" opacity="0.5" /> <!-- X Axis -->
+            <line x1="0" y1="0" x2="0" y2="350" stroke="currentColor" opacity="0.5" />     <!-- Y Axis Left (VU) -->
+            <line x1="800" y1="0" x2="800" y2="350" stroke="currentColor" opacity="0.5" /> <!-- Y Axis Right (RPS) -->
+
+            <!-- Y Axis Labels (Left - VU) -->
+            <text x="-10" y="355" text-anchor="end" class="label">0</text>
+            <text x="-10" y="295" text-anchor="end" class="label">600</text>
+            <text x="-10" y="55" text-anchor="end" class="label">3000 VU</text>
+
+            <!-- Y Axis Labels (Right - RPS) -->
+            <text x="810" y="355" text-anchor="start" class="label">0</text>
+            <text x="810" y="295" text-anchor="start" class="label">~450</text>
+            <text x="810" y="55" text-anchor="start" class="label">~3,000+ RPS</text>
+
+            <!-- X Axis Labels -->
+            <text x="0" y="375" text-anchor="middle" class="label">0s</text>
+            <text x="53" y="375" text-anchor="middle" class="label">2s</text>
+            <text x="266" y="375" text-anchor="middle" class="label">10s</text>
+            <text x="400" y="375" text-anchor="middle" class="label">15s</text>
+            <text x="666" y="375" text-anchor="middle" class="label">25s</text>
+            <text x="800" y="375" text-anchor="middle" class="label">30s</text>
+
+            <!-- VU Line (Primary) -->
+            <path d="M0,350 L53,50 L266,50 L400,290 L666,338 L800,350" class="area" stroke="none" />
+            <path d="M0,350 L53,50 L266,50 L400,290 L666,338 L800,350" class="line-vu" />
+
+            <!-- RPS Line (Secondary - Dashed) -->
+            <!-- RPS follows VU trend but slightly lower scale due to iteration time -->
+            <path d="M0,350 L53,60 L266,60 L400,300 L666,340 L800,350" class="line-rps" />
+
+            <!-- Points -->
+            <circle cx="53" cy="50" class="point" />
+            <circle cx="266" cy="50" class="point" />
+            
+            <!-- Annotations -->
+            <text x="160" y="35" text-anchor="middle" class="annotation" style="fill: var(--primary-color);">Peak Load (3000 VU)</text>
+            <text x="160" y="80" text-anchor="middle" class="annotation" style="fill: var(--secondary-color); font-size: 0.8rem;">~3,000+ RPS (Burst)</text>
+            <text x="420" y="280" text-anchor="start" class="annotation">Sold Out</text>
+        </svg>
+    </div>
+
+    <!-- Formula Box -->
+    <div class="formula-box">
+        <span class="formula-title">📊 RPS (Requests Per Second) 산출 로직</span>
+        <p>
+            RPS는 k6 스크립트의 <b>VU 반복 주기(Iteration Cycle)</b>와 <b>동시 접속자 수</b>를 기반으로 추산됩니다.
+            <br><br>
+            • <b>반복 주기:</b> 1명의 VU는 루프당 약 <b>3개의 요청</b> (Page View → Click → Reserve)을 수행합니다.
+            <br>
+            • <b>평균 소요 시간:</b> 응답 대기 및 딜레이 포함 약 4초.
+            <br>
+            • <b>기본 공식:</b> <code>RPS = (Total VUs * Requests per Iteration) / Iteration Duration</code>
+            <br><br>
+            <b>🔥 Peak Time (3000 VU):</b>
+            <br>
+            - <b>순간 최대 (Burst):</b> 0~2초 구간에 3000명이 동시에 진입하며 첫 요청을 발송 → <b>3,000+ RPS</b>
+            <br>
+            - <b>지속 평균 (Sustained):</b> <code>(3000 * 3) / 4s ≈ 2,250 RPS</code>
+        </p>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>단계 (Phase)</th>
+                    <th>시간 (Time)</th>
+                    <th>VUs 변화</th>
+                    <th>예상 RPS</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="phase-badge bg-spike">1. Spike</span></td>
+                    <td>0s ~ 2s</td>
+                    <td>0 → 3000</td>
+                    <td>0 → 3,000+</td>
+                    <td><b>Connection Storm</b> (오픈 직후 접속 폭주)</td>
+                </tr>
+                <tr>
+                    <td><span class="phase-badge bg-peak">2. Peak</span></td>
+                    <td>2s ~ 10s</td>
+                    <td>3000</td>
+                    <td>~2,250</td>
+                    <td><b>최대 부하 지속</b> (Critical Zone)</td>
+                </tr>
+                <tr>
+                    <td><span class="phase-badge bg-decline">3. Decline</span></td>
+                    <td>10s ~ 15s</td>
+                    <td>3000 → 600</td>
+                    <td>~450</td>
+                    <td>"Sold Out" 응답 (유저 이탈 시작)</td>
+                </tr>
+                <tr>
+                    <td><span class="phase-badge bg-tail">4. Tail</span></td>
+                    <td>15s ~ 25s</td>
+                    <td>600 → 120</td>
+                    <td>~90</td>
+                    <td>잔존 트래픽 (새로고침/재시도)</td>
+                </tr>
+                <tr>
+                    <td><span class="phase-badge bg-end">5. End</span></td>
+                    <td>25s ~ 30s</td>
+                    <td>120 → 0</td>
+                    <td>0</td>
+                    <td>테스트 및 상황 종료</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

@@ -1,11 +1,14 @@
 package com.axon.core_service.controller;
 
 import com.axon.core_service.domain.campaignactivity.CampaignActivity;
+import com.axon.core_service.domain.coupon.UserCoupon;
 import com.axon.core_service.domain.dto.campaignactivity.filter.FilterDetail;
+import com.axon.core_service.domain.dto.coupon.ApplicableCouponDto;
 import com.axon.core_service.domain.product.Product;
 import com.axon.core_service.exception.CampaignActivityNotFoundException;
 import com.axon.core_service.repository.CampaignActivityRepository;
 import com.axon.core_service.repository.ProductRepository;
+import com.axon.core_service.service.CouponService;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -34,6 +38,8 @@ public class StoreController {
     private final ProductRepository productRepository;
     private final com.axon.core_service.repository.UserCouponRepository userCouponRepository;
     private final com.axon.core_service.config.auth.JwtTokenProvider jwtTokenProvider;
+    private final CouponService couponService;
+    private final com.axon.core_service.repository.PurchaseRepository purchaseRepository;
 
     @org.springframework.beans.factory.annotation.Value("${axon.entry-service-url}")
     private String entryServiceUrl;
@@ -111,6 +117,7 @@ public class StoreController {
                 .name(product.getProductName())
                 .brand(product.getBrand() != null ? product.getBrand() : "SKU STORE") // Default brand
                 .price(priceStr)
+                .rawPrice(sellingPrice) // Add raw price
                 .originalPrice(originalPriceStr)
                 .discountRate(product.getDiscountRate() != null ? product.getDiscountRate() : 0)
                 .imageUrl(imagePath)
@@ -129,11 +136,55 @@ public class StoreController {
     }
 
     @GetMapping("/checkout")
-    public String checkout(@RequestParam Long productId, Model model) {
+    public String checkout(@RequestParam Long productId,
+            @org.springframework.web.bind.annotation.CookieValue(value = "accessToken", required = false) String accessToken,
+            Model model) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
 
         model.addAttribute("product", convertToProductDto(product));
+
+        Long userId = null;
+
+        // 쿠키에서 accessToken 가져와서 사용자 ID 추출 (mypage와 동일한 방식)
+        if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
+            try {
+                org.springframework.security.core.Authentication auth = jwtTokenProvider.getAuthentication(accessToken);
+                Object principal = auth.getPrincipal();
+
+                if (principal instanceof com.axon.core_service.domain.user.CustomOAuth2User) {
+                    com.axon.core_service.domain.user.CustomOAuth2User oauthUser = (com.axon.core_service.domain.user.CustomOAuth2User) principal;
+                    userId = oauthUser.getUserId();
+                } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                    String username = ((org.springframework.security.core.userdetails.UserDetails) principal)
+                            .getUsername();
+                    userId = Long.parseLong(username);
+                }
+                log.info("Extracted userId from token: {}", userId);
+            } catch (Exception e) {
+                log.error("Error extracting userId from token", e);
+            }
+        } else {
+            log.info("No valid accessToken found in cookies");
+        }
+
+        // 사용자가 로그인되어 있으면 적용 가능한 쿠폰 조회
+        if (userId != null) {
+            try {
+                List<ApplicableCouponDto> applicableCoupons = couponService.getApplicableCoupons(userId,
+                        product.getPrice(), product.getCategory());
+                model.addAttribute("coupons", applicableCoupons);
+                log.info("Found {} applicable coupons for user {} and product {}", applicableCoupons.size(), userId,
+                        productId);
+            } catch (Exception e) {
+                log.error("Error loading coupons for checkout", e);
+                model.addAttribute("coupons", java.util.Collections.emptyList());
+            }
+        } else {
+            log.info("userId is null - user not authenticated");
+            model.addAttribute("coupons", java.util.Collections.emptyList());
+        }
+
         return "checkout";
     }
 
@@ -214,6 +265,121 @@ public class StoreController {
         return "entry";
     }
 
+    @GetMapping("/cart")
+    public String cart() {
+        return "cart";
+    }
+
+    @GetMapping("/cart/checkout")
+    public String payment() {
+        return "payment";
+    }
+
+    @GetMapping("/payment/success")
+    public String paymentSuccess(
+            @RequestParam(required = false) Long couponId,
+            @RequestParam(required = false) Long productId,
+            @RequestParam(required = false) BigDecimal finalPrice,
+            @org.springframework.web.bind.annotation.CookieValue(value = "accessToken", required = false) String accessToken,
+            Model model) {
+
+        Long userId = null;
+
+        // 사용자 ID 추출
+        if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
+            try {
+                org.springframework.security.core.Authentication auth = jwtTokenProvider.getAuthentication(accessToken);
+                Object principal = auth.getPrincipal();
+
+                if (principal instanceof com.axon.core_service.domain.user.CustomOAuth2User) {
+                    com.axon.core_service.domain.user.CustomOAuth2User oauthUser = (com.axon.core_service.domain.user.CustomOAuth2User) principal;
+                    userId = oauthUser.getUserId();
+                } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                    String username = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+                    userId = Long.parseLong(username);
+                }
+            } catch (Exception e) {
+                log.error("Failed to extract user from token", e);
+            }
+        }
+
+        // 구매 정보 저장
+        if (userId != null && productId != null && finalPrice != null) {
+            try {
+                com.axon.core_service.domain.purchase.Purchase purchase = com.axon.core_service.domain.purchase.Purchase.builder()
+                        .userId(userId)
+                        .productId(productId)
+                        .campaignActivityId(null) // SHOP 구매는 캠페인 없음
+                        .purchaseType(com.axon.core_service.domain.purchase.PurchaseType.SHOP)
+                        .price(finalPrice)
+                        .quantity(1)
+                        .purchasedAt(java.time.Instant.now())
+                        .build();
+
+                purchaseRepository.save(purchase);
+                log.info("Purchase saved: userId={}, productId={}, price={}", userId, productId, finalPrice);
+            } catch (Exception e) {
+                log.error("Failed to save purchase", e);
+            }
+        }
+
+        // 쿠폰 사용 처리
+        if (couponId != null && userId != null) {
+            try {
+                couponService.useCoupon(couponId, userId);
+                log.info("Coupon {} successfully used by user {} during payment", couponId, userId);
+            } catch (Exception e) {
+                log.error("Failed to use coupon {} during payment", couponId, e);
+            }
+        }
+
+        return "payment-success";
+    }
+
+    @GetMapping("/mypage")
+    public String mypage(
+            @org.springframework.web.bind.annotation.CookieValue(value = "accessToken", required = false) String accessToken,
+            Model model) {
+        String username = "Guest";
+        Long userId = null;
+        List<UserCoupon> userCoupons = new ArrayList<>();
+
+        if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
+            try {
+                org.springframework.security.core.Authentication auth = jwtTokenProvider.getAuthentication(accessToken);
+                Object principal = auth.getPrincipal();
+
+                if (principal instanceof com.axon.core_service.domain.user.CustomOAuth2User) {
+                    com.axon.core_service.domain.user.CustomOAuth2User oauthUser = (com.axon.core_service.domain.user.CustomOAuth2User) principal;
+                    username = oauthUser.getDisplayName(); // Use real name
+                    userId = oauthUser.getUserId();
+                } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                    username = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+                    userId = Long.parseLong(username); // Fallback for test users
+                }
+
+                if (userId != null) {
+                    List<UserCoupon> allCoupons = userCouponRepository.findAllByUserId(userId);
+                    LocalDateTime now = LocalDateTime.now();
+
+                    userCoupons = allCoupons.stream()
+                            .filter(uc -> uc.getStatus() == com.axon.core_service.domain.coupon.CouponStatus.ISSUED)
+                            .filter(uc -> {
+                                var c = uc.getCoupon();
+                                return now.isAfter(c.getStartDate()) && now.isBefore(c.getEndDate());
+                            })
+                            .collect(java.util.stream.Collectors.toList());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to extract user data from token", e);
+            }
+        }
+
+        model.addAttribute("username", username);
+        model.addAttribute("userCoupons", userCoupons);
+        return "mypage";
+    }
+
     private CampaignActivityDisplayDto convertToDto(CampaignActivity activity) {
         NumberFormat currency = NumberFormat.getInstance(Locale.KOREA);
 
@@ -289,6 +455,7 @@ public class StoreController {
         private String name;
         private String brand;
         private String price; // Selling price
+        private BigDecimal rawPrice; // Raw Selling Price (for JS)
         private String originalPrice; // Original price (if discounted)
         private int discountRate;
         private String imageUrl;

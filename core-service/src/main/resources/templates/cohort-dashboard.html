@@ -1,224 +1,301 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-    th:replace="fragments/layout :: layout('Axon - Cohort Analysis', 'bg-gray-50 text-neutral-900', ~{::head/content()}, ~{::section}, 'dashboard')">
+    th:replace="fragments/layout :: layout('Axon - Cohort Analysis', 'bg-gray-50 text-neutral-900', ~{::head}, ~{::section}, 'dashboard')">
 
 <head>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
         crossorigin="anonymous"></script>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
 </head>
 <section>
     <input type="hidden" id="activityId" th:value="${activityId}" />
 
-    <main class="max-w-[1600px] mx-auto px-8 py-6 space-y-6 pt-6">
-        <div class="flex justify-between items-center mb-2">
-            <h1 class="font-semibold text-gray-900 text-xl" th:text="'Cohort Analysis: ' + ${activityName}">Cohort Analysis</h1>
-            <div class="flex items-center gap-4">
-                <a th:href="@{/admin/dashboard/{id}(id=${activityId})}"
-                   class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                    <i class="fa-solid fa-arrow-left mr-2"></i>실시간 대시보드로 돌아가기
-                </a>
-                <span id="calculatedAt" class="text-sm text-gray-500">Calculated: --:--:--</span>
-            </div>
-        </div>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div th:replace="fragments/dashboard_sidebar :: sidebar('cohort', ${activityId}, null)"></div>
 
-        <!-- Cohort Information Banner -->
-        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-6">
-            <div class="flex items-start gap-4">
-                <div class="p-3 bg-indigo-100 rounded-lg text-indigo-600">
-                    <i class="fa-solid fa-users text-2xl"></i>
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                        <span
+                            class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold">Activity</span>
+                        <span th:text="${activityName}">Activity Name</span>
+                    </div>
+                    <div class="dashboard-title-row">
+                        <h1 class="page-title">Cohort Analysis</h1>
+                        <span id="calculatedAt" class="text-sm text-gray-500 ml-auto">Calculated: --:--:--</span>
+                    </div>
                 </div>
-                <div class="flex-1">
-                    <h2 class="text-xl font-bold text-gray-900 mb-2">고객 생애 가치 (LTV) 분석</h2>
-                    <p class="text-gray-600 mb-4">이 Activity를 통해 획득한 고객들의 장기적인 가치와 마케팅 효율성을 분석합니다.</p>
-                    <div class="grid grid-cols-4 gap-4 text-sm">
-                        <div>
-                            <span class="text-gray-500">Cohort Period:</span>
-                            <div id="cohortPeriod" class="font-semibold text-gray-900">-</div>
+
+                <div class="flex items-center gap-3">
+                    <a th:href="@{/admin/dashboard/{id}(id=${activityId})}"
+                        class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Back to Real-time
+                    </a>
+                </div>
+            </div>
+
+            <!-- Cohort Information Banner -->
+            <div class="bg-white border rounded-xl p-6 mb-6 shadow-sm">
+                <div class="flex items-center gap-6">
+                    <div class="flex-shrink-0 p-4 bg-blue-50 rounded-lg text-blue-600">
+                        <i class="fa-solid fa-bullseye text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-base font-bold text-gray-900 mb-1">LTV Analysis Overview</h2>
+                        <p class="text-sm text-gray-500 mb-4">Analyzing customer value retention and marketing
+                            efficiency over time.</p>
+
+                        <div class="grid grid-cols-4 gap-8 border-t border-gray-100 pt-4">
+                            <div>
+                                <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">
+                                    Cohort Period
+                                    <span class="inline-block cursor-help tooltip-wrapper"
+                                        data-tippy-content="코호트 분석의 기준이 되는 기간입니다. 이 기간 동안 처음으로 구매를 발생시킨 고객들을 대상으로 분석합니다.">
+                                        <i class="fa-regular fa-circle-question ml-1"></i>
+                                    </span>
+                                </span>
+                                <div id="cohortPeriod" class="font-semibold text-gray-900">-</div>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">
+                                    Total Customers
+                                    <span class="inline-block cursor-help tooltip-wrapper"
+                                        data-tippy-content="해당 기간 동안 처음으로 구매를 발생시킨 고유 고객 수입니다.">
+                                        <i class="fa-regular fa-circle-question ml-1"></i>
+                                    </span>
+                                </span>
+                                <div id="totalCustomers" class="font-semibold text-gray-900">-</div>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">
+                                    Total Budget
+                                    <span class="inline-block cursor-help tooltip-wrapper"
+                                        data-tippy-content="이 캠페인 활동에 할당된 총 마케팅 예산입니다.">
+                                        <i class="fa-regular fa-circle-question ml-1"></i>
+                                    </span>
+                                </span>
+                                <div id="totalBudget" class="font-semibold text-gray-900">-</div>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold block mb-1">
+                                    Avg CAC
+                                    <span class="inline-block cursor-help tooltip-wrapper"
+                                        data-tippy-content="고객 획득 비용(Customer Acquisition Cost)입니다.<br>총 예산 / 신규 고객 수">
+                                        <i class="fa-regular fa-circle-question ml-1"></i>
+                                    </span>
+                                </span>
+                                <div id="avgCACBanner" class="font-semibold text-gray-900">-</div>
+                            </div>
                         </div>
-                        <div>
-                            <span class="text-gray-500">Total Customers:</span>
-                            <div id="totalCustomers" class="font-semibold text-gray-900">0</div>
-                        </div>
-                        <div>
-                            <span class="text-gray-500">Total Budget:</span>
-                            <div id="totalBudget" class="font-semibold text-gray-900">₩0</div>
-                        </div>
-                        <div>
-                            <span class="text-gray-500">Avg CAC:</span>
-                            <div id="avgCACBanner" class="font-semibold text-gray-900">₩0</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- LTV Metrics Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <!-- 30-day LTV Card -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
-                        <i class="fa-solid fa-calendar-day text-xl"></i>
-                    </div>
-                    <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">30일</span>
-                </div>
-                <div class="space-y-1">
-                    <div class="text-sm text-gray-600">30-Day LTV</div>
-                    <div id="ltv30d" class="text-2xl font-bold text-gray-900">₩0</div>
-                    <div class="flex items-center gap-2 text-sm">
-                        <span class="text-gray-500">LTV/CAC:</span>
-                        <span id="ratio30d" class="font-semibold text-blue-600">0.00</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 90-day LTV Card -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-green-50 rounded-lg text-green-600">
-                        <i class="fa-solid fa-calendar-week text-xl"></i>
+            <!-- LTV Metrics Grid -->
+            <div class="kpi-grid mb-6">
+                <!-- 30-day LTV -->
+                <div class="kpi-card">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="kpi-label">
+                            30-Day LTV
+                            <span class="inline-block cursor-help text-gray-400 tooltip-wrapper"
+                                data-tippy-content="최초 구매 후 30일 동안 발생한<br>고객당 평균 누적 매출입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </h3>
+                        <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Month 1</span>
                     </div>
-                    <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">90일</span>
+                    <div id="ltv30d" class="kpi-value text-gray-900">-</div>
+                    <div class="kpi-trend neutral mt-2">
+                        <span class="text-gray-500 text-xs">LTV/CAC:</span>
+                        <span id="ratio30d" class="font-bold ml-1">-</span>
+                    </div>
+                    <div class="kpi-chart-container">
+                        <!-- Tiny chart placeholder if needed -->
+                    </div>
                 </div>
-                <div class="space-y-1">
-                    <div class="text-sm text-gray-600">90-Day LTV</div>
-                    <div id="ltv90d" class="text-2xl font-bold text-gray-900">₩0</div>
-                    <div class="flex items-center gap-2 text-sm">
-                        <span class="text-gray-500">LTV/CAC:</span>
-                        <span id="ratio90d" class="font-semibold text-green-600">0.00</span>
+
+                <!-- 90-day LTV -->
+                <div class="kpi-card">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="kpi-label">
+                            90-Day LTV
+                            <span class="inline-block cursor-help text-gray-400 tooltip-wrapper"
+                                data-tippy-content="최초 구매 후 90일 동안 발생한<br>고객당 평균 누적 매출입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </h3>
+                        <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Month 3</span>
+                    </div>
+                    <div id="ltv90d" class="kpi-value text-gray-900">-</div>
+                    <div class="kpi-trend mt-2">
+                        <span class="text-gray-500 text-xs">LTV/CAC:</span>
+                        <span id="ratio90d" class="font-bold ml-1 text-blue-600">-</span>
+                    </div>
+                </div>
+
+                <!-- 365-day LTV -->
+                <div class="kpi-card">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="kpi-label">
+                            365-Day LTV
+                            <span class="inline-block cursor-help text-gray-400 tooltip-wrapper"
+                                data-tippy-content="최초 구매 후 1년(365일) 동안 발생한<br>고객당 평균 누적 매출입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </h3>
+                        <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Year 1</span>
+                    </div>
+                    <div id="ltv365d" class="kpi-value text-gray-900">-</div>
+                    <div class="kpi-trend mt-2">
+                        <span class="text-gray-500 text-xs">LTV/CAC:</span>
+                        <span id="ratio365d" class="font-bold ml-1 text-indigo-600">-</span>
+                    </div>
+                </div>
+
+                <!-- Current LTV -->
+                <div class="kpi-card border-l-4 border-l-emerald-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="kpi-label text-emerald-900">
+                            Current LTV
+                            <span class="inline-block cursor-help text-emerald-700 tooltip-wrapper"
+                                data-tippy-content="현재 시점까지 누적된<br>총 고객당 평균 매출입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </h3>
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Live</span>
+                    </div>
+                    <div id="ltvCurrent" class="kpi-value text-emerald-700">-</div>
+                    <div class="kpi-trend mt-2">
+                        <span class="text-emerald-600 text-xs font-medium">ROI Ratio:</span>
+                        <span id="ratioCurrent" class="font-bold ml-1 text-emerald-700">-</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 365-day LTV Card -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-purple-50 rounded-lg text-purple-600">
-                        <i class="fa-solid fa-calendar text-xl"></i>
-                    </div>
-                    <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">365일</span>
-                </div>
-                <div class="space-y-1">
-                    <div class="text-sm text-gray-600">365-Day LTV</div>
-                    <div id="ltv365d" class="text-2xl font-bold text-gray-900">₩0</div>
-                    <div class="flex items-center gap-2 text-sm">
-                        <span class="text-gray-500">LTV/CAC:</span>
-                        <span id="ratio365d" class="font-semibold text-purple-600">0.00</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Current LTV Card -->
-            <div class="bg-white rounded-xl shadow-sm border border-emerald-200 p-6 ring-2 ring-emerald-100">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-                        <i class="fa-solid fa-chart-line text-xl"></i>
-                    </div>
-                    <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded">현재</span>
-                </div>
-                <div class="space-y-1">
-                    <div class="text-sm text-gray-600">Current LTV</div>
-                    <div id="ltvCurrent" class="text-2xl font-bold text-emerald-600">₩0</div>
-                    <div class="flex items-center gap-2 text-sm">
-                        <span class="text-gray-500">LTV/CAC:</span>
-                        <span id="ratioCurrent" class="font-semibold text-emerald-600">0.00</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Customer Behavior Metrics -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Repeat Purchase Rate -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="p-2 bg-orange-50 rounded-lg text-orange-600">
-                        <i class="fa-solid fa-repeat text-xl"></i>
-                    </div>
+            <!-- Customer Behavior Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Repeat Purchase Rate -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <div class="text-sm text-gray-600">Repeat Purchase Rate</div>
-                        <div class="text-xs text-gray-500">재구매한 고객 비율</div>
+                        <p class="text-sm text-gray-500 font-medium mb-1">
+                            Repeat Purchase Rate
+                            <span class="inline-block cursor-help tooltip-wrapper"
+                                data-tippy-content="최초 구매 이후 한 번 이상<br>추가 구매를 한 고객의 비율입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </p>
+                        <h4 id="repeatPurchaseRate" class="text-2xl font-bold text-gray-900">-</h4>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
+                        <i class="fa-solid fa-arrows-rotate"></i>
                     </div>
                 </div>
-                <div id="repeatPurchaseRate" class="text-3xl font-bold text-orange-600">0%</div>
-            </div>
 
-            <!-- Avg Purchase Frequency -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="p-2 bg-cyan-50 rounded-lg text-cyan-600">
-                        <i class="fa-solid fa-shopping-cart text-xl"></i>
-                    </div>
+                <!-- Avg Frequency -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <div class="text-sm text-gray-600">Avg Purchase Frequency</div>
-                        <div class="text-xs text-gray-500">고객당 평균 구매 횟수</div>
+                        <p class="text-sm text-gray-500 font-medium mb-1">
+                            Avg Purchase Frequency
+                            <span class="inline-block cursor-help tooltip-wrapper"
+                                data-tippy-content="기간 내 구매 고객 한 명당<br>평균 총 결제 횟수입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </p>
+                        <h4 id="avgPurchaseFrequency" class="text-2xl font-bold text-gray-900">-</h4>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500">
+                        <i class="fa-solid fa-bag-shopping"></i>
                     </div>
                 </div>
-                <div id="avgPurchaseFrequency" class="text-3xl font-bold text-cyan-600">0</div>
-            </div>
 
-            <!-- Avg Order Value -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="p-2 bg-amber-50 rounded-lg text-amber-600">
-                        <i class="fa-solid fa-receipt text-xl"></i>
-                    </div>
+                <!-- Avg Order Value -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <div class="text-sm text-gray-600">Avg Order Value</div>
-                        <div class="text-xs text-gray-500">평균 주문 금액</div>
+                        <p class="text-sm text-gray-500 font-medium mb-1">
+                            Avg Order Value
+                            <span class="inline-block cursor-help tooltip-wrapper"
+                                data-tippy-content="비용을 제외하지 않은<br>1회 주문당 평균 결제 금액입니다.">
+                                <i class="fa-regular fa-circle-question ml-1"></i>
+                            </span>
+                        </p>
+                        <h4 id="avgOrderValue" class="text-2xl font-bold text-gray-900">-</h4>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
+                        <i class="fa-solid fa-coins"></i>
                     </div>
                 </div>
-                <div id="avgOrderValue" class="text-3xl font-bold text-amber-600">₩0</div>
             </div>
-        </div>
 
-        <!-- LTV Growth Chart -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900">LTV Growth Over Time</h3>
-                <p class="text-sm text-gray-600">시간 경과에 따른 고객 생애 가치 성장 추이</p>
+            <!-- LTV Growth Chart -->
+            <div class="chart-card mb-6">
+                <div class="chart-header flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="chart-title">LTV Growth & Cost Analysis</h3>
+                        <p class="text-sm text-gray-500 mt-1">Comparing cumulative revenue per user vs. acquisition cost
+                            over time.</p>
+                    </div>
+                    <div class="chart-actions">
+                        <!-- Legend or toggles could go here -->
+                    </div>
+                </div>
+                <div class="chart-body" style="height: 400px;">
+                    <canvas id="ltvGrowthChart"></canvas>
+                </div>
             </div>
-            <div class="h-80">
-                <canvas id="ltvGrowthChart"></canvas>
-            </div>
-        </div>
 
-        <!-- LTV/CAC Ratio Interpretation -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div class="mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">마케팅 효율성 해석</h3>
-                <p class="text-sm text-gray-600">LTV/CAC 비율로 마케팅 ROI 평가</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div class="font-semibold text-red-700 mb-1">&lt; 1.0 (손실)</div>
-                    <div class="text-sm text-red-600">고객 획득 비용이 생애 가치보다 높음. 마케팅 전략 재검토 필요.</div>
+            <!-- LTV/CAC Ratio Interpretation -->
+            <div class="bg-white border boundary-gray-200 rounded-xl p-6 shadow-sm">
+                <div class="mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-purple-500"></i>
+                    <h3 class="text-base font-bold text-gray-900">AI-Powered ROI Analysis</h3>
                 </div>
-                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div class="font-semibold text-yellow-700 mb-1">1.0 - 3.0 (주의)</div>
-                    <div class="text-sm text-yellow-600">수익은 나지만 마케팅 효율 개선이 필요한 상태.</div>
-                </div>
-                <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div class="font-semibold text-green-700 mb-1">&gt; 3.0 (우수)</div>
-                    <div class="text-sm text-green-600">건강한 마케팅 효율. 공격적인 확장 가능.</div>
+                <div id="currentRatioInterpretation"
+                    class="p-4 bg-gray-50 border border-gray-100 rounded-lg text-sm text-gray-700 leading-relaxed">
+                    <p id="interpretationText" class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-notch fa-spin text-gray-400"></i>
+                        <span>Analyzing profitability...</span>
+                    </p>
                 </div>
             </div>
-            <div id="currentRatioInterpretation" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-info-circle text-blue-600"></i>
-                    <span class="font-semibold text-blue-900">현재 상태:</span>
-                    <span id="interpretationText" class="text-blue-700">데이터 로딩 중...</span>
-                </div>
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script th:src="@{/js/cohort-dashboard.js}"></script>
     <!-- Chatbot -->
     <div th:replace="fragments/chatbot :: chatbot"></div>
     <script th:src="@{/js/chatbot.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof tippy !== 'undefined') {
+                tippy('.tooltip-wrapper', {
+                    allowHTML: true,
+                    placement: 'top',
+                    animation: 'shift-away',
+                    zIndex: 99999999,
+                    appendTo: document.body,
+                    popperOptions: {
+                        strategy: 'fixed',
+                        modifiers: [
+                            {
+                                name: 'preventOverflow',
+                                options: {
+                                    boundary: 'window',
+                                },
+                            },
+                        ],
+                    },
+                });
+            }
+        });
+    </script>
 </section>
 
 </html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head}">
+    <title>SKU STORE - Payment Success</title>
+</head>
+<!-- Add custom styles that were previously in the head, if they are not in the fragments/head -->
+
+<head>
+    <style>
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            60% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .animate-scale-in {
+            animation: scaleIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <!-- Content -->
+    <div class="w-full relative overflow-hidden min-h-[80vh] flex items-center justify-center">
+
+        <div class="max-w-[800px] mx-auto px-4 text-center relative z-10">
+
+            <div
+                class="animate-scale-in inline-flex items-center justify-center w-32 h-32 bg-black rounded-full mb-8 shadow-2xl">
+                <i class="ph-fill ph-check text-6xl text-white"></i>
+            </div>
+
+            <div class="animate-float">
+                <h1 class="text-5xl font-black mb-6 tracking-tight">PAYMENT SUCCESS!</h1>
+                <p class="text-gray-500 mb-12 text-xl font-medium">주문이 성공적으로 접수되었습니다.<br>설레는 마음으로 배송을 기다려주세요.</p>
+            </div>
+
+            <div class="flex gap-4 justify-center animate-scale-in"
+                style="animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards;">
+                <a href="/mainshop"
+                    class="h-14 px-10 bg-black text-white font-bold text-lg rounded-full flex items-center hover:scale-105 transition-transform shadow-lg">
+                    쇼핑 계속하기
+                </a>
+                <a href="/mypage"
+                    class="h-14 px-10 border-2 border-black text-black font-bold text-lg rounded-full flex items-center hover:bg-black hover:text-white transition-colors">
+                    마이페이지
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- No Footer -->
+
+</body>
+
+</html>

@@ -16,6 +16,17 @@ const common = (() => {
         getCookie,
 
         /**
+         * Logout the current user by redirecting to Spring Security logout endpoint.
+         * This will trigger CustomLogoutHandler which:
+         * - Deletes user cache from Redis
+         * - Publishes logout event
+         * - Clears JWT cookies
+         */
+        logout: function () {
+            window.location.href = '/logout';
+        },
+
+        /**
          * Format filter condition to human-readable string.
          * @param {Object} filter - Filter object {type, operator, values}
          * @returns {string} Formatted string
@@ -138,6 +149,15 @@ const common = (() => {
                         appendTo: document.body
                     });
                 }
+            });
+
+            // Initialize standard data-tippy-content attributes
+            tippy('[data-tippy-content]', {
+                allowHTML: true,
+                placement: 'top',
+                animation: 'shift-away',
+                zIndex: 99999,
+                appendTo: document.body
             });
         }
     };

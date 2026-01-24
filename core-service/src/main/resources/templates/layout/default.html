@@ -13,6 +13,30 @@
 
     <div th:replace="~{fragments/footer :: footer}"></div>
 
+    <!-- Axon Behavior Tracker -->
+    <script th:inline="javascript">
+        (function() {
+            window.__AXON_TRACKER_DEBUG__ = true;
+
+            // Local development: collectEndpoint goes to localhost:8081/entry (entry-service)
+            // eventsEndpoint uses relative path (same origin = core-service:8080)
+            // Production: use /entry path (Nginx routing)
+            const isLocal = window.location.hostname === 'localhost';
+            window.__AXON_TRACKER_COLLECT_ENDPOINT__ = isLocal
+                ? 'http://localhost:8081/entry/api/v1/behavior/events'
+                : '/entry/api/v1/behavior/events';
+
+            /*[# th:if="${#authentication != null and #authentication.principal != 'anonymousUser'}"]*/
+                try {
+                    window.__AXON_USER_ID__ = /*[[${#authentication.principal.userId}]]*/ null;
+                } catch (e) {
+                    console.warn('[AxonTracker] User ID extraction failed', e);
+                }
+            /*[/]*/
+        })();
+    </script>
+    <script th:src="@{/js/axon-tracker-config.js}"></script>
+
     <th:block layout:fragment="script"></th:block>
 </body>
 

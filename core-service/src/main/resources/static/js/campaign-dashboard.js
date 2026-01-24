@@ -28,7 +28,7 @@ async function fetchCampaignData(campaignId) {
 function connectToSse(campaignId) {
     const eventSource = new EventSource(`/api/v1/dashboard/stream/campaign/${campaignId}`);
 
-    eventSource.addEventListener('dashboard-update', function(event) {
+    eventSource.addEventListener('dashboard-update', function (event) {
         try {
             const data = JSON.parse(event.data);
             updateDashboard(data);
@@ -37,7 +37,7 @@ function connectToSse(campaignId) {
         }
     });
 
-    eventSource.onerror = function(error) {
+    eventSource.onerror = function (error) {
         console.error("SSE error:", error);
         eventSource.close();
         // Optional: Reconnect logic with backoff
@@ -48,7 +48,7 @@ function connectToSse(campaignId) {
 function updateDashboard(data) {
     // 1. Update Header
     const headerEl = document.getElementById('campaignName');
-    if(headerEl.textContent !== `Campaign Dashboard: ${data.campaignName}`) {
+    if (headerEl.textContent !== `Campaign Dashboard: ${data.campaignName}`) {
         headerEl.textContent = `Campaign Dashboard: ${data.campaignName}`;
     }
     document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
@@ -82,7 +82,7 @@ function updateKpi(elementId, value) {
 let comparisonChart = null;
 function renderComparisonChart(activities) {
     const ctx = document.getElementById('comparisonChart').getContext('2d');
-    
+
     const labels = activities.map(a => a.activityName);
     const visits = activities.map(a => a.totalVisits);
     const purchases = activities.map(a => a.totalPurchases);
@@ -103,29 +103,68 @@ function renderComparisonChart(activities) {
                     {
                         label: 'Visits',
                         data: visits,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
+                        backgroundColor: '#3b82f6', // Blue-500
+                        borderRadius: 3,
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.8
                     },
                     {
                         label: 'Purchases',
                         data: purchases,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
+                        backgroundColor: '#93c5fd', // Blue-300 (Lighter blue for contrast)
+                        borderRadius: 3,
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.8
                     }
                 ]
             },
             options: {
+                indexAxis: 'y', // Horizontal Layout (List style)
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: {
-                    duration: 500 // Smooth animation
+                interaction: {
+                    mode: 'index',
+                    axis: 'y',
+                    intersect: false
                 },
                 plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12, family: "'Inter', sans-serif" }
+                        }
+                    },
                     tooltip: {
-                        mode: 'index',
-                        intersect: false
+                        backgroundColor: '#1e293b',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: { size: 13, weight: 600 },
+                        bodyFont: { size: 12 },
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.x !== null) {
+                                    label += context.parsed.x.toLocaleString();
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9', drawBorder: false },
+                        ticks: { font: { size: 11 }, color: '#64748b' }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: { size: 12, weight: 500 }, color: '#334155' } // Activity Names
                     }
                 },
                 onClick: (evt, activeElements) => {
@@ -137,11 +176,6 @@ function renderComparisonChart(activities) {
                 },
                 onHover: (event, chartElement) => {
                     event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
                 }
             }
         });
@@ -151,8 +185,8 @@ function renderComparisonChart(activities) {
 let heatmapChart = null;
 function renderHeatmapChart(heatmapData) {
     const ctx = document.getElementById('heatmapChart').getContext('2d');
-    
-    const hours = Array.from({length: 24}, (_, i) => i);
+
+    const hours = Array.from({ length: 24 }, (_, i) => i);
     const data = hours.map(h => heatmapData.hourlyTraffic[h] || 0);
 
     if (heatmapChart) {
@@ -168,10 +202,15 @@ function renderHeatmapChart(heatmapData) {
                 datasets: [{
                     label: 'Hourly Traffic',
                     data: data,
-                    fill: true,
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    tension: 0.4
+                    fill: {
+                        target: 'origin',
+                        above: 'rgba(59, 130, 246, 0.1)' // Blue-500 low opacity
+                    },
+                    borderColor: '#3b82f6', // Blue-500
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
                 }]
             },
             options: {
@@ -196,11 +235,11 @@ function renderHeatmapChart(heatmapData) {
 
 function updateActivityTable(activities) {
     const tbody = document.getElementById('activityTableBody');
-    
+
     // Simple Strategy: Clear and Rebuild (Good enough for small N)
     // Optimization: If performance is an issue with 50+ rows, we can update individual cells
     // But for < 50 rows, innerHTML replacement is instant.
-    
+
     tbody.innerHTML = '';
 
     activities.forEach(activity => {

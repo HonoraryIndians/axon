@@ -10,6 +10,8 @@ import com.axon.core_service.repository.EventRepository;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class EventService {
      *                triggerType and triggerPayload)
      * @return the persisted Event converted to an EventResponse
      */
+    @CacheEvict(value = "activeEvents", allEntries = true)
     public EventResponse createEvent(EventRequest request) {
         Event event = Event.builder()
                 .name(request.getName())
@@ -49,6 +52,7 @@ public class EventService {
      * @return an EventResponse representing the updated Event
      * @throws IllegalArgumentException if no Event exists with the given id
      */
+    @CacheEvict(value = "activeEvents", allEntries = true)
     public EventResponse updateEvent(Long eventId, EventRequest request) {
         Event event = getEventEntity(eventId);
         event.updateDetails(request.getName(), request.getDescription());
@@ -85,6 +89,7 @@ public class EventService {
      * @return an EventResponse representing the event after the status change
      * @throws IllegalArgumentException if no event exists with the given {@code eventId}
      */
+    @CacheEvict(value = "activeEvents", allEntries = true)
     public EventResponse changeStatus(Long eventId, EventStatus status) {
         Event event = getEventEntity(eventId);
         event.changeStatus(status);
@@ -121,6 +126,7 @@ public class EventService {
      * @param triggerType the trigger type to filter by, or {@code null} to include all active events
      * @return a list of event definition responses for events with status ACTIVE, ordered by id ascending
      */
+    @Cacheable(value = "activeEvents", key = "#triggerType != null ? #triggerType.name() : 'ALL'")
     @Transactional(readOnly = true)
     public List<EventDefinitionResponse> getActiveEventDefinitions(TriggerType triggerType) {
         List<Event> events = triggerType != null
@@ -137,6 +143,7 @@ public class EventService {
      *
      * @param eventId the identifier of the Event to delete
      */
+    @CacheEvict(value = "activeEvents", allEntries = true)
     public void deleteEvent(Long eventId) {
         eventRepository.deleteById(eventId);
     }
