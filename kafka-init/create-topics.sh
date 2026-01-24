@@ -50,6 +50,22 @@ kafka-topics --create --if-not-exists \
 echo "  ✅ Created: axon.campaign-activity.command (1 partition - local dev)"
 echo ""
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 3. payment.retry
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+echo "Creating topic: axon.payment.retry"
+
+kafka-topics --create --if-not-exists \
+  --topic "axon.payment.retry" \
+  --bootstrap-server broker_1:29092 \
+  --partitions 1 \
+  --replication-factor 1 \
+  --config retention.ms=604800000 \
+  --config compression.type=lz4
+
+echo "  ✅ Created: axon.payment.retry (1 partition - local dev)"
+echo ""
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ All Kafka topics created successfully!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

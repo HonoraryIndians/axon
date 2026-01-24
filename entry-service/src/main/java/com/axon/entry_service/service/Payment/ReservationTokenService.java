@@ -1,7 +1,7 @@
 package com.axon.entry_service.service.Payment;
 
-import com.axon.entry_service.dto.Payment.PaymentApprovalPayload;
-import com.axon.entry_service.dto.Payment.ReservationTokenPayload;
+
+import com.axon.messaging.dto.payment.ReservationTokenPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.HmacAlgorithms;
@@ -25,12 +25,9 @@ public class ReservationTokenService {
     private String SECRET_TOKEN_KEY;
 
     private static final String TOKEN_PREFIX = "RESERVATION_TOKEN:";
-    private static final String APPROVAL_PREFIX = "PAYMENT_APPROVED_TOKEN:";
 
     //TODO: TTL 시간 상의 현재 5분
     private static final long TOKEN_TTL_MINUTES = 5;
-    private static final long APPROVALTOKEN_TTL_MINUTES = 30;
-
 
     /**
      * 스레드별 HmacUtils 인스턴스 캐시 (Thread-Safe + 고성능)
@@ -102,34 +99,16 @@ public class ReservationTokenService {
         return exists;
     }
 
-    // 2차 토큰 생성 또는 refresh
-    public String CreateApprovalToken(PaymentApprovalPayload paymentApprovalPayload) {
-        String redisKey = paymentApprovalPayload.getUserId() + ":" + paymentApprovalPayload.getCampaignActivityId();
-        String approvalToken = approvalRedisKey(redisKey);
-
-        try {
-            if(redisTemplate.hasKey(approvalToken)) {
-                refreshApprovalTokenTTL(approvalToken);
-            } else {
-                redisTemplate.opsForValue().set(approvalToken, paymentApprovalPayload, APPROVALTOKEN_TTL_MINUTES, TimeUnit.MINUTES);
-                log.info("2차 토큰 신규 발급: userId={}, campaignActivityId={}, TTL={}분", paymentApprovalPayload.getUserId(), paymentApprovalPayload.getCampaignActivityId(), APPROVALTOKEN_TTL_MINUTES);
-            }
-            return redisKey;
-        } catch (Exception e) {
-            log.error("2차 토큰 발급 실패", e);
-            return null;
-        }
-    }
-
-    // 2차 토큰 갱신
-    private void refreshApprovalTokenTTL(String redisKey) {
-        redisTemplate.expire(redisKey, APPROVALTOKEN_TTL_MINUTES, TimeUnit.MINUTES);
+    // 1차 토큰 삭제
+    public void removeToken(String token) {
+        String redisKey = TOKEN_PREFIX + token;
+        redisTemplate.delete(redisKey);
     }
 
     // 1차 토큰 조회
     public Optional<ReservationTokenPayload> getPayloadFromToken(String token) {
         log.error("DEBUG_TOKEN_GET: [{}] len={} hash={}", token, token.length(), token.hashCode());
-        
+
         String redisKey = TOKEN_PREFIX + token;
         Object payload = redisTemplate.opsForValue().get(redisKey);
         String substring = token.substring(0, Math.min(10, token.length()));
@@ -139,7 +118,7 @@ public class ReservationTokenService {
             return Optional.of((ReservationTokenPayload) payload);
         }
 
-        //Redis에 없으면 토큰 자체를 검증 (오버 엔지니어링 또는 부하가 예상되면 뺄 예정)
+        // Redis에 없으면 토큰 자체를 검증 (오버 엔지니어링 또는 부하가 예상되면 뺄 예정)
         if (verifyTokenSignature(token)) {
             log.warn("토큰 서명은 유효하지만 Redis에 없음 (만료 또는 첫 시도): token={}...", substring);
         } else {
@@ -192,51 +171,5 @@ public class ReservationTokenService {
     public ReservationTokenPayload getPayload(String token) {
         String redisKey = TOKEN_PREFIX + token;
         return (ReservationTokenPayload) redisTemplate.opsForValue().get(redisKey);
-    }
-
-    // 2차 토큰 조회
-    public Optional<PaymentApprovalPayload> getApprovalPayload(String token) {
-        String redisKey = approvalRedisKey(token);
-        Object payload = redisTemplate.opsForValue().get(redisKey);
-        return Optional.ofNullable((PaymentApprovalPayload) payload);
-    }
-
-
-    // 2차토큰 보안용 키 생성
-    private String approvalRedisKey(String key) {
-        return APPROVAL_PREFIX + key;
-    }
-
-
-    // 1차 토큰 삭제
-    public void removeToken(String token) {
-        String redisKey = TOKEN_PREFIX + token;
-        redisTemplate.delete(redisKey);
-    }
-
-    //2차토큰 삭제
-    public void removeApprovalToken(String token) {
-        String redisKey = approvalRedisKey(token);
-        redisTemplate.delete(redisKey);
-    }
-
-    // 토큰 전체 삭제
-    public void cleanup(PaymentApprovalPayload payload) {
-        try {
-            // 1차 토큰 삭제
-            removeToken(payload.getReservationToken());
-            log.debug("1차 토큰 삭제: {}", payload.getReservationToken());
-
-            // 2차 토큰 삭제
-            Long userId = payload.getUserId();
-            Long campaignActivityId = payload.getCampaignActivityId();
-            removeApprovalToken(userId + ":" + campaignActivityId);
-            log.debug("2차 토큰 삭제: {}:{}", userId, campaignActivityId);
-
-            log.info("토큰 정리 완료: userId={}, campaignActivityId={}", userId, campaignActivityId);
-
-        } catch (Exception e) {
-            log.error("토큰 정리 중 오류 발생 (TTL로 자동 만료됨): userId={}, error={}", payload.getUserId(), e.getMessage());
-        }
     }
 }

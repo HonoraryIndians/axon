@@ -68,7 +68,7 @@ class CohortAnalysisServiceTest {
 
         given(campaignActivityRepository.findById(activityId))
                 .willReturn(Optional.of(testActivity));
-        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(), any()))
+        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .willReturn(List.of(firstPurchase));
         given(purchaseRepository.findByUserIdIn(anyList()))
                 .willReturn(List.of(firstPurchase));
@@ -102,7 +102,7 @@ class CohortAnalysisServiceTest {
 
         given(campaignActivityRepository.findById(activityId))
                 .willReturn(Optional.of(testActivity));
-        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(), any()))
+        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .willReturn(List.of(firstPurchase));
         given(purchaseRepository.findByUserIdIn(anyList()))
                 .willReturn(Arrays.asList(firstPurchase, secondPurchase, thirdPurchase));
@@ -156,7 +156,7 @@ class CohortAnalysisServiceTest {
 
         given(campaignActivityRepository.findById(activityId))
                 .willReturn(Optional.of(testActivity));
-        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(), any()))
+        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .willReturn(Arrays.asList(user1_first, user2_first, user3_first));
         given(purchaseRepository.findByUserIdIn(anyList()))
                 .willReturn(Arrays.asList(
@@ -206,7 +206,7 @@ class CohortAnalysisServiceTest {
 
         given(campaignActivityRepository.findById(activityId))
                 .willReturn(Optional.of(testActivity));
-        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(), any()))
+        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .willReturn(List.of(firstPurchase));
         given(purchaseRepository.findByUserIdIn(anyList()))
                 .willReturn(Arrays.asList(firstPurchase, secondPurchase));
@@ -238,7 +238,7 @@ class CohortAnalysisServiceTest {
 
         given(campaignActivityRepository.findById(activityId))
                 .willReturn(Optional.of(testActivity));
-        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(), any()))
+        given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(any(), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .willReturn(Collections.emptyList());
 
         // When
@@ -286,8 +286,8 @@ class CohortAnalysisServiceTest {
                 .willReturn(Optional.of(testActivity));
         given(purchaseRepository.findFirstPurchasesByActivityAndPeriod(
                 eq(activityId),
-                any(Instant.class),
-                any(Instant.class)
+                any(LocalDateTime.class),
+                any(LocalDateTime.class)
         )).willReturn(List.of(purchase));
         given(purchaseRepository.findByUserIdIn(anyList()))
                 .willReturn(List.of(purchase));

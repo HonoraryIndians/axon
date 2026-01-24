@@ -1,3 +1,5 @@
+
+
 package com.axon.entry_service.controller;
 
 import com.axon.entry_service.domain.CampaignActivityMeta;
@@ -25,13 +27,13 @@ import java.util.Collections;
  * Use this for testing scripts and development without compromising production
  * security.
  */
+
 @Profile("!prod")
 @RestController
 @RequestMapping("/api/v1/test")
 @RequiredArgsConstructor
 @Slf4j
 public class TestReservationController {
-
         private final EntryReservationService reservationService;
         private final com.axon.entry_service.service.CampaignActivityProducerService producerService;
 
@@ -48,6 +50,8 @@ public class TestReservationController {
          *                productId
          * @return reservation result with success/failure status
          */
+
+        /**
         @PostMapping("/reserve/{userId}")
         public ResponseEntity<ReservationResult> testReserve(
                         @PathVariable Long userId,
@@ -99,4 +103,5 @@ public class TestReservationController {
 
                 return ResponseEntity.ok(result);
         }
+                        **/
 }

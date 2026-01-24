@@ -16,4 +16,7 @@ public final class KafkaTopics {
     public static final String CAMPAIGN_ACTIVITY_COMMAND = "axon.campaign-activity.command";
     @Deprecated
     public static final String USER_LOGIN = "axon.user.login";
+
+    @Deprecated
+    public static final String PAYMENT_RETRY_TOPIC = "axon.payment.retry";
 }

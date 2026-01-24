@@ -1,0 +1,96 @@
+%% 4. JS 스니펫 수집 파이프라인 - Sequence Diagram
+
+sequenceDiagram
+    participant Browser as Browser
+    participant JSTracker as Behavior Tracker JS
+    participant CoreAPI as Core API<br/>:8080
+    participant EntryAPI as Entry API<br/>:8081
+    participant Kafka as Apache Kafka
+    participant KafkaConnect as Kafka Connect
+    participant ES as Elasticsearch
+
+    Note over Browser,ES: 페이지 로드 시 초기화
+
+    Browser->>CoreAPI: GET /api/v1/events/active
+    Note right of CoreAPI: 활성 이벤트 정의 조회<br/>(PAGE_VIEW, CLICK, PURCHASE)
+
+    CoreAPI-->>Browser: 200 OK<br/>Event[] (eventId, eventName, triggerType)
+
+    Browser->>JSTracker: BehaviorTracker.init(config)
+    Note right of JSTracker: config = {<br/>  apiBaseUrl: entry-service,<br/>  eventsEndpoint,<br/>  collectEndpoint,<br/>  autoRefreshMs: 300000,<br/>  cooldownMs: 1500<br/>}
+
+    JSTracker->>JSTracker: fetchActiveEvents()
+    Note right of JSTracker: 이벤트 정의 저장<br/>state.events = [...]
+
+    JSTracker->>JSTracker: registerHandlers()
+    Note right of JSTracker: PAGE_VIEW, CLICK<br/>핸들러 등록
+
+    rect rgb(240, 248, 255)
+        Note over Browser,ES: 사용자 행동: 페이지 이동 (예: /mainshop → /product/123)
+
+        Browser->>JSTracker: History API pushState 감지
+        Note right of JSTracker: registerPageViewHandlers()<br/>히스토리 API 모니터링
+
+        JSTracker->>JSTracker: handlePageView()
+        Note right of JSTracker: 쿨다운 체크 (1.5초)<br/>lastSentAt Map 확인
+
+        JSTracker->>JSTracker: buildEvent(PAGE_VIEW)
+        Note right of JSTracker: {<br/>  eventId,<br/>  eventName: "상품 페이지 방문",<br/>  triggerType: "PAGE_VIEW",<br/>  occurredAt: ISO timestamp,<br/>  userId: localStorage.getItem('userId'),<br/>  sessionId: sessionStorage,<br/>  pageUrl: window.location.href,<br/>  referrer: document.referrer,<br/>  userAgent: navigator.userAgent,<br/>  properties: {<br/>    productId: 123,<br/>    campaignId: extractFromUrl()<br/>  }<br/>}
+
+        JSTracker->>EntryAPI: POST /entry/api/v1/behavior/events<br/>Authorization: Bearer JWT
+        Note right of EntryAPI: BehaviorEventController
+
+        EntryAPI->>EntryAPI: 메타데이터 보강
+        Note right of EntryAPI: • activityId 조회 (properties)<br/>• sessionId 검증<br/>• 타임스탬프 검증
+
+        EntryAPI->>Kafka: Produce to axon.event.behavior
+        Note right of Kafka: UserBehaviorEventMessage {<br/>  eventId, eventName,<br/>  triggerType, occurredAt,<br/>  userId, sessionId,<br/>  pageUrl, referrer,<br/>  userAgent, properties<br/>}
+
+        Kafka-->>EntryAPI: Ack
+        EntryAPI-->>JSTracker: 202 Accepted
+        JSTracker->>JSTracker: updateLastSentAt(eventId)
+    end
+
+    rect rgb(255, 245, 238)
+        Note over Browser,ES: 사용자 행동: 버튼 클릭 (예: "참여하기" 버튼)
+
+        Browser->>JSTracker: Click Event 발생
+        Note right of JSTracker: registerClickHandlers()<br/>이벤트 위임 패턴
+
+        JSTracker->>JSTracker: handleClick(element)
+        Note right of JSTracker: data-event-id 속성 확인<br/>또는 이벤트 매칭 로직
+
+        JSTracker->>JSTracker: buildEvent(CLICK)
+        Note right of JSTracker: {<br/>  eventId,<br/>  eventName: "참여 버튼 클릭",<br/>  triggerType: "CLICK",<br/>  properties: {<br/>    elementId: "join-btn",<br/>    elementClass: "cta-button",<br/>    campaignActivityId: 456<br/>  }<br/>}
+
+        JSTracker->>EntryAPI: POST /entry/api/v1/behavior/events
+        EntryAPI->>Kafka: Produce to axon.event.behavior
+        Kafka-->>EntryAPI: Ack
+        EntryAPI-->>JSTracker: 202 Accepted
+    end
+
+    rect rgb(232, 245, 233)
+        Note over Kafka,ES: 비동기 데이터 파이프라인
+
+        Kafka->>KafkaConnect: Elasticsearch Sink Connector
+        Note right of KafkaConnect: Connector: elasticsearch-sink-behavior-events<br/>Topics: axon.event.behavior
+
+        KafkaConnect->>ES: Bulk Index Request
+        Note right of ES: Index: behavior-events<br/>Document mapping:<br/>- eventId (keyword)<br/>- userId (long)<br/>- triggerType (keyword)<br/>- occurredAt (date)<br/>- pageUrl (text)<br/>- properties (nested)
+
+        ES-->>KafkaConnect: Bulk Response
+    end
+
+    rect rgb(243, 229, 245)
+        Note over Browser,ES: 마케터: 대시보드 조회
+
+        Browser->>CoreAPI: GET /api/v1/dashboard/events/aggregation<br/>?startDate=2025-01-01&endDate=2025-01-31
+
+        CoreAPI->>ES: Elasticsearch Query
+        Note right of ES: Aggregation:<br/>- terms: eventName<br/>- date_histogram: occurredAt<br/>- filter: triggerType
+
+        ES-->>CoreAPI: Aggregation Result
+        CoreAPI-->>Browser: 200 OK<br/>{<br/>  "PAGE_VIEW": 15420,<br/>  "CLICK": 3821,<br/>  "timeSeriesData": [...]<br/>}
+    end
+
+    Note over Browser,ES: 5분마다 자동 갱신: BehaviorTracker.fetchActiveEvents()

@@ -436,99 +436,45 @@
                     });
                 }
 
-                // 결제 준비 (1차 토큰 검증 → 2차 토큰 발급)
-                function preparePayment(reservationToken, accessToken) {
-                    showResult('info', '결제 준비 완료', '결제 창이 열립니다.');
-                    const applyButton = document.getElementById('entryButton');
-                    if (applyButton) applyButton.innerText = '결제 진행 중...';
-
-                    const payload = {
-                        reservationToken: reservationToken
-                    }
-
-                    fetch(window.ENTRY_SERVICE_BASE + '/entry/api/v1/payments/prepare', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: {
-                            'Authorization': 'Bearer ' + accessToken,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ reservationToken: reservationToken })
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                return response.json().then((err) => {
-                                    throw new Error(err.message || '결제 준비 실패');
-                                });
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success && data.approvalToken) {
-                                // Store tokens for the modal action
-                                currentReservationToken = data.approvalToken;
-                                currentAccessToken = accessToken;
-
-                                // Open Modal instead of auto-confirm
-                                openPaymentModal();
-                            } else {
-                                throw new Error(data.message || '결제 준비에 실패했습니다.');
-                            }
-                        })
-                        .catch(error => {
-                            showResult('error', '결제 준비 오류', error.message);
-                            console.error('Prepare Error:', error);
-                            if (applyButton) {
-                                applyButton.disabled = false;
-                                applyButton.innerText = '응모하기';
-                            }
-                        });
-                }
-
-                // 결제 완료 후
+                // 결제 처리 (Core Service 직접 호출)
                 function confirmPayment(token, accessToken) {
-                    // showResult('info', '결제 요청 중', '최종 결제를 진행하고 있습니다...');
                     const applyButton = document.getElementById('entryButton');
                     const modalButton = document.getElementById('confirm-payment-btn');
 
-                    const tokenPayload = {
-                        reservationToken: token
-                    }
-                    fetch(window.ENTRY_SERVICE_BASE + '/entry/api/v1/payments/confirm', {
+                    fetch('/core/api/v1/payments/process', {
                         method: 'POST',
-                        credentials: 'include',
                         headers: {
                             'Authorization': 'Bearer ' + accessToken,
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(tokenPayload)
+                        body: JSON.stringify({ token: token })
                     })
                         .then(response => {
                             if (!response.ok) {
-                                return response.json().then((err) => { throw new Error(err.reason || '결제 요청 실패'); });
+                                return response.text().then(text => { throw new Error(text || '결제 처리 중 오류가 발생했습니다.'); });
                             }
-                            return response.json
+                            return response.text();
                         })
                         .then(data => {
-                            // Success
                             closePaymentModal();
                             showResult('success', '응모 완료!', '결제가 성공적으로 완료되었습니다. 상품을 곧 받아보실 수 있습니다.');
                             if (applyButton) {
                                 applyButton.innerText = "응모 완료";
                                 applyButton.classList.remove('bg-accent', 'hover:bg-blue-600');
                                 applyButton.classList.add('bg-green-600', 'cursor-default');
+                                applyButton.disabled = true;
                             }
                         })
                         .catch(error => {
                             closePaymentModal();
                             showResult('error', '결제 실패', error.message);
-                            console.log(error);
+                            console.error('Payment Error:', error);
+                            
                             if (applyButton) {
                                 applyButton.disabled = false;
                                 applyButton.innerText = '응모하기';
                             }
 
-                            // Reset modal button
                             if (modalButton) {
                                 modalButton.disabled = false;
                                 modalButton.innerHTML = '<span>결제하기</span><i class="ph-bold ph-check"></i>';
@@ -590,9 +536,12 @@
                             .then(data => {
                                 const token = data.reservationToken;
                                 if (token) {
-                                    // showResult('success', '응모 성공!', '결제 창으로 이동합니다...');
-                                    // Go to prepare payment immediately
-                                    preparePayment(token, accessToken);
+                                    // 1차 토큰 저장 및 결제 모달 오픈
+                                    currentReservationToken = token;
+                                    currentAccessToken = accessToken;
+                                    
+                                    showResult('success', '당첨 성공!', '결제를 진행하여 응모를 완료해주세요.');
+                                    openPaymentModal();
                                 } else { throw new Error('결제 권한이 없습니다.') }
                             })
                             .catch(error => {

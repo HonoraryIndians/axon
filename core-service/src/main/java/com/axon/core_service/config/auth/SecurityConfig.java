@@ -63,6 +63,7 @@ public class SecurityConfig {
                                                                 "/welcomepage.html", "/test/**")
                                                 .permitAll()
                                                 .requestMatchers("/api/v1/**").permitAll()
+                                                .requestMatchers("/core/api/v1/**").authenticated() // Core API 인증 필수
                                                 .requestMatchers("/fake/data/**").permitAll() // TODO: 가짜 데이터 생성은 나중에
                                                                                               // 반드시 제거할 것
                                                 .requestMatchers("/actuator/**").permitAll() // Prometheus metrics endpoint
@@ -73,6 +74,9 @@ public class SecurityConfig {
                                                 .defaultAuthenticationEntryPointFor(
                                                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                                                                 antMatcher("/api/**"))
+                                                .defaultAuthenticationEntryPointFor(
+                                                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                                                antMatcher("/core/api/**")) // Core API도 401 반환
                                                 .defaultAuthenticationEntryPointFor(
                                                                 new HttpStatusEntryPoint(HttpStatus.OK), // 200 OK 반환 (리다이렉트 방지)
                                                                 antMatcher("/test/**"))

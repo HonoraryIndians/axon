@@ -1,0 +1,59 @@
+sequenceDiagram
+    autonumber
+    participant User as 마케터 (User)
+    participant Browser as 웹 브라우저 (UI)
+    participant CoreAPI as Core 서버 (API)
+    participant LLMService as LLM 서비스 (로직)
+    participant MetricsService as 데이터 수집기
+    participant DB_ES as DB & Elasticsearch
+    participant Gemini as Google Gemini (AI)
+
+    Note over User,Gemini: "이번 달 가장 성과가 좋은 캠페인은 뭐야?"라고 질문
+
+    User->>Browser: 챗봇에 질문 입력
+    Browser->>CoreAPI: 질문 전송 (POST /api/v1/dashboard/query)
+    activate CoreAPI
+
+    CoreAPI->>LLMService: processNaturalLanguageQuery(질문)
+    activate LLMService
+
+    LLMService->>LLMService: 의도 파악 (Intent Classification)
+    Note right of LLMService: "단순 통계 조회"인지<br/>"심층 분석/인사이트"인지 분류
+
+    LLMService->>LLMService: 파라미터 추출 (Extract Parameters)
+    Note right of LLMService: 기간: 이번 달<br/>대상: 전체 캠페인
+
+    Note over LLMService,DB_ES: 1. 답변에 필요한 데이터 수집
+
+    par 데이터 병렬 수집 (Parallel Data Collection)
+        LLMService->>MetricsService: getCampaignMetrics(파라미터)
+        activate MetricsService
+
+        MetricsService->>DB_ES: 매출, 참여자 수, 전환율 조회
+        Note right of DB_ES: MySQL: 정확한 매출<br/>Redis: 실시간 참여자<br/>ES: 클릭/전환 로그
+
+        DB_ES-->>MetricsService: 원본 데이터 반환
+        MetricsService-->>LLMService: 요약된 통계 데이터
+        deactivate MetricsService
+    end
+
+    Note over LLMService,Gemini: 2. AI에게 분석 요청
+
+    LLMService->>LLMService: 프롬프트 구성 (Construct Prompt)
+    Note right of LLMService: "당신은 마케팅 전문가입니다.<br/>아래 통계 데이터를 바탕으로<br/>사용자 질문에 답하세요."<br/>[데이터 첨부]
+
+    LLMService->>Gemini: 질문 + 통계 데이터 전송 (generateContent)
+    activate Gemini
+    Gemini->>Gemini: 답변 생성 (LLM Processing)
+    Gemini-->>LLMService: 분석 결과 (텍스트)
+    deactivate Gemini
+
+    Note right of Gemini: "신년 프로모션이 ROI 320%로<br/>가장 성과가 좋습니다."
+
+    LLMService-->>CoreAPI: 최종 답변 반환 (LLM Response DTO)
+    deactivate LLMService
+
+    CoreAPI-->>Browser: 응답 (200 OK)
+    deactivate CoreAPI
+
+    Browser->>User: 화면에 AI 답변 출력
